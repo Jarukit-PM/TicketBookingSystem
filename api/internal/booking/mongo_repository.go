@@ -97,6 +97,40 @@ func (r *MongoRepository) CountConfirmedBetween(ctx context.Context, from, to ti
 	return int(count), nil
 }
 
+func (r *MongoRepository) CountConfirmed(ctx context.Context) (int64, error) {
+	count, err := r.coll.CountDocuments(ctx, bson.M{"status": StatusConfirmed})
+	if err != nil {
+		return 0, fmt.Errorf("count confirmed bookings: %w", err)
+	}
+	return count, nil
+}
+
+func (r *MongoRepository) ListConfirmedPage(ctx context.Context, skip, limit int) ([]Booking, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if skip < 0 {
+		skip = 0
+	}
+	filter := bson.M{"status": StatusConfirmed}
+	opts := options.Find().
+		SetSort(bson.D{{Key: "confirmedAt", Value: -1}}).
+		SetSkip(int64(skip)).
+		SetLimit(int64(limit))
+
+	cur, err := r.coll.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("list confirmed bookings page: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Booking
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode bookings: %w", err)
+	}
+	return out, nil
+}
+
 func (r *MongoRepository) ListRecentConfirmed(ctx context.Context, limit int) ([]Booking, error) {
 	if limit <= 0 {
 		limit = 10

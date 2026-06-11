@@ -95,7 +95,8 @@ func (s *Service) HandleEmailSend(ctx context.Context, t *asynq.Task) error {
 	}
 
 	ticketURL := booking.TicketURL(s.appURL, b.BookingRef, b.TicketToken)
-	html, text, err := renderConfirmation(confirmationData{
+	locale := booking.ParseLocale(b.Locale)
+	html, text, err := renderConfirmation(locale, confirmationData{
 		BookingRef: b.BookingRef,
 		MovieTitle: mv.Title,
 		CinemaName: cn.Name,
@@ -111,7 +112,7 @@ func (s *Service) HandleEmailSend(ctx context.Context, t *asynq.Task) error {
 
 	providerID, sendErr := s.sender.Send(ctx, Message{
 		To:       u.Email,
-		Subject:  "Your tickets — " + mv.Title,
+		Subject:  confirmationSubject(locale, mv.Title),
 		HTMLBody: html,
 		TextBody: text,
 	})

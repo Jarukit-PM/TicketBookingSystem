@@ -158,6 +158,7 @@ func (s *DashboardService) summarizeBookings(ctx context.Context, bookings []boo
 			MovieTitle:  title,
 			Seats:       seats,
 			Total:       b.Total,
+			Locale:      booking.ParseLocale(b.Locale),
 			ConfirmedAt: b.ConfirmedAt,
 		})
 	}

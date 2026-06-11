@@ -42,6 +42,10 @@ func (r *memBookingRepo) CountConfirmedBetween(_ context.Context, _, _ time.Time
 func (r *memBookingRepo) ListRecentConfirmed(_ context.Context, _ int) ([]booking.Booking, error) {
 	return []booking.Booking{}, nil
 }
+func (r *memBookingRepo) CountConfirmed(_ context.Context) (int64, error) { return 0, nil }
+func (r *memBookingRepo) ListConfirmedPage(_ context.Context, _, _ int) ([]booking.Booking, error) {
+	return nil, nil
+}
 
 type memShowtimeRepo struct{}
 

@@ -16,5 +16,7 @@ type Repository interface {
 	ListConfirmedByUser(ctx context.Context, userID primitive.ObjectID) ([]Booking, error)
 	ListConfirmedByShowtime(ctx context.Context, showtimeID primitive.ObjectID) ([]Booking, error)
 	CountConfirmedBetween(ctx context.Context, from, to time.Time) (int, error)
+	CountConfirmed(ctx context.Context) (int64, error)
 	ListRecentConfirmed(ctx context.Context, limit int) ([]Booking, error)
+	ListConfirmedPage(ctx context.Context, skip, limit int) ([]Booking, error)
 }

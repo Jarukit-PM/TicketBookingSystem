@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry, EmailLogEntry } from '@/types/admin'
 
 type LogTab = 'audit' | 'email'
+
+const { t, te } = useI18n()
+const { formatDateTime } = useLocaleFormat()
 
 const activeTab = ref<LogTab>('audit')
 const bookingId = ref('')
@@ -17,33 +23,23 @@ const page = ref(1)
 const limit = 50
 
 const emptyMessage = computed(() =>
-  activeTab.value === 'audit'
-    ? 'No audit log entries yet.'
-    : 'No email log entries match your filter.',
+  activeTab.value === 'audit' ? t('admin.logs.emptyAudit') : t('admin.logs.emptyEmail'),
 )
 
-const auditActionLabels: Record<string, string> = {
-  booking_success: 'Booking Success',
-  booking_timeout: 'Booking Timeout',
-  seat_released: 'Seat Released',
-  booking_failed: 'Booking Failed',
-  system_error: 'System Error',
-  create: 'Create',
-  update: 'Update',
-  delete: 'Delete',
-}
-
 function formatAuditAction(action: string) {
-  return auditActionLabels[action] ?? action
+  const key = `admin.logs.auditActions.${action}`
+  return te(key) ? t(key) : action
 }
 
 function formatAuditDetails(meta?: Record<string, unknown>) {
-  if (!meta || !Object.keys(meta).length) return '—'
+  if (!meta || !Object.keys(meta).length) return t('common.dash')
   const parts: string[] = []
-  if (typeof meta.bookingRef === 'string') parts.push(`ref ${meta.bookingRef}`)
-  if (Array.isArray(meta.seats)) parts.push(`seats ${meta.seats.join(', ')}`)
-  if (Array.isArray(meta.seatIds)) parts.push(`seats ${meta.seatIds.join(', ')}`)
-  if (typeof meta.seatId === 'string') parts.push(`seat ${meta.seatId}`)
+  if (typeof meta.bookingRef === 'string') {
+    parts.push(t('admin.logs.auditDetails.ref', { value: meta.bookingRef }))
+  }
+  if (Array.isArray(meta.seats)) parts.push(t('admin.logs.auditDetails.seats', { value: meta.seats.join(', ') }))
+  if (Array.isArray(meta.seatIds)) parts.push(t('admin.logs.auditDetails.seats', { value: meta.seatIds.join(', ') }))
+  if (typeof meta.seatId === 'string') parts.push(t('admin.logs.auditDetails.seat', { value: meta.seatId }))
   if (typeof meta.code === 'string') parts.push(meta.code)
   if (typeof meta.reason === 'string') parts.push(meta.reason)
   if (typeof meta.message === 'string') parts.push(meta.message)
@@ -71,7 +67,10 @@ async function loadLogs() {
   } catch (error) {
     auditLogs.value = []
     emailLogs.value = []
-    errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load logs'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.logs.loadFailed')
   } finally {
     loading.value = false
   }
@@ -88,31 +87,29 @@ watch(activeTab, loadLogs, { immediate: true })
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-copy-primary">Logs</h1>
-      <p class="mt-1 text-sm text-copy-secondary">
-        Operational audit trail and email delivery status (newest first).
-      </p>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('admin.logs.title') }}</h1>
+      <p class="mt-1 text-sm text-copy-secondary">{{ t('admin.logs.subtitle') }}</p>
     </div>
 
     <div class="flex flex-wrap gap-2">
       <Button :variant="activeTab === 'audit' ? 'primary' : 'secondary'" @click="setTab('audit')">
-        Audit log
+        {{ t('admin.logs.auditTab') }}
       </Button>
       <Button :variant="activeTab === 'email' ? 'primary' : 'secondary'" @click="setTab('email')">
-        Email log
+        {{ t('admin.logs.emailTab') }}
       </Button>
     </div>
 
     <Card v-if="activeTab === 'email'">
       <CardHeader>
-        <CardTitle>Filter</CardTitle>
+        <CardTitle>{{ t('admin.logs.filterTitle') }}</CardTitle>
       </CardHeader>
       <CardContent class="flex flex-wrap items-end gap-3">
         <label class="block min-w-[16rem] flex-1 space-y-1.5">
-          <span class="text-sm text-copy-secondary">Booking ID</span>
-          <Input v-model="bookingId" placeholder="MongoDB ObjectId (optional)" autocomplete="off" />
+          <span class="text-sm text-copy-secondary">{{ t('admin.logs.bookingId') }}</span>
+          <Input v-model="bookingId" :placeholder="t('admin.logs.bookingIdPlaceholder')" autocomplete="off" />
         </label>
-        <Button :disabled="loading" @click="loadLogs">Apply</Button>
+        <Button :disabled="loading" @click="loadLogs">{{ t('common.apply') }}</Button>
       </CardContent>
     </Card>
 
@@ -120,30 +117,30 @@ watch(activeTab, loadLogs, { immediate: true })
 
     <Card>
       <CardHeader>
-        <CardTitle>{{ activeTab === 'audit' ? 'Audit entries' : 'Email deliveries' }}</CardTitle>
+        <CardTitle>{{ activeTab === 'audit' ? t('admin.logs.auditEntries') : t('admin.logs.emailDeliveries') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="sticky top-0 bg-surface text-copy-muted">
               <tr v-if="activeTab === 'audit'">
-                <th class="pb-3 pr-4 font-medium">When</th>
-                <th class="pb-3 pr-4 font-medium">Action</th>
-                <th class="pb-3 pr-4 font-medium">Entity</th>
-                <th class="pb-3 pr-4 font-medium">Entity ID</th>
-                <th class="pb-3 font-medium">Details</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.when') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.action') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.entity') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.entityId') }}</th>
+                <th class="pb-3 font-medium">{{ t('admin.logs.details') }}</th>
               </tr>
               <tr v-else>
-                <th class="pb-3 pr-4 font-medium">When</th>
-                <th class="pb-3 pr-4 font-medium">To</th>
-                <th class="pb-3 pr-4 font-medium">Type</th>
-                <th class="pb-3 pr-4 font-medium">Status</th>
-                <th class="pb-3 font-medium">Booking</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.when') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.to') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.type') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.status') }}</th>
+                <th class="pb-3 font-medium">{{ t('admin.logs.booking') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td :colspan="activeTab === 'audit' ? 5 : 5" class="py-6 text-copy-muted">Loading…</td>
+                <td :colspan="activeTab === 'audit' ? 5 : 5" class="py-6 text-copy-muted">{{ t('common.loading') }}</td>
               </tr>
               <tr v-else-if="activeTab === 'audit' && !auditLogs.length">
                 <td colspan="5" class="py-6 text-copy-muted">{{ emptyMessage }}</td>
@@ -158,7 +155,7 @@ watch(activeTab, loadLogs, { immediate: true })
                   class="border-t border-surface-border"
                 >
                   <td class="py-3 pr-4 text-copy-secondary">
-                    {{ new Date(log.createdAt).toLocaleString() }}
+                    {{ formatDateTime(log.createdAt) }}
                   </td>
                   <td class="py-3 pr-4 font-medium text-copy-primary">
                     {{ formatAuditAction(log.action) }}
@@ -175,7 +172,7 @@ watch(activeTab, loadLogs, { immediate: true })
                   class="border-t border-surface-border"
                 >
                   <td class="py-3 pr-4 text-copy-secondary">
-                    {{ new Date(log.createdAt).toLocaleString() }}
+                    {{ formatDateTime(log.createdAt) }}
                   </td>
                   <td class="py-3 pr-4 text-copy-primary">{{ log.to }}</td>
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.type }}</td>

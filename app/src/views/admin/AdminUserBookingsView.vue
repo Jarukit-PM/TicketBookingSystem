@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import BookingsTable from '@/components/admin/BookingsTable.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import type { BookingSummary } from '@/types/admin'
 
+const { t } = useI18n()
 const route = useRoute()
+
 const bookings = ref<BookingSummary[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
@@ -26,7 +30,10 @@ async function loadBookings() {
     bookings.value = data.bookings ?? []
   } catch (error) {
     bookings.value = []
-    errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load bookings'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.userBookings.loadFailed')
   } finally {
     loading.value = false
   }
@@ -39,26 +46,27 @@ watch(userId, loadBookings)
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-copy-primary">User bookings</h1>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('admin.userBookings.title') }}</h1>
       <p class="mt-1 text-sm text-copy-secondary">
-        Full confirmed booking history
-        <span v-if="customerEmail"> for {{ customerEmail }}</span>.
+        {{ t('admin.userBookings.subtitle') }}<span v-if="customerEmail">{{ t('admin.userBookings.subtitleFor', { email: customerEmail }) }}</span>.
       </p>
-      <p class="mt-1 font-mono text-xs text-copy-muted">User ID: {{ userId }}</p>
+      <p class="mt-1 font-mono text-xs text-copy-muted">
+        {{ t('admin.userBookings.userIdLabel', { id: userId }) }}
+      </p>
     </div>
 
     <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
 
     <Card>
       <CardHeader>
-        <CardTitle>Booking history</CardTitle>
+        <CardTitle>{{ t('admin.userBookings.historyTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <BookingsTable
           :bookings="bookings"
           :loading="loading"
           show-customer
-          empty-message="No confirmed bookings for this user."
+          :empty-message="t('admin.userBookings.empty')"
         />
       </CardContent>
     </Card>

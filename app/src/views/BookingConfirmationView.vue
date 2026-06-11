@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
-import { formatShowtime } from '@/lib/format'
+import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useBookingSessionStore } from '@/stores/bookingSession'
 
+const { t } = useI18n()
+const { formatDateTime, formatTHB } = useLocaleFormat()
 const route = useRoute()
 const router = useRouter()
 const session = useBookingSessionStore()
@@ -35,44 +38,48 @@ function bookMore(): void {
     <div class="mx-auto max-w-lg space-y-6">
       <Card v-if="booking">
         <CardHeader>
-          <CardTitle>Booking confirmed</CardTitle>
+          <CardTitle>{{ t('booking.confirmation.title') }}</CardTitle>
           <p class="text-sm text-copy-secondary">
-            Your tickets are reserved. A confirmation email will be sent shortly.
+            {{ t('booking.confirmation.subtitle') }}
           </p>
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="rounded-lg border border-surface-border bg-elevated p-4">
-            <p class="text-xs uppercase tracking-widest text-copy-muted">Booking reference</p>
+            <p class="text-xs uppercase tracking-widest text-copy-muted">
+              {{ t('booking.confirmation.reference') }}
+            </p>
             <p class="mt-1 text-2xl font-semibold text-brand">{{ booking.bookingRef }}</p>
           </div>
 
           <dl class="space-y-2 text-sm">
             <div class="flex justify-between gap-4">
-              <dt class="text-copy-secondary">Seats</dt>
+              <dt class="text-copy-secondary">{{ t('booking.confirmation.seats') }}</dt>
               <dd class="font-medium text-copy-primary">{{ booking.seats.join(', ') }}</dd>
             </div>
             <div class="flex justify-between gap-4">
-              <dt class="text-copy-secondary">Total</dt>
-              <dd class="font-medium text-copy-primary">{{ booking.total.toLocaleString() }} THB</dd>
+              <dt class="text-copy-secondary">{{ t('booking.confirmation.total') }}</dt>
+              <dd class="font-medium text-copy-primary">{{ formatTHB(booking.total) }}</dd>
             </div>
             <div class="flex justify-between gap-4">
-              <dt class="text-copy-secondary">Confirmed</dt>
-              <dd class="text-copy-primary">{{ formatShowtime(booking.confirmedAt) }}</dd>
+              <dt class="text-copy-secondary">{{ t('booking.confirmation.confirmed') }}</dt>
+              <dd class="text-copy-primary">{{ formatDateTime(booking.confirmedAt) }}</dd>
             </div>
           </dl>
 
           <div class="flex flex-wrap gap-3 pt-2">
-            <Button type="button" @click="viewTicket">View ticket</Button>
-            <Button type="button" variant="ghost" @click="goHome">Back to home</Button>
-            <Button type="button" variant="ghost" @click="bookMore">Book more seats</Button>
+            <Button type="button" @click="viewTicket">{{ t('booking.confirmation.viewTicket') }}</Button>
+            <Button type="button" variant="ghost" @click="goHome">{{ t('nav.backToHome') }}</Button>
+            <Button type="button" variant="ghost" @click="bookMore">
+              {{ t('booking.confirmation.bookMore') }}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       <Card v-else>
         <CardContent class="space-y-4 py-8 text-center">
-          <p class="text-copy-secondary">No booking details found.</p>
-          <Button type="button" @click="goHome">Back to home</Button>
+          <p class="text-copy-secondary">{{ t('booking.confirmation.notFound') }}</p>
+          <Button type="button" @click="goHome">{{ t('nav.backToHome') }}</Button>
         </CardContent>
       </Card>
     </div>

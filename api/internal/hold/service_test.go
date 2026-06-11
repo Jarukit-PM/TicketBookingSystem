@@ -97,6 +97,10 @@ func (stubBookings) CountConfirmedBetween(context.Context, time.Time, time.Time)
 func (stubBookings) ListRecentConfirmed(context.Context, int) ([]booking.Booking, error) {
 	return nil, nil
 }
+func (stubBookings) CountConfirmed(context.Context) (int64, error) { return 0, nil }
+func (stubBookings) ListConfirmedPage(context.Context, int, int) ([]booking.Booking, error) {
+	return nil, nil
+}
 func (s stubBookings) ListConfirmedByShowtime(_ context.Context, showtimeID primitive.ObjectID) ([]booking.Booking, error) {
 	out := make([]booking.Booking, 0)
 	for _, b := range s.bookings {

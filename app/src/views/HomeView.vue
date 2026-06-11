@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { fetchCinemas, fetchMovies } from '@/api/catalog'
 import CinemaPicker from '@/components/CinemaPicker.vue'
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import { Button } from '@/components/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useCatalogStore } from '@/stores/catalog'
 import type { CatalogTab, Cinema, Movie } from '@/types/catalog'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const catalog = useCatalogStore()
 
@@ -28,12 +31,12 @@ const selectedCinema = computed({
 
 const emptyMessage = computed(() => {
   if (!catalog.selectedCinemaId) {
-    return 'Select a cinema to browse movies.'
+    return t('catalog.selectCinema')
   }
   if (catalog.activeTab === 'now_showing') {
-    return 'No movies with upcoming showtimes at this cinema.'
+    return t('catalog.emptyNowShowing')
   }
-  return 'No coming soon titles at this cinema.'
+  return t('catalog.emptyComingSoon')
 })
 
 async function loadMovies(): Promise<void> {
@@ -47,7 +50,7 @@ async function loadMovies(): Promise<void> {
   try {
     movies.value = await fetchMovies(catalog.selectedCinemaId, catalog.activeTab)
   } catch {
-    error.value = 'Could not load movies. Please try again.'
+    error.value = t('catalog.loadMoviesError')
     movies.value = []
   } finally {
     loading.value = false
@@ -66,7 +69,7 @@ onMounted(async () => {
       catalog.setCinema(cinemas.value[0]!.id)
     }
   } catch {
-    error.value = 'Could not load cinemas. Please try again.'
+    error.value = t('catalog.loadCinemasError')
   }
 })
 
@@ -85,35 +88,36 @@ watch(
       <span
         class="bg-gradient-brand bg-clip-text text-xl font-semibold tracking-tight text-transparent"
       >
-        Cinema Tickets
+        {{ t('common.appName') }}
       </span>
       <div class="ml-auto flex items-center gap-3">
+        <LocaleSwitcher />
         <template v-if="auth.isAuthenticated">
           <RouterLink
             to="/my-bookings"
             class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
           >
-            My Bookings
+            {{ t('nav.myBookings') }}
           </RouterLink>
           <RouterLink
             v-if="auth.isAdmin"
             to="/admin"
             class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
           >
-            Admin
+            {{ t('nav.admin') }}
           </RouterLink>
           <span class="hidden text-sm text-copy-muted sm:inline">{{ auth.user?.email }}</span>
-          <Button variant="secondary" @click="auth.logout()">Sign out</Button>
+          <Button variant="secondary" @click="auth.logout()">{{ t('nav.signOut') }}</Button>
         </template>
         <template v-else>
           <RouterLink
             to="/login"
             class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
           >
-            Sign in
+            {{ t('nav.signIn') }}
           </RouterLink>
           <RouterLink to="/register">
-            <Button variant="secondary">Register</Button>
+            <Button variant="secondary">{{ t('nav.register') }}</Button>
           </RouterLink>
         </template>
       </div>
@@ -123,10 +127,10 @@ watch(
       <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 class="text-3xl font-semibold tracking-tight text-copy-primary md:text-4xl">
-            Browse movies
+            {{ t('catalog.browseMovies') }}
           </h1>
           <p class="mt-2 text-sm text-copy-secondary">
-            Pick a cinema and find showtimes near you.
+            {{ t('catalog.browseSubtitle') }}
           </p>
         </div>
         <div class="w-full max-w-xs">
@@ -145,7 +149,7 @@ watch(
           "
           @click="switchTab('now_showing')"
         >
-          Now Showing
+          {{ t('catalog.nowShowing') }}
         </button>
         <button
           type="button"
@@ -157,7 +161,7 @@ watch(
           "
           @click="switchTab('coming_soon')"
         >
-          Coming Soon
+          {{ t('catalog.comingSoon') }}
         </button>
       </div>
 
@@ -168,7 +172,7 @@ watch(
         {{ error }}
       </p>
 
-      <p v-if="loading" class="py-16 text-center text-copy-secondary">Loading movies…</p>
+      <p v-if="loading" class="py-16 text-center text-copy-secondary">{{ t('catalog.loadingMovies') }}</p>
 
       <div
         v-else-if="movies.length === 0"
@@ -179,7 +183,7 @@ watch(
           v-if="catalog.selectedCinemaId && catalog.activeTab === 'now_showing'"
           class="mt-2 text-sm text-copy-secondary"
         >
-          Add movies and showtimes in the admin console to list them here.
+          {{ t('catalog.adminHint') }}
         </p>
       </div>
 

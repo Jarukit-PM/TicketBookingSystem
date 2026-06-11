@@ -20,7 +20,9 @@ import (
 )
 
 type adminBookingsRepo struct {
-	byRef *booking.Booking
+	byRef   *booking.Booking
+	allPage []booking.Booking
+	allTotal int64
 }
 
 func (r *adminBookingsRepo) Insert(_ context.Context, _ *booking.Booking) error { return nil }
@@ -47,6 +49,12 @@ func (r *adminBookingsRepo) CountConfirmedBetween(_ context.Context, _, _ time.T
 }
 func (r *adminBookingsRepo) ListRecentConfirmed(_ context.Context, _ int) ([]booking.Booking, error) {
 	return nil, nil
+}
+func (r *adminBookingsRepo) CountConfirmed(_ context.Context) (int64, error) {
+	return r.allTotal, nil
+}
+func (r *adminBookingsRepo) ListConfirmedPage(_ context.Context, _, _ int) ([]booking.Booking, error) {
+	return r.allPage, nil
 }
 
 type adminBookingsShowtimes struct{}
@@ -153,6 +161,37 @@ func TestAdminBookingsRejectsCustomer(t *testing.T) {
 
 	if w.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want 403", w.Code)
+	}
+}
+
+func TestAdminBookingsListAllPaginated(t *testing.T) {
+	repo := &adminBookingsRepo{
+		allPage: []booking.Booking{
+			{
+				ID:          primitive.NewObjectID(),
+				UserID:      primitive.NewObjectID(),
+				ShowtimeID:  primitive.NewObjectID(),
+				BookingRef:  "BK-PAGE-001",
+				Status:      booking.StatusConfirmed,
+				Seats:       []string{"A1"},
+				Total:       1200,
+				ConfirmedAt: time.Now().UTC(),
+			},
+		},
+		allTotal: 1,
+	}
+	r := setupAdminBookingsRouter(t, user.RoleAdmin, repo)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/bookings?page=1&limit=20", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body %s", w.Code, w.Body.String())
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, `"total":1`) || !strings.Contains(body, "BK-PAGE-001") {
+		t.Fatalf("body = %s, want paginated booking list", body)
 	}
 }
 

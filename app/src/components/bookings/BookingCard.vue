@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { Badge, Card, CardContent } from '@/components/ui'
-import { formatShowtime } from '@/lib/format'
+import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { BookingListItem } from '@/types/bookings'
 
 const props = defineProps<{ booking: BookingListItem }>()
+const { t } = useI18n()
+const { formatDateTime } = useLocaleFormat()
+
 const posterStyle = computed(() => ({
   backgroundImage: props.booking.movie.posterUrl ? `url(${props.booking.movie.posterUrl})` : undefined,
 }))
@@ -25,10 +29,12 @@ const posterStyle = computed(() => ({
               <h3 class="truncate text-lg font-semibold text-copy-primary">{{ booking.movie.title }}</h3>
               <p class="text-sm text-copy-secondary">{{ booking.cinema.name }} · {{ booking.screen.name }}</p>
             </div>
-            <Badge variant="confirmed">{{ booking.status }}</Badge>
+            <Badge variant="confirmed">{{ t('booking.status.confirmed') }}</Badge>
           </div>
-          <p class="text-sm text-copy-secondary">{{ formatShowtime(booking.startsAt) }}</p>
-          <p class="text-sm text-copy-muted">Ref {{ booking.bookingRef }} · {{ booking.seats.join(', ') }}</p>
+          <p class="text-sm text-copy-secondary">{{ formatDateTime(booking.startsAt) }}</p>
+          <p class="text-sm text-copy-muted">
+            {{ t('common.ref') }} {{ booking.bookingRef }} · {{ booking.seats.join(', ') }}
+          </p>
         </CardContent>
       </div>
     </Card>

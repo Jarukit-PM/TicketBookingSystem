@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import { useAuthStore } from '@/stores/auth'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -28,9 +31,9 @@ async function onSubmit() {
     await router.replace(redirectTarget.value)
   } catch (error) {
     if (error instanceof ApiError) {
-      errorMessage.value = error.message
+      errorMessage.value = translateApiError(error.code, error.message)
     } else {
-      errorMessage.value = 'Unable to sign in. Please try again.'
+      errorMessage.value = t('auth.login.error')
     }
   } finally {
     submitting.value = false
@@ -46,31 +49,33 @@ async function onSubmit() {
           to="/"
           class="bg-gradient-brand bg-clip-text text-2xl font-semibold tracking-tight text-transparent"
         >
-          Cinema Tickets
+          {{ t('common.appName') }}
         </RouterLink>
-        <p class="mt-2 text-sm text-copy-secondary">Sign in to book seats and view your tickets.</p>
+        <p class="mt-2 text-sm text-copy-secondary">{{ t('auth.login.subtitle') }}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
+          <CardTitle>{{ t('auth.login.title') }}</CardTitle>
         </CardHeader>
         <CardContent>
           <form class="space-y-4" @submit.prevent="onSubmit">
             <div class="space-y-2">
-              <label class="text-sm text-copy-secondary" for="email">Email</label>
+              <label class="text-sm text-copy-secondary" for="email">{{ t('auth.login.email') }}</label>
               <Input
                 id="email"
                 v-model="email"
                 type="email"
                 autocomplete="email"
-                placeholder="you@example.com"
+                :placeholder="t('auth.login.emailPlaceholder')"
                 required
               />
             </div>
 
             <div class="space-y-2">
-              <label class="text-sm text-copy-secondary" for="password">Password</label>
+              <label class="text-sm text-copy-secondary" for="password">
+                {{ t('auth.login.password') }}
+              </label>
               <Input
                 id="password"
                 v-model="password"
@@ -86,7 +91,7 @@ async function onSubmit() {
             </p>
 
             <Button type="submit" class="w-full" :disabled="submitting || auth.loading">
-              {{ submitting ? 'Signing in…' : 'Sign in' }}
+              {{ submitting ? t('auth.login.submitting') : t('auth.login.submit') }}
             </Button>
           </form>
 
@@ -95,7 +100,7 @@ async function onSubmit() {
               <span class="w-full border-t border-border" />
             </div>
             <div class="relative flex justify-center text-xs uppercase">
-              <span class="bg-surface px-2 text-copy-secondary">or</span>
+              <span class="bg-surface px-2 text-copy-secondary">{{ t('common.or') }}</span>
             </div>
           </div>
 
@@ -103,16 +108,16 @@ async function onSubmit() {
             href="/api/auth/google"
             class="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-copy-primary transition hover:bg-surface-elevated"
           >
-            Sign in with Google
+            {{ t('auth.login.google') }}
           </a>
 
           <p class="mt-6 text-center text-sm text-copy-secondary">
-            New here?
+            {{ t('auth.login.newHere') }}
             <RouterLink
               class="text-brand hover:underline"
               :to="{ path: '/register', query: route.query }"
             >
-              Create an account
+              {{ t('auth.login.createAccount') }}
             </RouterLink>
           </p>
         </CardContent>

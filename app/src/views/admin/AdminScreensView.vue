@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import type { Cinema, Screen, ScreenLayout } from '@/types/catalog'
+
+const { t } = useI18n()
 
 const cinemas = ref<Cinema[]>([])
 const screens = ref<Screen[]>([])
@@ -47,7 +51,7 @@ function resetForm() {
 function parseLayout(): ScreenLayout {
   const parsed = JSON.parse(form.value.layoutJson) as ScreenLayout
   if (!parsed?.seats?.length) {
-    throw new Error('Layout must include a seats array')
+    throw new Error(t('admin.screens.layoutMustIncludeSeats'))
   }
   return parsed
 }
@@ -66,7 +70,10 @@ async function loadData() {
       form.value.cinemaId = cinemas.value[0].id
     }
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load screens'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.screens.loadFailed')
   } finally {
     loading.value = false
   }
@@ -104,19 +111,27 @@ async function onSubmit() {
     resetForm()
     await loadScreens()
   } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError ? error.message : error instanceof Error ? error.message : 'Save failed'
+    if (error instanceof ApiError) {
+      errorMessage.value = translateApiError(error.code, error.message)
+    } else if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = t('admin.screens.saveFailed')
+    }
   }
 }
 
 async function onDelete(id: string) {
-  if (!confirm('Delete this screen?')) return
+  if (!confirm(t('admin.screens.confirmDelete'))) return
   try {
     await api.delete(`/admin/screens/${id}`)
     if (editingId.value === id) resetForm()
     await loadScreens()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Delete failed'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.screens.deleteFailed')
   }
 }
 
@@ -128,20 +143,18 @@ onMounted(async () => {
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-copy-primary">Screens</h1>
-      <p class="mt-1 text-sm text-copy-secondary">
-        Halls with seat layouts. Edit layout as JSON ({ seatId, row, col, type }).
-      </p>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('admin.screens.title') }}</h1>
+      <p class="mt-1 text-sm text-copy-secondary">{{ t('admin.screens.subtitle') }}</p>
     </div>
 
     <Card>
       <CardHeader>
-        <CardTitle>{{ editingId ? 'Edit screen' : 'Add screen' }}</CardTitle>
+        <CardTitle>{{ editingId ? t('admin.screens.editTitle') : t('admin.screens.addTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <form class="space-y-4" @submit.prevent="onSubmit">
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="cinemaId">Cinema</label>
+            <label class="text-sm text-copy-secondary" for="cinemaId">{{ t('common.cinema') }}</label>
             <select
               id="cinemaId"
               v-model="form.cinemaId"
@@ -154,11 +167,11 @@ onMounted(async () => {
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="screenName">Name</label>
+            <label class="text-sm text-copy-secondary" for="screenName">{{ t('common.name') }}</label>
             <Input id="screenName" v-model="form.name" required />
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="layout">Layout JSON</label>
+            <label class="text-sm text-copy-secondary" for="layout">{{ t('admin.screens.layoutJson') }}</label>
             <textarea
               id="layout"
               v-model="form.layoutJson"
@@ -168,14 +181,14 @@ onMounted(async () => {
             />
           </div>
           <p v-if="!loading && cinemas.length === 0" class="text-sm text-copy-muted">
-            Add a cinema first under Cinemas before creating a screen.
+            {{ t('admin.screens.addCinemaFirst') }}
           </p>
           <div class="flex gap-2">
             <Button type="submit" :disabled="cinemas.length === 0">
-              {{ editingId ? 'Update' : 'Create' }}
+              {{ editingId ? t('common.update') : t('common.create') }}
             </Button>
             <Button v-if="editingId" type="button" variant="secondary" @click="resetForm">
-              Cancel
+              {{ t('common.cancel') }}
             </Button>
           </div>
         </form>
@@ -187,13 +200,13 @@ onMounted(async () => {
     <Card>
       <CardHeader>
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle>All screens</CardTitle>
+          <CardTitle>{{ t('admin.screens.allTitle') }}</CardTitle>
           <select
             v-model="filterCinemaId"
             class="rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-copy-primary"
             @change="loadScreens"
           >
-            <option value="">All cinemas</option>
+            <option value="">{{ t('common.allCinemas') }}</option>
             <option v-for="cinema in cinemas" :key="cinema.id" :value="cinema.id">
               {{ cinema.name }}
             </option>
@@ -201,15 +214,15 @@ onMounted(async () => {
         </div>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">Loading…</p>
+        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
               <tr>
-                <th class="pb-3 pr-4 font-medium">Name</th>
-                <th class="pb-3 pr-4 font-medium">Cinema</th>
-                <th class="pb-3 pr-4 font-medium">Seats</th>
-                <th class="pb-3 font-medium">Actions</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.name') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.cinema') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.seats') }}</th>
+                <th class="pb-3 font-medium">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -223,14 +236,14 @@ onMounted(async () => {
                 <td class="py-3 pr-4 text-copy-secondary">{{ screen.layout.seats.length }}</td>
                 <td class="py-3">
                   <div class="flex gap-2">
-                    <Button variant="ghost" @click="startEdit(screen)">Edit</Button>
-                    <Button variant="destructive" @click="onDelete(screen.id)">Delete</Button>
+                    <Button variant="ghost" @click="startEdit(screen)">{{ t('common.edit') }}</Button>
+                    <Button variant="destructive" @click="onDelete(screen.id)">{{ t('common.delete') }}</Button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-          <p v-if="!filteredScreens.length" class="text-sm text-copy-muted">No screens yet.</p>
+          <p v-if="!filteredScreens.length" class="text-sm text-copy-muted">{{ t('admin.screens.empty') }}</p>
         </div>
       </CardContent>
     </Card>

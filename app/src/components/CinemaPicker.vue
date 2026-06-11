@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { Cinema } from '@/types/catalog'
 
 defineProps<{
@@ -9,12 +10,14 @@ defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="flex flex-col gap-2">
     <label class="text-xs font-medium uppercase tracking-wide text-copy-muted" for="cinema-picker">
-      Cinema
+      {{ t('catalog.cinema') }}
     </label>
     <select
       id="cinema-picker"
@@ -22,7 +25,7 @@ const emit = defineEmits<{
       :value="modelValue ?? ''"
       @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
     >
-      <option value="" disabled>Select a cinema</option>
+      <option value="" disabled>{{ t('catalog.selectCinemaOption') }}</option>
       <option v-for="cinema in cinemas" :key="cinema.id" :value="cinema.id">
         {{ cinema.name }}
       </option>

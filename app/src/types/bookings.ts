@@ -5,6 +5,7 @@ export type ConfirmedBooking = {
   seats: string[]
   total: number
   status: 'CONFIRMED'
+  locale?: string
   confirmedAt: string
 }
 
@@ -15,6 +16,7 @@ export type BookingListItem = {
   seats: string[]
   total: number
   status: 'CONFIRMED'
+  locale?: string
   confirmedAt: string
   startsAt: string
   movie: {

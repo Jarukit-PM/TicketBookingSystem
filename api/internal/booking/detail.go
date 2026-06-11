@@ -33,6 +33,7 @@ type ListItem struct {
 	Seats       []string   `json:"seats"`
 	Total       int64      `json:"total"`
 	Status      string     `json:"status"`
+	Locale      string     `json:"locale"`
 	ConfirmedAt time.Time  `json:"confirmedAt"`
 	StartsAt    time.Time  `json:"startsAt"`
 	Movie       ListMovie  `json:"movie"`
@@ -116,6 +117,7 @@ func (s *Service) enrichBooking(ctx context.Context, b Booking) (ListItem, strin
 		Seats:       b.Seats,
 		Total:       b.Total,
 		Status:      b.Status,
+		Locale:      ParseLocale(b.Locale),
 		ConfirmedAt: b.ConfirmedAt,
 		StartsAt:    showtime.StartsAt,
 		Movie:       ListMovie{ID: movie.ID.Hex(), Title: movie.Title, PosterURL: movie.PosterURL},

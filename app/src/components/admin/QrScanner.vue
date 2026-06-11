@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { BrowserQRCodeReader, type IScannerControls } from '@zxing/browser'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{
   scan: [value: string]
   error: [message: string]
 }>()
+
+const { t } = useI18n()
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -36,12 +39,12 @@ async function startCamera(): Promise<void> {
         emit('scan', result.getText())
         stopCamera()
       } else if (error && error.name !== 'NotFoundException') {
-        cameraError.value = 'Unable to read QR code. Adjust lighting or distance.'
+        cameraError.value = t('admin.qrScanner.readFailed')
       }
     })
     cameraActive.value = true
   } catch {
-    cameraError.value = 'Camera access denied or unavailable. Upload a QR image instead.'
+    cameraError.value = t('admin.qrScanner.cameraDenied')
     emit('error', cameraError.value)
   } finally {
     scanning.value = false
@@ -65,7 +68,7 @@ async function onFileSelected(event: Event): Promise<void> {
       URL.revokeObjectURL(url)
     }
   } catch {
-    emit('error', 'Could not read a QR code from that image.')
+    emit('error', t('admin.qrScanner.imageReadFailed'))
   }
 }
 
@@ -88,7 +91,7 @@ defineExpose({ startCamera, stopCamera })
   <div class="space-y-4">
     <div
       class="relative overflow-hidden rounded-xl border border-surface-border bg-elevated"
-      aria-label="QR scanner preview"
+      :aria-label="t('admin.qrScanner.previewLabel')"
     >
       <video
         ref="videoRef"
@@ -100,7 +103,7 @@ defineExpose({ startCamera, stopCamera })
         v-if="!cameraActive && !scanning"
         class="absolute inset-0 flex items-center justify-center bg-base/80 px-6 text-center text-sm text-copy-secondary"
       >
-        {{ cameraError || 'Starting camera…' }}
+        {{ cameraError || t('admin.qrScanner.startingCamera') }}
       </div>
     </div>
 
@@ -112,14 +115,14 @@ defineExpose({ startCamera, stopCamera })
         class="rounded-lg bg-gradient-brand px-4 py-2 text-sm font-medium text-copy-primary transition-opacity hover:opacity-90"
         @click="startCamera"
       >
-        {{ cameraActive ? 'Restart camera' : 'Try camera again' }}
+        {{ cameraActive ? t('admin.qrScanner.restartCamera') : t('admin.qrScanner.tryCameraAgain') }}
       </button>
       <button
         type="button"
         class="rounded-lg border border-surface-border bg-surface px-4 py-2 text-sm font-medium text-copy-secondary transition-colors hover:bg-subtle hover:text-copy-primary"
         @click="openFilePicker"
       >
-        Upload QR image
+        {{ t('admin.qrScanner.uploadImage') }}
       </button>
     </div>
 

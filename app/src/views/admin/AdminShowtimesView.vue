@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { Cinema, Movie, Screen, Showtime, ShowtimeStatus } from '@/types/catalog'
+
+const { t } = useI18n()
+const { formatDateTime } = useLocaleFormat()
 
 const movies = ref<Movie[]>([])
 const screens = ref<Screen[]>([])
@@ -92,7 +98,10 @@ async function loadShowtimes() {
     )
     showtimes.value = response.showtimes ?? []
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load showtimes'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.showtimes.loadFailed')
   } finally {
     loading.value = false
   }
@@ -105,7 +114,10 @@ async function loadAll() {
     resetForm()
     await loadShowtimes()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load data'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.showtimes.loadDataFailed')
     loading.value = false
   }
 }
@@ -145,18 +157,24 @@ async function onSubmit() {
     resetForm()
     await loadShowtimes()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Save failed'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.showtimes.saveFailed')
   }
 }
 
 async function onDelete(id: string) {
-  if (!confirm('Delete this showtime?')) return
+  if (!confirm(t('admin.showtimes.confirmDelete'))) return
   try {
     await api.delete(`/admin/showtimes/${id}`)
     if (editingId.value === id) resetForm()
     await loadShowtimes()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Delete failed'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.showtimes.deleteFailed')
   }
 }
 
@@ -166,20 +184,18 @@ onMounted(loadAll)
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-copy-primary">Showtimes</h1>
-      <p class="mt-1 text-sm text-copy-secondary">
-        Schedule screenings by linking a movie to a screen.
-      </p>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('admin.showtimes.title') }}</h1>
+      <p class="mt-1 text-sm text-copy-secondary">{{ t('admin.showtimes.subtitle') }}</p>
     </div>
 
     <Card>
       <CardHeader>
-        <CardTitle>{{ editingId ? 'Edit showtime' : 'Add showtime' }}</CardTitle>
+        <CardTitle>{{ editingId ? t('admin.showtimes.editTitle') : t('admin.showtimes.addTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <form class="grid gap-4 md:grid-cols-2" @submit.prevent="onSubmit">
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="movieId">Movie</label>
+            <label class="text-sm text-copy-secondary" for="movieId">{{ t('common.movie') }}</label>
             <select
               id="movieId"
               v-model="form.movieId"
@@ -192,7 +208,7 @@ onMounted(loadAll)
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="screenId">Screen</label>
+            <label class="text-sm text-copy-secondary" for="screenId">{{ t('common.screen') }}</label>
             <select
               id="screenId"
               v-model="form.screenId"
@@ -205,38 +221,38 @@ onMounted(loadAll)
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="startsAt">Starts at</label>
+            <label class="text-sm text-copy-secondary" for="startsAt">{{ t('admin.showtimes.startsAt') }}</label>
             <Input id="startsAt" v-model="form.startsAtLocal" type="datetime-local" required />
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="showtimeStatus">Status</label>
+            <label class="text-sm text-copy-secondary" for="showtimeStatus">{{ t('common.status') }}</label>
             <select
               id="showtimeStatus"
               v-model="form.status"
               class="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-copy-primary"
             >
-              <option value="OPEN">OPEN</option>
-              <option value="CANCELLED">CANCELLED</option>
+              <option value="OPEN">{{ t('admin.showtimes.status.OPEN') }}</option>
+              <option value="CANCELLED">{{ t('admin.showtimes.status.CANCELLED') }}</option>
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="standard">Standard (cents)</label>
+            <label class="text-sm text-copy-secondary" for="standard">{{ t('admin.showtimes.standardCents') }}</label>
             <Input id="standard" :model-value="String(form.standard)" @update:model-value="form.standard = Number($event) || 0" type="number" min="0" required />
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="vip">VIP (cents)</label>
+            <label class="text-sm text-copy-secondary" for="vip">{{ t('admin.showtimes.vipCents') }}</label>
             <Input id="vip" :model-value="String(form.vip)" @update:model-value="form.vip = Number($event) || 0" type="number" min="0" required />
           </div>
           <div class="space-y-2 md:col-span-2">
-            <label class="text-sm text-copy-secondary" for="wheelchair">Wheelchair (cents)</label>
+            <label class="text-sm text-copy-secondary" for="wheelchair">{{ t('admin.showtimes.wheelchairCents') }}</label>
             <Input id="wheelchair" :model-value="String(form.wheelchair)" @update:model-value="form.wheelchair = Number($event) || 0" type="number" min="0" required />
           </div>
           <div class="flex gap-2 md:col-span-2">
             <Button type="submit" :disabled="movies.length === 0 || screens.length === 0">
-              {{ editingId ? 'Update' : 'Create' }}
+              {{ editingId ? t('common.update') : t('common.create') }}
             </Button>
             <Button v-if="editingId" type="button" variant="secondary" @click="resetForm">
-              Cancel
+              {{ t('common.cancel') }}
             </Button>
           </div>
         </form>
@@ -248,13 +264,13 @@ onMounted(loadAll)
     <Card>
       <CardHeader>
         <div class="flex flex-wrap items-end gap-3">
-          <CardTitle>All showtimes</CardTitle>
+          <CardTitle>{{ t('admin.showtimes.allTitle') }}</CardTitle>
           <select
             v-model="filter.cinemaId"
             class="rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-copy-primary"
             @change="loadShowtimes"
           >
-            <option value="">All cinemas</option>
+            <option value="">{{ t('common.allCinemas') }}</option>
             <option v-for="cinema in cinemas" :key="cinema.id" :value="cinema.id">
               {{ cinema.name }}
             </option>
@@ -264,7 +280,7 @@ onMounted(loadAll)
             class="rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-copy-primary"
             @change="loadShowtimes"
           >
-            <option value="">All movies</option>
+            <option value="">{{ t('common.allMovies') }}</option>
             <option v-for="movie in movies" :key="movie.id" :value="movie.id">
               {{ movie.title }}
             </option>
@@ -272,16 +288,16 @@ onMounted(loadAll)
         </div>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">Loading…</p>
+        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
               <tr>
-                <th class="pb-3 pr-4 font-medium">Movie</th>
-                <th class="pb-3 pr-4 font-medium">Screen</th>
-                <th class="pb-3 pr-4 font-medium">Starts</th>
-                <th class="pb-3 pr-4 font-medium">Status</th>
-                <th class="pb-3 font-medium">Actions</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.movie') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.screen') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.showtimes.startsAt') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.status') }}</th>
+                <th class="pb-3 font-medium">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -293,19 +309,21 @@ onMounted(loadAll)
                 <td class="py-3 pr-4 text-copy-primary">{{ movieTitle(showtime.movieId) }}</td>
                 <td class="py-3 pr-4 text-copy-secondary">{{ screenName(showtime.screenId) }}</td>
                 <td class="py-3 pr-4 text-copy-secondary">
-                  {{ new Date(showtime.startsAt).toLocaleString() }}
+                  {{ formatDateTime(showtime.startsAt) }}
                 </td>
-                <td class="py-3 pr-4 text-copy-secondary">{{ showtime.status }}</td>
+                <td class="py-3 pr-4 text-copy-secondary">
+                  {{ t(`admin.showtimes.status.${showtime.status}`) }}
+                </td>
                 <td class="py-3">
                   <div class="flex gap-2">
-                    <Button variant="ghost" @click="startEdit(showtime)">Edit</Button>
-                    <Button variant="destructive" @click="onDelete(showtime.id)">Delete</Button>
+                    <Button variant="ghost" @click="startEdit(showtime)">{{ t('common.edit') }}</Button>
+                    <Button variant="destructive" @click="onDelete(showtime.id)">{{ t('common.delete') }}</Button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-          <p v-if="!showtimes.length" class="text-sm text-copy-muted">No showtimes yet.</p>
+          <p v-if="!showtimes.length" class="text-sm text-copy-muted">{{ t('admin.showtimes.empty') }}</p>
         </div>
       </CardContent>
     </Card>

@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import type { Cinema } from '@/types/catalog'
+
+const { t } = useI18n()
 
 const cinemas = ref<Cinema[]>([])
 const loading = ref(true)
@@ -28,7 +32,10 @@ async function loadCinemas() {
     const response = await api.get<{ cinemas: Cinema[] }>('/admin/cinemas')
     cinemas.value = response.cinemas ?? []
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load cinemas'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.cinemas.loadFailed')
   } finally {
     loading.value = false
   }
@@ -54,18 +61,24 @@ async function onSubmit() {
     resetForm()
     await loadCinemas()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Save failed'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.cinemas.saveFailed')
   }
 }
 
 async function onDelete(id: string) {
-  if (!confirm('Delete this cinema?')) return
+  if (!confirm(t('admin.cinemas.confirmDelete'))) return
   try {
     await api.delete(`/admin/cinemas/${id}`)
     if (editingId.value === id) resetForm()
     await loadCinemas()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Delete failed'
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.cinemas.deleteFailed')
   }
 }
 
@@ -75,32 +88,32 @@ onMounted(loadCinemas)
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-copy-primary">Cinemas</h1>
-      <p class="mt-1 text-sm text-copy-secondary">Manage venues and their timezones.</p>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('admin.cinemas.title') }}</h1>
+      <p class="mt-1 text-sm text-copy-secondary">{{ t('admin.cinemas.subtitle') }}</p>
     </div>
 
     <Card>
       <CardHeader>
-        <CardTitle>{{ editingId ? 'Edit cinema' : 'Add cinema' }}</CardTitle>
+        <CardTitle>{{ editingId ? t('admin.cinemas.editTitle') : t('admin.cinemas.addTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <form class="grid gap-4 md:grid-cols-2" @submit.prevent="onSubmit">
           <div class="space-y-2 md:col-span-2">
-            <label class="text-sm text-copy-secondary" for="name">Name</label>
+            <label class="text-sm text-copy-secondary" for="name">{{ t('common.name') }}</label>
             <Input id="name" v-model="form.name" required />
           </div>
           <div class="space-y-2 md:col-span-2">
-            <label class="text-sm text-copy-secondary" for="address">Address</label>
+            <label class="text-sm text-copy-secondary" for="address">{{ t('common.address') }}</label>
             <Input id="address" v-model="form.address" />
           </div>
           <div class="space-y-2 md:col-span-2">
-            <label class="text-sm text-copy-secondary" for="timezone">Timezone (IANA)</label>
-            <Input id="timezone" v-model="form.timezone" placeholder="Asia/Bangkok" required />
+            <label class="text-sm text-copy-secondary" for="timezone">{{ t('admin.cinemas.timezone') }}</label>
+            <Input id="timezone" v-model="form.timezone" :placeholder="t('admin.cinemas.timezonePlaceholder')" required />
           </div>
           <div class="flex gap-2 md:col-span-2">
-            <Button type="submit">{{ editingId ? 'Update' : 'Create' }}</Button>
+            <Button type="submit">{{ editingId ? t('common.update') : t('common.create') }}</Button>
             <Button v-if="editingId" type="button" variant="secondary" @click="resetForm">
-              Cancel
+              {{ t('common.cancel') }}
             </Button>
           </div>
         </form>
@@ -111,18 +124,18 @@ onMounted(loadCinemas)
 
     <Card>
       <CardHeader>
-        <CardTitle>All cinemas</CardTitle>
+        <CardTitle>{{ t('admin.cinemas.allTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">Loading…</p>
+        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
               <tr>
-                <th class="pb-3 pr-4 font-medium">Name</th>
-                <th class="pb-3 pr-4 font-medium">Timezone</th>
-                <th class="pb-3 pr-4 font-medium">Address</th>
-                <th class="pb-3 font-medium">Actions</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.name') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.cinemas.timezone') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('common.address') }}</th>
+                <th class="pb-3 font-medium">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -136,14 +149,14 @@ onMounted(loadCinemas)
                 <td class="py-3 pr-4 text-copy-secondary">{{ cinema.address }}</td>
                 <td class="py-3">
                   <div class="flex gap-2">
-                    <Button variant="ghost" @click="startEdit(cinema)">Edit</Button>
-                    <Button variant="destructive" @click="onDelete(cinema.id)">Delete</Button>
+                    <Button variant="ghost" @click="startEdit(cinema)">{{ t('common.edit') }}</Button>
+                    <Button variant="destructive" @click="onDelete(cinema.id)">{{ t('common.delete') }}</Button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-          <p v-if="!cinemas.length" class="text-sm text-copy-muted">No cinemas yet.</p>
+          <p v-if="!cinemas.length" class="text-sm text-copy-muted">{{ t('admin.cinemas.empty') }}</p>
         </div>
       </CardContent>
     </Card>

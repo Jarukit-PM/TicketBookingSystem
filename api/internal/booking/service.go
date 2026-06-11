@@ -91,7 +91,8 @@ type confirmCtx struct {
 }
 
 // Confirm books all held seats for one showtime as a single CONFIRMED booking.
-func (s *Service) Confirm(ctx context.Context, userID, showtimeID, idempotencyKey string) (*Booking, error) {
+func (s *Service) Confirm(ctx context.Context, userID, showtimeID, idempotencyKey, locale string) (*Booking, error) {
+	locale = ParseLocale(locale)
 	if idempotencyKey == "" {
 		return nil, ErrIdempotencyRequired
 	}
@@ -162,7 +163,7 @@ func (s *Service) Confirm(ctx context.Context, userID, showtimeID, idempotencyKe
 	}
 
 	confirmedAt := s.now().UTC()
-	booking, err := s.insertBookingWithRetry(ctx, userOID, showtimeOID, seatIDs, total, confirmedAt)
+	booking, err := s.insertBookingWithRetry(ctx, userOID, showtimeOID, seatIDs, total, locale, confirmedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -183,6 +184,7 @@ func (s *Service) insertBookingWithRetry(
 	userID, showtimeID primitive.ObjectID,
 	seatIDs []string,
 	total int64,
+	locale string,
 	confirmedAt time.Time,
 ) (*Booking, error) {
 	const maxAttempts = 5
@@ -203,6 +205,7 @@ func (s *Service) insertBookingWithRetry(
 			BookingRef:  ref,
 			TicketToken: token,
 			Status:      StatusConfirmed,
+			Locale:      locale,
 			ConfirmedAt: confirmedAt,
 		}
 		if err := s.bookings.Insert(ctx, b); err != nil {

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
+import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import { useAuthStore } from '@/stores/auth'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -29,9 +32,9 @@ async function onSubmit() {
     await router.replace(redirectTarget.value)
   } catch (error) {
     if (error instanceof ApiError) {
-      errorMessage.value = error.message
+      errorMessage.value = translateApiError(error.code, error.message)
     } else {
-      errorMessage.value = 'Unable to create account. Please try again.'
+      errorMessage.value = t('auth.register.error')
     }
   } finally {
     submitting.value = false
@@ -47,43 +50,51 @@ async function onSubmit() {
           to="/"
           class="bg-gradient-brand bg-clip-text text-2xl font-semibold tracking-tight text-transparent"
         >
-          Cinema Tickets
+          {{ t('common.appName') }}
         </RouterLink>
-        <p class="mt-2 text-sm text-copy-secondary">Create an account to save your bookings.</p>
+        <p class="mt-2 text-sm text-copy-secondary">{{ t('auth.register.subtitle') }}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Create account</CardTitle>
+          <CardTitle>{{ t('auth.register.title') }}</CardTitle>
         </CardHeader>
         <CardContent>
           <form class="space-y-4" @submit.prevent="onSubmit">
             <div class="space-y-2">
-              <label class="text-sm text-copy-secondary" for="name">Name</label>
-              <Input id="name" v-model="name" autocomplete="name" placeholder="Your name" required />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm text-copy-secondary" for="email">Email</label>
+              <label class="text-sm text-copy-secondary" for="name">{{ t('auth.register.name') }}</label>
               <Input
-                id="email"
-                v-model="email"
-                type="email"
-                autocomplete="email"
-                placeholder="you@example.com"
+                id="name"
+                v-model="name"
+                autocomplete="name"
+                :placeholder="t('auth.register.namePlaceholder')"
                 required
               />
             </div>
 
             <div class="space-y-2">
-              <label class="text-sm text-copy-secondary" for="password">Password</label>
+              <label class="text-sm text-copy-secondary" for="email">{{ t('auth.register.email') }}</label>
+              <Input
+                id="email"
+                v-model="email"
+                type="email"
+                autocomplete="email"
+                :placeholder="t('auth.register.emailPlaceholder')"
+                required
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm text-copy-secondary" for="password">
+                {{ t('auth.register.password') }}
+              </label>
               <Input
                 id="password"
                 v-model="password"
                 type="password"
                 autocomplete="new-password"
                 minlength="8"
-                placeholder="At least 8 characters"
+                :placeholder="t('auth.register.passwordPlaceholder')"
                 required
               />
             </div>
@@ -93,17 +104,17 @@ async function onSubmit() {
             </p>
 
             <Button type="submit" class="w-full" :disabled="submitting || auth.loading">
-              {{ submitting ? 'Creating account…' : 'Create account' }}
+              {{ submitting ? t('auth.register.submitting') : t('auth.register.submit') }}
             </Button>
           </form>
 
           <p class="mt-6 text-center text-sm text-copy-secondary">
-            Already have an account?
+            {{ t('auth.register.hasAccount') }}
             <RouterLink
               class="text-brand hover:underline"
               :to="{ path: '/login', query: route.query }"
             >
-              Sign in
+              {{ t('auth.register.signIn') }}
             </RouterLink>
           </p>
         </CardContent>

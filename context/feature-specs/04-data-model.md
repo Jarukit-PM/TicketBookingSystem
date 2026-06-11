@@ -78,6 +78,7 @@ type Booking struct {
     BookingRef   string             `bson:"bookingRef"`   // TBS-XXXXXX
     TicketToken  string             `bson:"ticketToken"`  // opaque, not equal to bookingRef
     Status       string             `bson:"status"`       // CONFIRMED only in MVP
+    Locale       string             `bson:"locale"`       // "en" | "th" — added spec 11 (i18n)
     ConfirmedAt  time.Time          `bson:"confirmedAt"`
 }
 ```

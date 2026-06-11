@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { cn } from '@/lib/cn'
 import type { Seat, SeatStatus } from '@/types/seats'
 
@@ -14,12 +15,29 @@ const emit = defineEmits<{
   select: [seatId: string]
 }>()
 
+const { t } = useI18n()
+
 const displayStatus = computed<SeatStatus | 'SELECTED'>(() => {
   if (props.selfHeld || props.pending) {
     return 'SELECTED'
   }
   return props.seat.status
 })
+
+const statusLabel = computed(() => {
+  const keyMap: Record<SeatStatus | 'SELECTED', string> = {
+    AVAILABLE: 'seatMap.status.available',
+    HELD: 'seatMap.status.held',
+    SOLD: 'seatMap.status.sold',
+    BLOCKED: 'seatMap.status.blocked',
+    SELECTED: 'seatMap.status.selected',
+  }
+  return t(keyMap[displayStatus.value])
+})
+
+const ariaLabel = computed(() =>
+  t('seatMap.seatAria', { seatId: props.seat.seatId, status: statusLabel.value }),
+)
 
 const statusClasses: Record<SeatStatus | 'SELECTED', string> = {
   AVAILABLE:
@@ -73,7 +91,7 @@ function onKeydown(event: KeyboardEvent) {
     type="button"
     :class="classes"
     :disabled="!isClickable"
-    :aria-label="`${seat.seatId}, ${displayStatus.toLowerCase()}`"
+    :aria-label="ariaLabel"
     :aria-pressed="selfHeld"
     @click="onClick"
     @keydown="onKeydown"

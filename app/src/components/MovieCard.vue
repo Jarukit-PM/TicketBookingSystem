@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Button, Card, CardContent } from '@/components/ui'
 import { formatDuration } from '@/lib/format'
@@ -10,11 +11,18 @@ const props = defineProps<{
   tab: 'now_showing' | 'coming_soon'
 }>()
 
+const { t } = useI18n()
 const router = useRouter()
 
 const posterStyle = computed(() => ({
   backgroundImage: props.movie.posterUrl ? `url(${props.movie.posterUrl})` : undefined,
 }))
+
+const posterAria = computed(() => t('catalog.posterAria', { title: props.movie.title }))
+
+const actionLabel = computed(() =>
+  props.tab === 'coming_soon' ? t('catalog.viewDetails') : t('catalog.viewShowtimes'),
+)
 
 function openMovie(): void {
   router.push({ name: 'movie-detail', params: { id: props.movie.id } })
@@ -27,7 +35,7 @@ function openMovie(): void {
       class="aspect-[2/3] w-full rounded-t-xl bg-subtle bg-cover bg-center ring-1 ring-white/10"
       :style="posterStyle"
       role="img"
-      :aria-label="`${movie.title} poster`"
+      :aria-label="posterAria"
     />
     <CardContent class="flex flex-col gap-3 p-4">
       <div>
@@ -37,7 +45,7 @@ function openMovie(): void {
         </p>
       </div>
       <Button variant="primary" class="w-full" @click="openMovie">
-        {{ tab === 'coming_soon' ? 'View details' : 'View showtimes' }}
+        {{ actionLabel }}
       </Button>
     </CardContent>
   </Card>

@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -24,7 +25,8 @@ func SearchAdminBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 			UserID:     c.Query("userId"),
 			ShowtimeID: c.Query("showtimeId"),
 		}
-		bookings, err := deps.Service.Search(c.Request.Context(), q)
+		page, limit := parseBookingPagination(c)
+		result, err := deps.Service.Search(c.Request.Context(), q, page, limit)
 		if err != nil {
 			if errors.Is(err, admin.ErrInvalidQuery) {
 				httputil.Error(c, http.StatusBadRequest, "INVALID_QUERY", "invalid search filter")
@@ -33,8 +35,29 @@ func SearchAdminBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"bookings": httputil.JSONSlice(bookings)})
+		httputil.OK(c, gin.H{
+			"bookings": httputil.JSONSlice(result.Bookings),
+			"total":    result.Total,
+			"page":     result.Page,
+			"limit":    result.Limit,
+		})
 	}
+}
+
+func parseBookingPagination(c *gin.Context) (page int, limit int) {
+	page = 1
+	limit = 0
+	if raw := c.Query("page"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
+			page = v
+		}
+	}
+	if raw := c.Query("limit"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
+			limit = v
+		}
+	}
+	return page, limit
 }
 
 // ListAdminUserBookings handles GET /api/admin/users/:userId/bookings.

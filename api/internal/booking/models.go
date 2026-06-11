@@ -20,5 +20,6 @@ type Booking struct {
 	BookingRef  string             `bson:"bookingRef" json:"bookingRef"`
 	TicketToken string             `bson:"ticketToken" json:"-"`
 	Status      string             `bson:"status" json:"status"`
+	Locale      string             `bson:"locale" json:"locale"` // en | th — UI language at confirm
 	ConfirmedAt time.Time          `bson:"confirmedAt" json:"confirmedAt"`
 }

@@ -172,6 +172,37 @@ func (m *memBookings) ListConfirmedByShowtime(_ context.Context, showtimeID prim
 	return out, nil
 }
 
+func (m *memBookings) CountConfirmed(_ context.Context) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var count int64
+	for _, b := range m.bookings {
+		if b.Status == booking.StatusConfirmed {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *memBookings) ListConfirmedPage(_ context.Context, skip, limit int) ([]booking.Booking, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	confirmed := make([]booking.Booking, 0)
+	for _, b := range m.bookings {
+		if b.Status == booking.StatusConfirmed {
+			confirmed = append(confirmed, b)
+		}
+	}
+	if skip >= len(confirmed) {
+		return []booking.Booking{}, nil
+	}
+	end := skip + limit
+	if end > len(confirmed) {
+		end = len(confirmed)
+	}
+	return confirmed[skip:end], nil
+}
+
 type confirmEnv struct {
 	mr       *miniredis.Miniredis
 	rdb      *redis.Client
@@ -302,12 +333,12 @@ func TestConfirm_IdempotencyHitReturnsSameBooking(t *testing.T) {
 	env.holdSeats(t, ctx, env.userA, "A-1", "A-2")
 
 	key := "idem-key-1"
-	first, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key)
+	first, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key, booking.LocaleEN)
 	if err != nil {
 		t.Fatalf("first confirm: %v", err)
 	}
 
-	second, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key)
+	second, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key, booking.LocaleEN)
 	if err != nil {
 		t.Fatalf("second confirm: %v", err)
 	}
@@ -324,7 +355,7 @@ func TestConfirm_NoHoldsReturnsConflict(t *testing.T) {
 	env := newConfirmEnv(t, time.Date(2026, 6, 11, 18, 0, 0, 0, time.UTC), nil)
 	defer env.close(t)
 
-	_, err := env.bookSvc.Confirm(context.Background(), env.userA, env.showID, "fresh-key")
+	_, err := env.bookSvc.Confirm(context.Background(), env.userA, env.showID, "fresh-key", booking.LocaleEN)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -344,7 +375,7 @@ func TestConfirm_ExpiredHoldsOnRetryReturnsConflict(t *testing.T) {
 	key := "retry-key"
 	env.mr.FastForward(6 * time.Minute)
 
-	_, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key)
+	_, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key, booking.LocaleEN)
 	if err == nil {
 		t.Fatal("expected error on confirm without active holds")
 	}
@@ -362,14 +393,14 @@ func TestConfirm_IdempotencyReturnsCachedAfterHoldsExpire(t *testing.T) {
 	env.holdSeats(t, ctx, env.userA, "A-1")
 
 	key := "cached-key"
-	first, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key)
+	first, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key, booking.LocaleEN)
 	if err != nil {
 		t.Fatalf("confirm: %v", err)
 	}
 
 	env.mr.FastForward(6 * time.Minute)
 
-	second, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key)
+	second, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, key, booking.LocaleEN)
 	if err != nil {
 		t.Fatalf("idempotent retry: %v", err)
 	}
@@ -385,7 +416,7 @@ func TestConfirm_TotalPriceAndBookingRef(t *testing.T) {
 	ctx := context.Background()
 	env.holdSeats(t, ctx, env.userA, "A-1", "A-2")
 
-	got, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "price-key")
+	got, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "price-key", booking.LocaleEN)
 	if err != nil {
 		t.Fatalf("confirm: %v", err)
 	}
@@ -411,12 +442,12 @@ func TestConfirm_MultipleBookingsSameUserShowtime(t *testing.T) {
 
 	ctx := context.Background()
 	env.holdSeats(t, ctx, env.userA, "A-1")
-	if _, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "booking-1"); err != nil {
+	if _, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "booking-1", booking.LocaleEN); err != nil {
 		t.Fatalf("first confirm: %v", err)
 	}
 
 	env.holdSeats(t, ctx, env.userA, "A-2")
-	second, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "booking-2")
+	second, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "booking-2", booking.LocaleEN)
 	if err != nil {
 		t.Fatalf("second confirm: %v", err)
 	}
@@ -442,7 +473,7 @@ func TestConfirm_ConcurrentDuplicateConfirmOnlyOneBooking(t *testing.T) {
 	for i := range 2 {
 		go func(idx int) {
 			defer wg.Done()
-			_, errs[idx] = env.bookSvc.Confirm(ctx, env.userA, env.showID, fmt.Sprintf("race-key-%d", idx))
+			_, errs[idx] = env.bookSvc.Confirm(ctx, env.userA, env.showID, fmt.Sprintf("race-key-%d", idx), booking.LocaleEN)
 		}(i)
 	}
 	wg.Wait()
@@ -472,7 +503,7 @@ func TestConfirm_SecondUserWithoutHoldGetsConflict(t *testing.T) {
 	ctx := context.Background()
 	env.holdSeats(t, ctx, env.userA, "A-1")
 
-	_, err := env.bookSvc.Confirm(ctx, env.userB, env.showID, "user-b-key")
+	_, err := env.bookSvc.Confirm(ctx, env.userB, env.showID, "user-b-key", booking.LocaleEN)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -488,7 +519,7 @@ func TestConfirm_ClearsHoldsOnSuccess(t *testing.T) {
 	ctx := context.Background()
 	env.holdSeats(t, ctx, env.userA, "A-1", "A-2")
 
-	if _, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "clear-key"); err != nil {
+	if _, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "clear-key", booking.LocaleEN); err != nil {
 		t.Fatalf("confirm: %v", err)
 	}
 
@@ -513,7 +544,7 @@ func TestConfirm_RejectsAlreadySoldSeat(t *testing.T) {
 	ctx := context.Background()
 	env.forceHold(t, ctx, env.userA, "A-1")
 
-	_, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "sold-key")
+	_, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "sold-key", booking.LocaleEN)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -539,5 +570,21 @@ func TestConfirm_HoldPayloadStillOwned(t *testing.T) {
 	}
 	if rec.UserID != env.userA {
 		t.Fatalf("hold owner = %q, want %q", rec.UserID, env.userA)
+	}
+}
+
+func TestConfirm_PersistsLocale(t *testing.T) {
+	env := newConfirmEnv(t, time.Date(2026, 6, 11, 18, 0, 0, 0, time.UTC), nil)
+	defer env.close(t)
+
+	ctx := context.Background()
+	env.holdSeats(t, ctx, env.userA, "A-1")
+
+	got, err := env.bookSvc.Confirm(ctx, env.userA, env.showID, "locale-key", booking.LocaleTH)
+	if err != nil {
+		t.Fatalf("confirm: %v", err)
+	}
+	if got.Locale != booking.LocaleTH {
+		t.Fatalf("locale = %q, want %q", got.Locale, booking.LocaleTH)
 	}
 }

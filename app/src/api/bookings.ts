@@ -4,12 +4,14 @@ import type { BookingListItem, ConfirmedBooking } from '@/types/bookings'
 export function confirmBooking(
   showtimeId: string,
   idempotencyKey: string,
+  locale: string,
 ): Promise<ConfirmedBooking> {
   return apiRequest<ConfirmedBooking>('/bookings/confirm', {
     method: 'POST',
     headers: {
       'Idempotency-Key': idempotencyKey,
       'Content-Type': 'application/json',
+      'X-Locale': locale,
     },
     body: JSON.stringify({ showtimeId }),
   })

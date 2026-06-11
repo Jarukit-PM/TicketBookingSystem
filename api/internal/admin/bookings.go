@@ -17,7 +17,18 @@ import (
 // ErrInvalidQuery is returned when a search filter value is malformed.
 var ErrInvalidQuery = errors.New("invalid search query")
 
-const adminBookingSearchLimit = 100
+const (
+	adminBookingSearchLimit  = 100
+	defaultBookingPageLimit  = 20
+)
+
+// BookingSearchResult is a paginated admin booking search response.
+type BookingSearchResult struct {
+	Bookings []BookingSummary `json:"bookings"`
+	Total    int64            `json:"total"`
+	Page     int              `json:"page"`
+	Limit    int              `json:"limit"`
+}
 
 // BookingSearchQuery holds optional admin booking search filters.
 // Priority when multiple are set: bookingRef > userId > email > showtimeId.
@@ -38,6 +49,7 @@ type BookingSummary struct {
 	MovieTitle  string    `json:"movieTitle"`
 	Seats       []string  `json:"seats"`
 	Total       int64     `json:"total"`
+	Locale      string    `json:"locale,omitempty"`
 	ConfirmedAt time.Time `json:"confirmedAt"`
 }
 
@@ -49,13 +61,28 @@ type BookingsService struct {
 	Users     user.Repository
 }
 
-// Search returns confirmed bookings matching the first non-empty filter.
-func (s *BookingsService) Search(ctx context.Context, q BookingSearchQuery) ([]BookingSummary, error) {
-	bookings, err := s.resolveSearch(ctx, q)
+// Search returns confirmed bookings matching the first non-empty filter, or all
+// confirmed bookings when no filter is set. Results are paginated newest first.
+func (s *BookingsService) Search(ctx context.Context, q BookingSearchQuery, page, limit int) (*BookingSearchResult, error) {
+	limit = clampBookingLimit(limit)
+	if page <= 0 {
+		page = 1
+	}
+
+	bookings, total, err := s.resolveSearch(ctx, q, page, limit)
 	if err != nil {
 		return nil, err
 	}
-	return s.summarizeBookings(ctx, bookings)
+	summaries, err := s.summarizeBookings(ctx, bookings)
+	if err != nil {
+		return nil, err
+	}
+	return &BookingSearchResult{
+		Bookings: summaries,
+		Total:    total,
+		Page:     page,
+		Limit:    limit,
+	}, nil
 }
 
 // ListUserBookings returns confirmed booking history for a user.
@@ -67,7 +94,11 @@ func (s *BookingsService) ListUserBookings(ctx context.Context, userID primitive
 	return s.summarizeBookings(ctx, bookings)
 }
 
-func (s *BookingsService) resolveSearch(ctx context.Context, q BookingSearchQuery) ([]booking.Booking, error) {
+func (s *BookingsService) resolveSearch(
+	ctx context.Context,
+	q BookingSearchQuery,
+	page, limit int,
+) ([]booking.Booking, int64, error) {
 	ref := strings.TrimSpace(q.BookingRef)
 	userID := strings.TrimSpace(q.UserID)
 	email := strings.TrimSpace(strings.ToLower(q.Email))
@@ -77,55 +108,83 @@ func (s *BookingsService) resolveSearch(ctx context.Context, q BookingSearchQuer
 	case ref != "":
 		b, err := s.Bookings.FindByBookingRef(ctx, ref)
 		if err != nil {
-			return nil, fmt.Errorf("find booking by ref: %w", err)
+			return nil, 0, fmt.Errorf("find booking by ref: %w", err)
 		}
 		if b == nil || b.Status != booking.StatusConfirmed {
-			return []booking.Booking{}, nil
+			return []booking.Booking{}, 0, nil
 		}
-		return []booking.Booking{*b}, nil
+		return []booking.Booking{*b}, 1, nil
 	case userID != "":
 		oid, err := primitive.ObjectIDFromHex(userID)
 		if err != nil {
-			return nil, ErrInvalidQuery
+			return nil, 0, ErrInvalidQuery
 		}
 		bookings, err := s.Bookings.ListByUser(ctx, oid)
 		if err != nil {
-			return nil, fmt.Errorf("list bookings by user: %w", err)
+			return nil, 0, fmt.Errorf("list bookings by user: %w", err)
 		}
-		return limitBookings(bookings, adminBookingSearchLimit), nil
+		return paginateBookings(bookings, page, limit)
 	case email != "":
 		u, err := s.Users.FindByEmail(ctx, email)
 		if err != nil {
-			return nil, fmt.Errorf("find user by email: %w", err)
+			return nil, 0, fmt.Errorf("find user by email: %w", err)
 		}
 		if u == nil {
-			return []booking.Booking{}, nil
+			return []booking.Booking{}, 0, nil
 		}
 		bookings, err := s.Bookings.ListByUser(ctx, u.ID)
 		if err != nil {
-			return nil, fmt.Errorf("list bookings by email: %w", err)
+			return nil, 0, fmt.Errorf("list bookings by email: %w", err)
 		}
-		return limitBookings(bookings, adminBookingSearchLimit), nil
+		return paginateBookings(bookings, page, limit)
 	case showtimeID != "":
 		oid, err := primitive.ObjectIDFromHex(showtimeID)
 		if err != nil {
-			return nil, ErrInvalidQuery
+			return nil, 0, ErrInvalidQuery
 		}
 		bookings, err := s.Bookings.ListConfirmedByShowtime(ctx, oid)
 		if err != nil {
-			return nil, fmt.Errorf("list bookings by showtime: %w", err)
+			return nil, 0, fmt.Errorf("list bookings by showtime: %w", err)
 		}
-		return limitBookings(bookings, adminBookingSearchLimit), nil
+		return paginateBookings(bookings, page, limit)
 	default:
-		return []booking.Booking{}, nil
+		total, err := s.Bookings.CountConfirmed(ctx)
+		if err != nil {
+			return nil, 0, fmt.Errorf("count confirmed bookings: %w", err)
+		}
+		bookings, err := s.Bookings.ListConfirmedPage(ctx, SkipFor(page, limit), limit)
+		if err != nil {
+			return nil, 0, fmt.Errorf("list confirmed bookings: %w", err)
+		}
+		return bookings, total, nil
 	}
 }
 
-func limitBookings(bookings []booking.Booking, limit int) []booking.Booking {
-	if len(bookings) <= limit {
-		return bookings
+func paginateBookings(bookings []booking.Booking, page, limit int) ([]booking.Booking, int64, error) {
+	total := int64(len(bookings))
+	if total > adminBookingSearchLimit {
+		bookings = bookings[:adminBookingSearchLimit]
+		total = adminBookingSearchLimit
 	}
-	return bookings[:limit]
+	start := SkipFor(page, limit)
+	if start >= len(bookings) {
+		return []booking.Booking{}, total, nil
+	}
+	end := start + limit
+	if end > len(bookings) {
+		end = len(bookings)
+	}
+	return bookings[start:end], total, nil
+}
+
+func clampBookingLimit(limit int) int {
+	if limit <= 0 {
+		return defaultBookingPageLimit
+	}
+	if limit > maxPageLimit {
+		return maxPageLimit
+	}
+	return limit
 }
 
 func (s *BookingsService) summarizeBookings(ctx context.Context, bookings []booking.Booking) ([]BookingSummary, error) {
@@ -164,6 +223,7 @@ func (s *BookingsService) summarizeBookings(ctx context.Context, bookings []book
 			MovieTitle:  title,
 			Seats:       seats,
 			Total:       b.Total,
+			Locale:      booking.ParseLocale(b.Locale),
 			ConfirmedAt: b.ConfirmedAt,
 		})
 	}

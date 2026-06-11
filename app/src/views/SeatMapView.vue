@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { addHolds, removeHolds } from '@/api/holds'
 import { fetchSeatMap } from '@/api/seats'
@@ -7,13 +8,16 @@ import HoldCountdown from '@/components/seat-map/HoldCountdown.vue'
 import SeatLegend from '@/components/seat-map/SeatLegend.vue'
 import SeatMapGrid from '@/components/seat-map/SeatMapGrid.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import { translateApiError } from '@/api/errors'
+import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useShowtimeSocket } from '@/composables/useShowtimeSocket'
-import { formatShowtime } from '@/lib/format'
 import { useAuthStore } from '@/stores/auth'
 import { useBookingSessionStore } from '@/stores/bookingSession'
 import { ApiError } from '@/api/client'
 import type { SeatMapSnapshot } from '@/types/seats'
 
+const { t } = useI18n()
+const { formatDateTime, formatTHB } = useLocaleFormat()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -55,8 +59,8 @@ async function loadSeatMap(): Promise<void> {
   error.value = null
   try {
     restSnapshot.value = await fetchSeatMap(showtimeId.value)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load seat map'
+  } catch {
+    error.value = t('seatMap.loadError')
     restSnapshot.value = null
   } finally {
     loading.value = false
@@ -108,9 +112,9 @@ async function toggleSeat(seatId: string): Promise<void> {
     }
   } catch (err) {
     if (err instanceof ApiError) {
-      actionError.value = err.message
+      actionError.value = translateApiError(err.code, err.message)
     } else {
-      actionError.value = 'Failed to update seat selection'
+      actionError.value = t('seatMap.actionError')
     }
     await loadSeatMap()
   } finally {
@@ -146,12 +150,12 @@ watch(
     <header
       class="sticky top-0 z-10 flex h-16 items-center border-b border-surface-border bg-base/80 px-4 backdrop-blur-md md:px-6"
     >
-      <Button variant="ghost" type="button" @click="goBack">Back</Button>
-      <span class="ml-4 text-sm text-copy-secondary">Select seats</span>
+      <Button variant="ghost" type="button" @click="goBack">{{ t('common.back') }}</Button>
+      <span class="ml-4 text-sm text-copy-secondary">{{ t('seatMap.selectSeats') }}</span>
     </header>
 
     <main class="mx-auto max-w-4xl px-4 py-8 md:px-6">
-      <p v-if="loading && !snapshot" class="text-copy-secondary">Loading seat map…</p>
+      <p v-if="loading && !snapshot" class="text-copy-secondary">{{ t('seatMap.loading') }}</p>
       <p v-else-if="error" class="text-state-error">{{ error }}</p>
 
       <template v-else-if="snapshot">
@@ -164,14 +168,14 @@ watch(
           <CardHeader>
             <CardTitle>{{ snapshot.screenName }}</CardTitle>
             <p class="text-sm text-copy-secondary">
-              {{ formatShowtime(snapshot.startsAt) }}
+              {{ formatDateTime(snapshot.startsAt) }}
             </p>
           </CardHeader>
           <CardContent class="space-y-6">
             <div
               class="rounded-lg border border-surface-border bg-elevated px-4 py-2 text-center text-xs uppercase tracking-widest text-copy-muted"
             >
-              Screen
+              {{ t('seatMap.screen') }}
             </div>
 
             <SeatMapGrid
@@ -192,13 +196,13 @@ watch(
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p class="text-sm text-copy-secondary">
-                {{ selectedCount }} seat{{ selectedCount === 1 ? '' : 's' }} selected
+                {{ t('seatMap.seatsSelected', selectedCount) }}
               </p>
               <p class="text-lg font-semibold text-brand">
-                {{ totalPrice.toLocaleString() }} THB
+                {{ formatTHB(totalPrice) }}
               </p>
             </div>
-            <Button type="button" @click="goCheckout">Continue to checkout</Button>
+            <Button type="button" @click="goCheckout">{{ t('seatMap.continueCheckout') }}</Button>
           </div>
         </div>
       </template>

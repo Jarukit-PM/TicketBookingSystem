@@ -1,11 +1,16 @@
 <script setup lang="ts">
-const items = [
-  { label: 'Available', class: 'bg-subtle border-surface-border' },
-  { label: 'Your seats', class: 'bg-accent-dim border-brand/60' },
-  { label: 'Held', class: 'bg-state-warning-dim border-state-warning' },
-  { label: 'Sold', class: 'bg-elevated border-surface-border-subtle' },
-  { label: 'Blocked', class: 'bg-state-error-dim border-state-error/50' },
-] as const
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
+const items = computed(() => [
+  { label: t('seatMap.legend.available'), class: 'bg-subtle border-surface-border' },
+  { label: t('seatMap.legend.yourSeats'), class: 'bg-accent-dim border-brand/60' },
+  { label: t('seatMap.legend.held'), class: 'bg-state-warning-dim border-state-warning' },
+  { label: t('seatMap.legend.sold'), class: 'bg-elevated border-surface-border-subtle' },
+  { label: t('seatMap.legend.blocked'), class: 'bg-state-error-dim border-state-error/50' },
+])
 </script>
 
 <template>

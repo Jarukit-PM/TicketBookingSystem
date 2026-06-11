@@ -54,7 +54,8 @@ func ConfirmBooking(deps BookingsDeps) gin.HandlerFunc {
 			return
 		}
 
-		result, err := deps.Bookings.Confirm(c.Request.Context(), user.ID.Hex(), req.ShowtimeID, idempotencyKey)
+		locale := booking.ParseLocale(c.GetHeader("X-Locale"))
+		result, err := deps.Bookings.Confirm(c.Request.Context(), user.ID.Hex(), req.ShowtimeID, idempotencyKey, locale)
 		if err != nil {
 			writeBookingError(c, deps.Audit, user.ID, req.ShowtimeID, err)
 			return
@@ -166,6 +167,7 @@ func toConfirmResponse(b *booking.Booking) gin.H {
 		"seats":       b.Seats,
 		"total":       b.Total,
 		"status":      b.Status,
+		"locale":      b.Locale,
 		"confirmedAt": b.ConfirmedAt,
 	}
 }

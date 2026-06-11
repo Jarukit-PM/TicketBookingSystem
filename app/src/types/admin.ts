@@ -27,6 +27,7 @@ export interface BookingSummary {
   movieTitle: string
   seats: string[]
   total: number
+  locale?: string
   confirmedAt: string
 }
 

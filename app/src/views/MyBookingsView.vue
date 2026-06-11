@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { fetchMyBookings } from '@/api/bookings'
 import BookingCard from '@/components/bookings/BookingCard.vue'
@@ -7,12 +8,17 @@ import { Button } from '@/components/ui'
 import type { BookingListItem } from '@/types/bookings'
 
 type Tab = 'upcoming' | 'history'
+
+const { t } = useI18n()
 const activeTab = ref<Tab>('upcoming')
 const bookings = ref<BookingListItem[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
+
 const emptyMessage = computed(() =>
-  activeTab.value === 'upcoming' ? 'No upcoming bookings yet.' : 'No past bookings yet.',
+  activeTab.value === 'upcoming'
+    ? t('booking.myBookings.emptyUpcoming')
+    : t('booking.myBookings.emptyHistory'),
 )
 
 async function loadBookings(): Promise<void> {
@@ -21,7 +27,7 @@ async function loadBookings(): Promise<void> {
   try {
     bookings.value = await fetchMyBookings(activeTab.value === 'upcoming')
   } catch {
-    error.value = 'Could not load your bookings. Please try again.'
+    error.value = t('booking.myBookings.loadError')
   } finally {
     loading.value = false
   }
@@ -39,7 +45,7 @@ onMounted(() => void loadBookings())
 <template>
   <div class="min-h-screen bg-base px-4 py-8 md:px-6">
     <div class="mx-auto max-w-3xl space-y-6">
-      <h1 class="text-2xl font-semibold text-copy-primary">My Bookings</h1>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('booking.myBookings.title') }}</h1>
       <div class="flex gap-2 rounded-lg border border-surface-border bg-surface p-1">
         <button
           type="button"
@@ -47,7 +53,7 @@ onMounted(() => void loadBookings())
           :class="activeTab === 'upcoming' ? 'bg-gradient-brand text-white' : 'text-copy-secondary'"
           @click="switchTab('upcoming')"
         >
-          Upcoming
+          {{ t('booking.myBookings.upcoming') }}
         </button>
         <button
           type="button"
@@ -55,10 +61,10 @@ onMounted(() => void loadBookings())
           :class="activeTab === 'history' ? 'bg-gradient-brand text-white' : 'text-copy-secondary'"
           @click="switchTab('history')"
         >
-          History
+          {{ t('booking.myBookings.history') }}
         </button>
       </div>
-      <p v-if="loading" class="text-sm text-copy-secondary">Loading bookings…</p>
+      <p v-if="loading" class="text-sm text-copy-secondary">{{ t('booking.myBookings.loading') }}</p>
       <p v-else-if="error" class="text-sm text-state-error">{{ error }}</p>
       <div
         v-else-if="bookings.length === 0"
@@ -66,7 +72,7 @@ onMounted(() => void loadBookings())
       >
         <p class="text-copy-secondary">{{ emptyMessage }}</p>
         <RouterLink to="/" class="mt-4 inline-block">
-          <Button variant="primary">Find a showtime</Button>
+          <Button variant="primary">{{ t('booking.myBookings.findShowtime') }}</Button>
         </RouterLink>
       </div>
       <ul v-else class="space-y-4">

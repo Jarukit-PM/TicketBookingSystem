@@ -82,11 +82,11 @@ Pill shape (`rounded-full px-3 py-1 text-xs font-medium`).
 
 | Role | Font | CSS Variable |
 | ---- | ---- | ------------ |
-| UI text | Inter or DM Sans | `--font-sans` |
+| UI text | Inter + **Noto Sans Thai** | `--font-sans` |
 | Display / hero | Same family, tighter tracking | `--font-display` |
 | Code / mono | JetBrains Mono or Roboto Mono | `--font-mono` |
 
-Load via Google Fonts or `@fontsource`. White/light grey text on black — never dark text on dark surfaces.
+**Bilingual stack:** `'Inter', 'Noto Sans Thai', system-ui, sans-serif` — Inter for Latin UI; Noto Sans Thai for Thai script (spec 11). Load both from Google Fonts in `index.html`. White/light grey text on black — never dark text on dark surfaces.
 
 ### Type scale
 
@@ -163,6 +163,8 @@ Card grid on `bg-base`. Poster: `aspect-[2/3]`, `rounded-lg`, ring. Card: `bg-su
 Filter chips: `bg-subtle` default; active chip `bg-accent-dim text-brand border border-brand/30`.
 
 ### Showtime picker
+
+Horizontal **date strip** above showtime cards: **7 days per page** with prev/next paging (not a long scroll of every date). Day chips show abbreviated weekday + day number; month/year label above. Selected chip uses `bg-gradient-brand`; unselected uses `border-brand/30` on `bg-surface`. Showtime cards for the selected day show **time only** (date is implied by the filter).
 
 Rows on `bg-surface` cards. Selected row: left border or ring in gradient orange. Time and price prominent; screen name secondary.
 

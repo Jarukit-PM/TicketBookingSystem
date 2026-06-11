@@ -33,6 +33,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Customer home catalog (2026-06-11):** `HomeView.vue` live cinema picker + Now Showing / Coming Soon tabs via `/api/movies`.
 - **Admin sign-out redirect (2026-06-11):** `auth.logout()` clears local session on API failure and navigates home from protected routes.
 - **Booking lifecycle audit logs (2026-06-12):** `audit_logs` records `booking_success`, `booking_timeout` (Redis hold TTL expiry listener), `seat_released` (explicit abandon), `booking_failed` (confirm 409s), `system_error` (unexpected hold/confirm/email-enqueue failures), plus existing admin catalog `create`/`update`/`delete`; Admin Logs view shows human-readable actions and meta details.
+- **Admin bookings pagination (2026-06-12):** `GET /api/admin/bookings` lists all confirmed bookings when no filter is set (`page`, `limit`, `total`); Admin Bookings view loads on mount with Previous/Next controls.
+- **Showtime date filter (2026-06-12):** `MovieDetailView` — horizontal date strip (`ShowtimeDateFilter`) groups showtimes by cinema-local calendar day; cards show time-only once a date is selected; EN/TH i18n + locale-aware labels.
+- **Feature spec 11 — i18n (2026-06-12):** `vue-i18n@10`, `en.json` / `th.json`, browser-detect + `LocaleSwitcher` (customer header + admin sidebar), `useLocaleFormat`, `translateApiError`; `bookings.locale` at confirm via `X-Locale`; EN/TH SendGrid templates; Noto Sans Thai + Inter fonts; admin bookings table locale column; Vitest + Go tests pass.
 
 ## In Progress
 
@@ -88,6 +91,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Showtime seat inventory (option A):** Derive sold seats from confirmed `bookings` only. No `showtimes.soldSeatIds[]`. **No cancellation in MVP** — sold seats never return to available, so inventory is append-only.
 - **Multi-cinema:** **In scope for MVP.** Multiple `cinemas` documents; customer browses/filters by cinema; admin manages venues, screens, and showtimes per cinema.
 - **Admin QR scan:** **Scan only → open that customer's booking history** in admin UI (`/admin/users/:userId/bookings`). No door check-in validation, showtime window gate, or pass/fail scan result screen.
+- **i18n (spec 11):** Browser-detect default locale (`th*` → Thai, else English); `locale` stored on `bookings` at confirm; Noto Sans Thai + Inter font stack.
 
 ## Architecture Decisions
 
@@ -104,6 +108,7 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-12:** Feature spec 11 implemented — full EN/TH SPA i18n, `bookings.locale`, localized confirmation email, font stack update.
 - **2026-06-11:** MVP merged to `main` at `e0c2d67` (PR #39); issues #11–#24 closed.
 - **2026-06-11:** Issue #2 CI merged to `main` — workflow + minimal `api/` module before full API scaffold.
 - **2026-06-11:** Issue #5 — MongoDB data model on branch `issue-5-data-model` (models, indexes, repos, seed, booking ref generator).

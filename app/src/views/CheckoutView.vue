@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { confirmBooking } from '@/api/bookings'
+import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
 import { fetchSeatMap } from '@/api/seats'
 import HoldCountdown from '@/components/seat-map/HoldCountdown.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
-import { formatShowtime } from '@/lib/format'
+import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useBookingSessionStore } from '@/stores/bookingSession'
 import type { SeatMapSnapshot } from '@/types/seats'
 
+const { t, locale } = useI18n()
+const { formatDateTime, formatTHB } = useLocaleFormat()
 const route = useRoute()
 const router = useRouter()
 const session = useBookingSessionStore()
@@ -41,8 +45,8 @@ async function loadSnapshot(): Promise<void> {
   error.value = null
   try {
     snapshot.value = await fetchSeatMap(showtimeId.value)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load checkout details'
+  } catch {
+    error.value = t('booking.checkout.loadError')
   } finally {
     loading.value = false
   }
@@ -62,7 +66,7 @@ async function handleConfirm(): Promise<void> {
   const idempotencyKey = session.ensureIdempotencyKey()
 
   try {
-    const booking = await confirmBooking(showtimeId.value, idempotencyKey)
+    const booking = await confirmBooking(showtimeId.value, idempotencyKey, locale.value)
     session.setConfirmedBooking(booking)
     await router.push({
       name: 'booking-confirmation',
@@ -73,9 +77,9 @@ async function handleConfirm(): Promise<void> {
       if (err.code === 'NO_ACTIVE_HOLDS' || err.code === 'SEAT_CONFLICT') {
         session.resetCheckoutAttempt()
       }
-      error.value = err.message
+      error.value = translateApiError(err.code, err.message)
     } else {
-      error.value = 'Failed to confirm booking'
+      error.value = t('booking.checkout.confirmError')
     }
   } finally {
     confirming.value = false
@@ -106,35 +110,37 @@ watch(
 
       <Card>
         <CardHeader>
-          <CardTitle>Checkout</CardTitle>
+          <CardTitle>{{ t('booking.checkout.title') }}</CardTitle>
           <p v-if="snapshot" class="text-sm text-copy-secondary">
-            {{ snapshot.screenName }} · {{ formatShowtime(snapshot.startsAt) }}
+            {{ snapshot.screenName }} · {{ formatDateTime(snapshot.startsAt) }}
           </p>
         </CardHeader>
         <CardContent class="space-y-4">
-          <p v-if="loading" class="text-sm text-copy-secondary">Loading order summary…</p>
+          <p v-if="loading" class="text-sm text-copy-secondary">{{ t('booking.checkout.loading') }}</p>
 
           <template v-else>
             <p v-if="session.holds.length" class="text-sm text-copy-primary">
-              Selected seats:
+              {{ t('booking.checkout.selectedSeats') }}
               <span class="font-medium">{{ session.holds.join(', ') }}</span>
             </p>
-            <p v-else class="text-sm text-copy-secondary">No seats selected.</p>
+            <p v-else class="text-sm text-copy-secondary">{{ t('booking.checkout.noSeats') }}</p>
 
             <p class="text-lg font-semibold text-brand">
-              {{ totalPrice.toLocaleString() }} THB
+              {{ formatTHB(totalPrice) }}
             </p>
 
             <p v-if="error" class="text-sm text-state-error">{{ error }}</p>
 
             <div class="flex flex-wrap gap-3">
-              <Button type="button" variant="ghost" @click="backToSeats">Back to seat map</Button>
+              <Button type="button" variant="ghost" @click="backToSeats">
+                {{ t('booking.checkout.backToSeatMap') }}
+              </Button>
               <Button
                 type="button"
                 :disabled="!session.holds.length || confirming"
                 @click="handleConfirm"
               >
-                {{ confirming ? 'Confirming…' : 'Confirm booking' }}
+                {{ confirming ? t('booking.checkout.confirming') : t('booking.checkout.confirm') }}
               </Button>
             </div>
           </template>

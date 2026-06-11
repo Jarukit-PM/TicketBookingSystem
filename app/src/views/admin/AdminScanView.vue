@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { resolveAdminTicket } from '@/api/admin'
+import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
 import QrScanner from '@/components/admin/QrScanner.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { parseTicketScanUrl } from '@/lib/parseTicketScanUrl'
 
+const { t } = useI18n()
 const router = useRouter()
 const resolving = ref(false)
 const toastMessage = ref('')
@@ -33,7 +36,7 @@ async function handleScan(raw: string): Promise<void> {
 
   const parsed = parseTicketScanUrl(raw)
   if (!parsed) {
-    showToast('QR code is not a valid ticket link.')
+    showToast(t('admin.scan.invalidQr'))
     return
   }
 
@@ -43,7 +46,9 @@ async function handleScan(raw: string): Promise<void> {
     await router.push({ name: 'admin-user-bookings', params: { userId: result.userId } })
   } catch (error) {
     const message =
-      error instanceof ApiError ? error.message : 'Could not resolve ticket. Try again.'
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.scan.resolveFailed')
     showToast(message)
   } finally {
     resolving.value = false
@@ -54,10 +59,8 @@ async function handleScan(raw: string): Promise<void> {
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-semibold text-copy-primary">Scan ticket</h1>
-      <p class="mt-1 text-sm text-copy-secondary">
-        Scan a customer&apos;s digital ticket QR to open their booking history for support lookup.
-      </p>
+      <h1 class="text-2xl font-semibold text-copy-primary">{{ t('admin.scan.title') }}</h1>
+      <p class="mt-1 text-sm text-copy-secondary">{{ t('admin.scan.subtitle') }}</p>
     </div>
 
     <div
@@ -75,34 +78,27 @@ async function handleScan(raw: string): Promise<void> {
 
     <Card>
       <CardHeader>
-        <CardTitle>QR scanner</CardTitle>
-        <p class="text-sm text-copy-secondary">
-          Point the camera at the ticket QR code, or upload a screenshot if the camera is blocked.
-        </p>
+        <CardTitle>{{ t('admin.scan.qrScanner') }}</CardTitle>
+        <p class="text-sm text-copy-secondary">{{ t('admin.scan.scannerHint') }}</p>
       </CardHeader>
       <CardContent>
-        <p v-if="resolving" class="mb-4 text-sm text-copy-muted">Resolving ticket…</p>
+        <p v-if="resolving" class="mb-4 text-sm text-copy-muted">{{ t('admin.scan.resolving') }}</p>
         <QrScanner @scan="handleScan" @error="showToast($event)" />
       </CardContent>
     </Card>
 
     <Card>
       <CardHeader>
-        <CardTitle>What you need to do</CardTitle>
+        <CardTitle>{{ t('admin.scan.instructionsTitle') }}</CardTitle>
       </CardHeader>
       <CardContent class="space-y-3 text-sm text-copy-secondary">
-        <p>
-          This flow requires a real device with camera permissions. Automated tests only cover URL
-          parsing — not live scanning.
-        </p>
+        <p>{{ t('admin.scan.instructionsIntro') }}</p>
         <ol class="list-decimal space-y-2 pl-5">
-          <li>On a second phone or laptop, sign in as a customer and complete a booking.</li>
-          <li>Open the digital ticket (QR on white pad) from My Bookings or the confirmation email.</li>
-          <li>On this admin device, allow camera access when prompted.</li>
-          <li>Scan the customer ticket QR — you should land on that user&apos;s booking history.</li>
-          <li>
-            Try an edited QR or random image to confirm you stay on this page with an error message.
-          </li>
+          <li>{{ t('admin.scan.step1') }}</li>
+          <li>{{ t('admin.scan.step2') }}</li>
+          <li>{{ t('admin.scan.step3') }}</li>
+          <li>{{ t('admin.scan.step4') }}</li>
+          <li>{{ t('admin.scan.step5') }}</li>
         </ol>
       </CardContent>
     </Card>

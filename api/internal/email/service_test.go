@@ -78,6 +78,10 @@ func (fakeBookings) CountConfirmedBetween(context.Context, time.Time, time.Time)
 func (fakeBookings) ListRecentConfirmed(context.Context, int) ([]booking.Booking, error) {
 	return nil, nil
 }
+func (fakeBookings) CountConfirmed(context.Context) (int64, error) { return 0, nil }
+func (fakeBookings) ListConfirmedPage(context.Context, int, int) ([]booking.Booking, error) {
+	return nil, nil
+}
 func (f fakeBookings) ListConfirmedByShowtime(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
 }

@@ -49,6 +49,10 @@ func (r *adminTicketsRepo) CountConfirmedBetween(_ context.Context, _, _ time.Ti
 func (r *adminTicketsRepo) ListRecentConfirmed(_ context.Context, _ int) ([]booking.Booking, error) {
 	return nil, nil
 }
+func (r *adminTicketsRepo) CountConfirmed(_ context.Context) (int64, error) { return 0, nil }
+func (r *adminTicketsRepo) ListConfirmedPage(_ context.Context, _, _ int) ([]booking.Booking, error) {
+	return nil, nil
+}
 
 func setupAdminTicketsRouter(t *testing.T, role string, repo *adminTicketsRepo) *gin.Engine {
 	t.Helper()
