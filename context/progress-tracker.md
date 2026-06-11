@@ -32,10 +32,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Redis seat holds (2026-06-11):** Issue #16 on branch `issue-16-redis-holds` (`db7a2df`) — `POST/DELETE /api/showtimes/:id/holds` (auth required), Redis keys `hold:{showtimeId}:{seatId}` + `user_holds:{userId}:{showtimeId}` (5m TTL, refresh on add only), rejects sold/blocked/other-hold/post-cutoff/>10 seats; `expiresAt` in response; `go test ./internal/hold/...` passes.
 - **Interactive seat map + WebSocket (2026-06-11):** Issue #17 on branch `issue-17-seat-map-ws` — `GET /ws/showtimes/:id` hub with Redis pub/sub fan-out; `seat_held`/`seat_released` after HTTP mutations; `useShowtimeSocket`, `useHoldCountdown`, `bookingSession` Pinia store; interactive `SeatMapView` (select/deselect, gradient self-held, countdown urgency &lt;60s); guest seat click → login redirect; checkout stub `/book/:showtimeId/checkout`; `go test ./...` + `npm run type-check` + `npm run build` pass.
 - **Booking confirm (2026-06-11):** Issue #18 on branch `issue-18-booking-confirm` — `POST /api/bookings/confirm` with `Idempotency-Key`, sorted `lock:confirm:{showtimeId}:{seatId}` acquisition, `bookingRef` + `ticketToken`, Redis idempotency cache (~24h), holds cleared on success, `seat_sold` WS events, asynq `email:send` enqueue + worker stub; `CheckoutView` confirm flow + `BookingConfirmationView`; `go test ./internal/booking/...` + `go test ./...` + `npm run build` pass.
+- **Digital ticket + email (2026-06-11):** Issue #20 on branch `issue-20-ticket-email` — HMAC `ticketToken` sign/verify, `GET /api/bookings/:id/ticket` with `go-qrcode` PNG, `TicketView` + `TicketCard` (white QR pad), asynq `email:send` worker with SendGrid + `email_logs`, confirm enqueues non-blocking; `go test ./...` + `npm run build` pass.
 
 ## In Progress
 
-- None — ready for #19 (My Bookings).
+- None — ready for #19 (My Bookings) or #21 (admin shell).
 
 ## Next Up
 
@@ -52,7 +53,7 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 7 | ~~[#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17)~~ | ~~Interactive seat map + WebSocket~~ ✅ `issue-17-seat-map-ws` | 07 |
 | 8 | ~~[#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18)~~ | ~~Booking confirm~~ ✅ `issue-18-booking-confirm` | 08 |
 | 9 | [#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19) | My Bookings | 08 |
-| 10 | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email | 09 |
+| ~~10~~ | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | ~~Digital ticket + confirmation email~~ ✅ `issue-20-ticket-email` | 09 |
 | 11 | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | Admin shell + dashboard | 10 |
 | 12 | [#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22) | Admin booking search | 10 |
 | 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |

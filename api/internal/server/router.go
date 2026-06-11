@@ -97,10 +97,12 @@ func NewRouter(deps Deps) *gin.Engine {
 		catalogRepos.Showtimes,
 		catalogRepos.Screens,
 		catalogRepos.Cinemas,
+		catalogRepos.Movies,
 		bookingRepo,
 		holdSvc,
 		deps.Redis,
 		idempotency,
+		booking.WithTicketConfig(deps.Config.TicketHMACSecret(), deps.Config.AppURL),
 	)
 	bookingsDeps := handler.BookingsDeps{
 		Bookings:  bookingSvc,
@@ -108,6 +110,7 @@ func NewRouter(deps Deps) *gin.Engine {
 		Publisher: deps.Hub,
 	}
 	api.POST("/bookings/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
+	api.GET("/bookings/:id/ticket", auth.RequireAuth(authMw), handler.GetBookingTicket(bookingsDeps))
 
 	wsDeps := ws.HandlerDeps{Hub: deps.Hub, Inventory: inventorySvc}
 	r.GET("/ws/showtimes/:id", ws.Showtime(wsDeps))

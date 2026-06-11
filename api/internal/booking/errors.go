@@ -9,4 +9,6 @@ var (
 	ErrShowtimeNotFound    = errors.New("showtime not found")
 	ErrShowtimeStarted     = errors.New("showtime already started")
 	ErrSeatLimitExceeded   = errors.New("seat limit exceeded")
+	ErrBookingNotFound     = errors.New("booking not found")
+	ErrForbidden           = errors.New("forbidden")
 )

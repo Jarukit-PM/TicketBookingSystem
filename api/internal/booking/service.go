@@ -24,14 +24,17 @@ type HoldStore interface {
 
 // Service confirms bookings from active seat holds.
 type Service struct {
-	showtimes   catalog.ShowtimeRepository
-	screens     catalog.ScreenRepository
-	cinemas     catalog.CinemaRepository
-	bookings    Repository
-	holds       HoldStore
-	redis       *redis.Client
-	idempotency *IdempotencyStore
-	now         func() time.Time
+	showtimes    catalog.ShowtimeRepository
+	screens      catalog.ScreenRepository
+	cinemas      catalog.CinemaRepository
+	movies       catalog.MovieRepository
+	bookings     Repository
+	holds        HoldStore
+	redis        *redis.Client
+	idempotency  *IdempotencyStore
+	ticketSecret string
+	appURL       string
+	now          func() time.Time
 }
 
 // Option configures a booking Service.
@@ -42,11 +45,20 @@ func WithClock(now func() time.Time) Option {
 	return func(s *Service) { s.now = now }
 }
 
+// WithTicketConfig sets HMAC secret and app URL for ticket tokens and QR links.
+func WithTicketConfig(secret, appURL string) Option {
+	return func(s *Service) {
+		s.ticketSecret = secret
+		s.appURL = appURL
+	}
+}
+
 // NewService returns a booking confirm service.
 func NewService(
 	showtimes catalog.ShowtimeRepository,
 	screens catalog.ScreenRepository,
 	cinemas catalog.CinemaRepository,
+	movies catalog.MovieRepository,
 	bookings Repository,
 	holds HoldStore,
 	rdb *redis.Client,
@@ -57,6 +69,7 @@ func NewService(
 		showtimes:   showtimes,
 		screens:     screens,
 		cinemas:     cinemas,
+		movies:      movies,
 		bookings:    bookings,
 		holds:       holds,
 		redis:       rdb,
@@ -178,12 +191,11 @@ func (s *Service) insertBookingWithRetry(
 		if err != nil {
 			return nil, err
 		}
-		token, err := GenerateTicketToken()
-		if err != nil {
-			return nil, err
-		}
+		bookingID := primitive.NewObjectID()
+		token := GenerateTicketToken(s.ticketSecret, ref, bookingID)
 
 		b := &Booking{
+			ID:          bookingID,
 			UserID:      userID,
 			ShowtimeID:  showtimeID,
 			Seats:       seatIDs,

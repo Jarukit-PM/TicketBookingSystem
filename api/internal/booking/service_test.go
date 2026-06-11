@@ -63,6 +63,16 @@ func (s stubCinemas) FindCinemaByID(_ context.Context, id primitive.ObjectID) (*
 }
 func (s stubCinemas) ListCinemas(context.Context) ([]catalog.Cinema, error) { return nil, nil }
 
+type stubMovies struct{}
+
+func (stubMovies) InsertMovie(context.Context, *catalog.Movie) error { return nil }
+func (stubMovies) FindMovieByID(context.Context, primitive.ObjectID) (*catalog.Movie, error) {
+	return nil, nil
+}
+func (stubMovies) ListMoviesByStatus(context.Context, string) ([]catalog.Movie, error) { return nil, nil }
+func (stubMovies) ListComingSoonMovies(context.Context) ([]catalog.Movie, error)      { return nil, nil }
+func (stubMovies) ListNonArchivedMovies(context.Context) ([]catalog.Movie, error)     { return nil, nil }
+
 type memBookings struct {
 	mu       sync.Mutex
 	bookings []booking.Booking
@@ -182,11 +192,13 @@ func newConfirmEnv(t *testing.T, now time.Time, sold []string) *confirmEnv {
 		stubShowtimes{showtime},
 		stubScreens{screen},
 		stubCinemas{cinema},
+		stubMovies{},
 		bookings,
 		holdSvc,
 		rdb,
 		booking.NewIdempotencyStore(rdb, time.Hour),
 		booking.WithClock(func() time.Time { return now }),
+		booking.WithTicketConfig("test-ticket-secret", "http://localhost"),
 	)
 
 	return &confirmEnv{
@@ -336,6 +348,9 @@ func TestConfirm_TotalPriceAndBookingRef(t *testing.T) {
 	}
 	if got.TicketToken == "" || got.TicketToken == got.BookingRef {
 		t.Fatalf("expected opaque ticket token distinct from booking ref")
+	}
+	if !booking.ValidateTicketToken(got.BookingRef, got.TicketToken, got, "test-ticket-secret") {
+		t.Fatalf("expected signed ticket token to validate")
 	}
 }
 
