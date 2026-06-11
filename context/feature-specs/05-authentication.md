@@ -64,7 +64,7 @@ app/src/
 
 ### Login prompt for holds
 
-When guest clicks a seat (spec 07), redirect to `/login?redirect=/book/...` — document contract here.
+When a guest must authenticate (e.g. hold or checkout in spec 07), redirect to `/login?redirect=<encoded-path>`. After successful login or register, the SPA reads `redirect` from the query string and navigates there (must start with `/`). Example: `/login?redirect=/book/abc123/checkout`.
 
 ## Code Style
 

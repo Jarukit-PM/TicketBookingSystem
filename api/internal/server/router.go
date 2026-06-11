@@ -5,14 +5,19 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/handler"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/middleware"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
 )
 
 // Deps holds shared dependencies for HTTP routes.
 type Deps struct {
-	Mongo *mongo.Client
-	Redis *redis.Client
+	Config config.Config
+	Mongo  *mongo.Client
+	Redis  *redis.Client
 }
 
 // NewRouter builds the Gin engine with middleware and routes.
@@ -25,6 +30,23 @@ func NewRouter(deps Deps) *gin.Engine {
 		Redis: deps.Redis,
 	}
 	r.GET("/api/health", handler.Health(healthDeps))
+
+	database := db.Database(deps.Mongo, deps.Config.MongoURI)
+	userRepo := user.NewMongoRepository(database)
+	tokenSvc := auth.NewTokenService(deps.Config.JWTSecret, deps.Config.JWTExpiryDuration())
+	rateLimiter := auth.NewLoginRateLimiter(deps.Redis)
+	authSvc := auth.NewService(userRepo, tokenSvc, rateLimiter, deps.Config.AdminEmail)
+
+	cookieOpts := auth.CookieOptions{Secure: deps.Config.CookieSecure()}
+	authDeps := handler.AuthDeps{Service: authSvc, CookieOptions: cookieOpts}
+	authMw := auth.MiddlewareDeps{Service: authSvc}
+
+	api := r.Group("/api")
+	authRoutes := api.Group("/auth")
+	authRoutes.POST("/register", handler.Register(authDeps))
+	authRoutes.POST("/login", handler.Login(authDeps))
+	authRoutes.POST("/logout", handler.Logout(authDeps))
+	authRoutes.GET("/me", auth.RequireAuth(authMw), handler.Me(authDeps))
 
 	return r
 }

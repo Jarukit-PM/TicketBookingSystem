@@ -35,8 +35,9 @@ func main() {
 	}()
 
 	router := server.NewRouter(server.Deps{
-		Mongo: mongoClient,
-		Redis: redisClient,
+		Config: cfg,
+		Mongo:  mongoClient,
+		Redis:  redisClient,
 	})
 
 	addr := "0.0.0.0:" + cfg.Port
