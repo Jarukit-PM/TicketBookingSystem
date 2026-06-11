@@ -10,7 +10,9 @@ import {
   CardTitle,
   Input,
 } from '@/components/ui'
+import { useAuthStore } from '@/stores/auth'
 
+const auth = useAuthStore()
 const searchQuery = ref('')
 </script>
 
@@ -25,15 +27,27 @@ const searchQuery = ref('')
         Cinema Tickets
       </span>
       <div class="ml-auto flex items-center gap-3">
-        <RouterLink
-          to="/login"
-          class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
-        >
-          Sign in
-        </RouterLink>
-        <RouterLink to="/register">
-          <Button variant="secondary">Register</Button>
-        </RouterLink>
+        <template v-if="auth.isAuthenticated">
+          <RouterLink
+            to="/my-bookings"
+            class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
+          >
+            My Bookings
+          </RouterLink>
+          <span class="hidden text-sm text-copy-muted sm:inline">{{ auth.user?.name }}</span>
+          <Button variant="secondary" @click="auth.logout()">Sign out</Button>
+        </template>
+        <template v-else>
+          <RouterLink
+            to="/login"
+            class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
+          >
+            Sign in
+          </RouterLink>
+          <RouterLink to="/register">
+            <Button variant="secondary">Register</Button>
+          </RouterLink>
+        </template>
       </div>
     </header>
 
