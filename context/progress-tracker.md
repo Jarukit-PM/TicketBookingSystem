@@ -26,6 +26,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Agent skills:** Project skills installed (`.agents/skills/`, `skills-lock.json`); mapping in `AGENTS.md`.
 - **Feature specs (2026-06-11):** `context/CONTEXT.md` glossary + grill decisions; feature specs **02–10** authored (`spec-driven-development`).
 - **Implementation issues (2026-06-11):** Specs **05–10** broken into 14 vertical-slice GitHub issues **#11–#24** (`to-issues`); label `ready-for-human` added for HITL slices (#13 OAuth, #24 QR scan).
+- **Email/password auth (2026-06-11):** Issue #11 on branch `issue-11-auth` — full auth slice (API + SPA guards); Google OAuth deferred to #13.
+- **Read-only seat map (2026-06-11):** Issue #15 on branch `issue-15-seat-map` — `GET /api/showtimes/:id/seats` inventory snapshot (`AVAILABLE`/`HELD`/`SOLD`/`BLOCKED`), `internal/inventory` + Redis hold reader, `SeatMapView` with `SeatMapGrid`/`SeatCell`/`SeatLegend`, public route `/book/:showtimeId`; Go table tests for inventory computation.
 
 ## In Progress
 
@@ -37,11 +39,11 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 
 | Order | Issue | Slice | Spec |
 | ----- | ----- | ----- | ---- |
-| 1 | [#11](https://github.com/Jarukit-PM/TicketBookingSystem/issues/11) | Email/password auth + middleware + route guards | 05 |
+| ~~1~~ | [#11](https://github.com/Jarukit-PM/TicketBookingSystem/issues/11) | Email/password auth + middleware + route guards ✅ `issue-11-auth` | 05 |
 | 2 | [#12](https://github.com/Jarukit-PM/TicketBookingSystem/issues/12) | Public catalog browse | 06 |
 | 3 | [#13](https://github.com/Jarukit-PM/TicketBookingSystem/issues/13) | Google OAuth (HITL) | 05 |
 | 4 | [#14](https://github.com/Jarukit-PM/TicketBookingSystem/issues/14) | Admin catalog CRUD | 06 |
-| 5 | [#15](https://github.com/Jarukit-PM/TicketBookingSystem/issues/15) | Read-only seat map | 07 |
+| 5 | ~~[#15](https://github.com/Jarukit-PM/TicketBookingSystem/issues/15)~~ | ~~Read-only seat map~~ ✅ (branch `issue-15-seat-map`) | 07 |
 | 6 | [#16](https://github.com/Jarukit-PM/TicketBookingSystem/issues/16) | Redis seat holds API | 07 |
 | 7 | [#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17) | Interactive seat map + WebSocket | 07 |
 | 8 | [#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18) | Booking confirm | 08 |
@@ -52,7 +54,7 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |
 | 14 | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) | 10 |
 
-**Start immediately (no blockers):** #11, #12.
+**Start immediately (no blockers):** #12 (public catalog browse) or #16 (Redis seat holds API).
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
@@ -105,3 +107,4 @@ See `context/architecture-context.md`. Summary:
 - **2026-06-11:** Auth JWT session lifetime confirmed — **7 days** (`JWT_EXPIRY`, default `168h`); spec 05 open question closed.
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
 - **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. `api/` scaffolded per spec 03.
+- **2026-06-11:** Issue #15 — read-only seat map on branch `issue-15-seat-map` (inventory API, seat map UI, public `/book/:showtimeId`).

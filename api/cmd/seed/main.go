@@ -5,9 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
@@ -25,6 +28,10 @@ func main() {
 	database := db.Database(client, cfg.MongoURI)
 	if err := db.EnsureIndexes(ctx, database); err != nil {
 		log.Fatalf("ensure indexes: %v", err)
+	}
+
+	if err := seedAdmin(ctx, cfg, database); err != nil {
+		log.Fatalf("seed admin: %v", err)
 	}
 
 	repos := catalog.NewMongoRepositories(database)
@@ -118,6 +125,17 @@ func main() {
 	}
 
 	log.Printf("seed: created cinema %s, 2 screens, 2 movies, %d showtimes", cinema.Name, len(showtimes))
+}
+
+func seedAdmin(ctx context.Context, cfg config.Config, database *mongo.Database) error {
+	if cfg.AdminEmail == "" || cfg.AdminSeedPassword == "" {
+		return nil
+	}
+
+	userRepo := user.NewMongoRepository(database)
+	tokenSvc := auth.NewTokenService(cfg.JWTSecret, cfg.JWTExpiryDuration())
+	authSvc := auth.NewService(userRepo, tokenSvc, auth.NewLoginRateLimiter(nil), cfg.AdminEmail)
+	return authSvc.BootstrapAdmin(ctx, cfg.AdminEmail, cfg.AdminSeedPassword)
 }
 
 func sampleLayout(rowPrefix string) catalog.ScreenLayout {
