@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,9 +13,16 @@ import (
 	"github.com/Jarukit-PM/TicketBookingSystem/api/pkg/httputil"
 )
 
+// SeatEventPublisher broadcasts seat hold/release events to WebSocket clients.
+type SeatEventPublisher interface {
+	PublishSeatHeld(ctx context.Context, showtimeID, seatID string, expiresAt time.Time) error
+	PublishSeatReleased(ctx context.Context, showtimeID, seatID string) error
+}
+
 // HoldsDeps holds dependencies for seat hold handlers.
 type HoldsDeps struct {
-	Holds *hold.Service
+	Holds     *hold.Service
+	Publisher SeatEventPublisher
 }
 
 type holdsRequest struct {
@@ -35,12 +44,14 @@ func AddShowtimeHolds(deps HoldsDeps) gin.HandlerFunc {
 			return
 		}
 
-		result, err := deps.Holds.AddSeats(c.Request.Context(), user.ID.Hex(), c.Param("id"), req.SeatIDs)
+		showtimeID := c.Param("id")
+		result, err := deps.Holds.AddSeats(c.Request.Context(), user.ID.Hex(), showtimeID, req.SeatIDs)
 		if err != nil {
 			writeHoldError(c, err)
 			return
 		}
 
+		publishHoldEvents(c.Request.Context(), deps.Publisher, showtimeID, result)
 		httputil.OK(c, result)
 	}
 }
@@ -57,13 +68,33 @@ func RemoveShowtimeHolds(deps HoldsDeps) gin.HandlerFunc {
 		var req holdsRequest
 		_ = c.ShouldBindJSON(&req)
 
-		result, err := deps.Holds.RemoveSeats(c.Request.Context(), user.ID.Hex(), c.Param("id"), req.SeatIDs)
+		showtimeID := c.Param("id")
+		result, err := deps.Holds.RemoveSeats(c.Request.Context(), user.ID.Hex(), showtimeID, req.SeatIDs)
 		if err != nil {
 			writeHoldError(c, err)
 			return
 		}
 
+		publishReleaseEvents(c.Request.Context(), deps.Publisher, showtimeID, result)
 		httputil.OK(c, result)
+	}
+}
+
+func publishHoldEvents(ctx context.Context, pub SeatEventPublisher, showtimeID string, result hold.Result) {
+	if pub == nil || result.ExpiresAt == nil {
+		return
+	}
+	for _, seatID := range result.Added {
+		_ = pub.PublishSeatHeld(ctx, showtimeID, seatID, *result.ExpiresAt)
+	}
+}
+
+func publishReleaseEvents(ctx context.Context, pub SeatEventPublisher, showtimeID string, result hold.Result) {
+	if pub == nil {
+		return
+	}
+	for _, seatID := range result.Released {
+		_ = pub.PublishSeatReleased(ctx, showtimeID, seatID)
 	}
 }
 

@@ -5,6 +5,13 @@ import type { Seat } from '@/types/seats'
 
 const props = defineProps<{
   seats: Seat[]
+  selfHeldIds?: Set<string>
+  pendingIds?: Set<string>
+  interactive?: boolean
+}>()
+
+const emit = defineEmits<{
+  select: [seatId: string]
 }>()
 
 const grid = computed(() => {
@@ -53,7 +60,13 @@ const grid = computed(() => {
       <template v-for="(row, rowIdx) in grid.cells" :key="rowIdx">
         <template v-for="(seat, colIdx) in row" :key="`${rowIdx}-${colIdx}`">
           <div v-if="seat" role="gridcell">
-            <SeatCell :seat="seat" />
+            <SeatCell
+              :seat="seat"
+              :self-held="selfHeldIds?.has(seat.seatId)"
+              :pending="pendingIds?.has(seat.seatId)"
+              :interactive="interactive"
+              @select="emit('select', $event)"
+            />
           </div>
           <div v-else class="h-10 w-10" aria-hidden="true" />
         </template>

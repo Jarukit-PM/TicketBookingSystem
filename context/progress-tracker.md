@@ -30,10 +30,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Public catalog browse (2026-06-11):** Issue #12 on branch `issue-12-catalog` (`39588a6`) — public catalog API + customer UI (cinema picker, movie browse, showtime list); pushed (replaced mistaken admin CRUD commit on remote).
 - **Read-only seat map (2026-06-11):** Issue #15 on branch `issue-15-seat-map` (`f907bbe`) — `GET /api/showtimes/:id/seats` inventory snapshot (`AVAILABLE`/`HELD`/`SOLD`/`BLOCKED`), `internal/inventory` + Redis hold reader, `SeatMapView` with `SeatMapGrid`/`SeatCell`/`SeatLegend`, public route `/book/:showtimeId`; Go table tests for inventory computation.
 - **Redis seat holds (2026-06-11):** Issue #16 on branch `issue-16-redis-holds` (`db7a2df`) — `POST/DELETE /api/showtimes/:id/holds` (auth required), Redis keys `hold:{showtimeId}:{seatId}` + `user_holds:{userId}:{showtimeId}` (5m TTL, refresh on add only), rejects sold/blocked/other-hold/post-cutoff/>10 seats; `expiresAt` in response; `go test ./internal/hold/...` passes.
+- **Interactive seat map + WebSocket (2026-06-11):** Issue #17 on branch `issue-17-seat-map-ws` — `GET /ws/showtimes/:id` hub with Redis pub/sub fan-out; `seat_held`/`seat_released` after HTTP mutations; `useShowtimeSocket`, `useHoldCountdown`, `bookingSession` Pinia store; interactive `SeatMapView` (select/deselect, gradient self-held, countdown urgency &lt;60s); guest seat click → login redirect; checkout stub `/book/:showtimeId/checkout`; `go test ./...` + `npm run type-check` + `npm run build` pass.
 
 ## In Progress
 
-- None — ready for #17 (interactive seat map + WebSocket).
+- None — ready for #18 (booking confirm).
 
 ## Next Up
 
@@ -47,7 +48,7 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 4 | ~~[#14](https://github.com/Jarukit-PM/TicketBookingSystem/issues/14)~~ | ~~Admin catalog CRUD~~ ✅ `issue-14-admin-catalog` (`c51aec3`) | 06 |
 | 5 | ~~[#15](https://github.com/Jarukit-PM/TicketBookingSystem/issues/15)~~ | ~~Read-only seat map~~ ✅ `issue-15-seat-map` (`f907bbe`) | 07 |
 | 6 | ~~[#16](https://github.com/Jarukit-PM/TicketBookingSystem/issues/16)~~ | ~~Redis seat holds API~~ ✅ `issue-16-redis-holds` (`db7a2df`) | 07 |
-| 7 | [#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17) | Interactive seat map + WebSocket | 07 |
+| 7 | ~~[#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17)~~ | ~~Interactive seat map + WebSocket~~ ✅ `issue-17-seat-map-ws` | 07 |
 | 8 | [#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18) | Booking confirm | 08 |
 | 9 | [#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19) | My Bookings | 08 |
 | 10 | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email | 09 |
@@ -56,7 +57,7 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |
 | 14 | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) | 10 |
 
-**Start immediately (no blockers):** #17 (interactive seat map + WebSocket).
+**Start immediately (no blockers):** #18 (booking confirm).
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
@@ -112,3 +113,4 @@ See `context/architecture-context.md`. Summary:
 - **2026-06-11:** Branch hygiene — split catalog (#12), seat map (#15), and Redis holds (#16) onto correct branches; `issue-12-catalog` force-pushed to remove mistaken admin CRUD commit from remote.
 - **2026-06-11:** Issue #16 — Redis seat holds on branch `issue-16-redis-holds` (`db7a2df`).
 - **2026-06-11:** Issue #15 — read-only seat map on branch `issue-15-seat-map` (`f907bbe`).
+- **2026-06-11:** Issue #17 — interactive seat map + WebSocket on branch `issue-17-seat-map-ws`.

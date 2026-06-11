@@ -140,7 +140,14 @@ func (s *Service) AddSeats(ctx context.Context, userID, showtimeID string, seatI
 		return Result{}, err
 	}
 
-	return Result{Holds: merged, ExpiresAt: &expiresAt}, nil
+	added := make([]string, 0, len(seatIDs))
+	for _, seatID := range seatIDs {
+		if _, wasHeld := currentSet[seatID]; !wasHeld {
+			added = append(added, seatID)
+		}
+	}
+
+	return Result{Holds: merged, ExpiresAt: &expiresAt, Added: added}, nil
 }
 
 // RemoveSeats releases seats without refreshing TTL on remaining holds.
@@ -193,7 +200,7 @@ func (s *Service) RemoveSeats(ctx context.Context, userID, showtimeID string, se
 		if err := s.redis.Del(ctx, userKey).Err(); err != nil {
 			return Result{}, fmt.Errorf("clear user holds: %w", err)
 		}
-		return Result{Holds: []string{}}, nil
+		return Result{Holds: []string{}, Released: toRemove}, nil
 	}
 
 	ttl, err := s.redis.TTL(ctx, userKey).Result()
@@ -207,7 +214,7 @@ func (s *Service) RemoveSeats(ctx context.Context, userID, showtimeID string, se
 		expiresAt = &t
 	}
 
-	return Result{Holds: remaining, ExpiresAt: expiresAt}, nil
+	return Result{Holds: remaining, ExpiresAt: expiresAt, Released: toRemove}, nil
 }
 
 func (s *Service) currentResult(ctx context.Context, userID, showtimeID string) (Result, error) {

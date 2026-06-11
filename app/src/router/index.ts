@@ -22,6 +22,12 @@ const router = createRouter({
       component: () => import('../views/SeatMapView.vue'),
     },
     {
+      path: '/book/:showtimeId/checkout',
+      name: 'checkout',
+      component: () => import('../views/CheckoutView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/auth/LoginView.vue'),
