@@ -8,10 +8,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- MVP integrated on `integrate-mvp` — polish, HITL credentials (Google OAuth, SendGrid), and production deploy.
+- **MVP on `main`** (merged at `e0c2d67` via PR #39) — remaining **HITL** before production: manual Google OAuth sign-in test, SendGrid env (`SENDGRID_API_KEY` / `EMAIL_FROM`), two-browser WebSocket seat-map smoke test.
 
 ## Completed
 
+- **MVP merge to main (2026-06-11):** PR #39 (`integrate-mvp`) at `e0c2d67` — full stack on `main`; GitHub issues **#11–#24** complete.
 - **GitHub Actions CI (2026-06-11):** Issue #2 — `.github/workflows/ci.yml` (Go `vet`/`test` in `api/`, Vue `lint`/`type-check`/`build` in `app/`); minimal `api/go.mod` + stub test; ESLint override for UI primitive names.
 - **MongoDB data model (2026-06-11):** Issue #5 — domain models (users, movies, cinemas, screens, showtimes, bookings, audit_logs, email_logs), `db.EnsureIndexes` on server boot, repository interfaces + mongo implementations, `booking.GenerateBookingRef` (`TBS-` format) with table-driven tests, `catalog.TotalForSeats` pricing helper, `cmd/seed` (1 cinema, 2 screens, 2 movies, 5 showtimes); `go test ./...` passes.
 - **Go API scaffold (2026-06-11):** Issue #4 — Gin server + asynq worker (`cmd/server`, `cmd/worker`), Viper config, MongoDB/Redis connect + ping, `GET /api/health` (optional `?deep=1`), middleware (request ID, recovery), `pkg/httputil` JSON errors; `go test ./...` and `go vet` pass.
@@ -26,34 +27,35 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Agent skills:** Project skills installed (`.agents/skills/`, `skills-lock.json`); mapping in `AGENTS.md`.
 - **Feature specs (2026-06-11):** `context/CONTEXT.md` glossary + grill decisions; feature specs **02–10** authored (`spec-driven-development`).
 - **Implementation issues (2026-06-11):** Specs **05–10** broken into 14 vertical-slice GitHub issues **#11–#24** (`to-issues`); label `ready-for-human` added for HITL slices (#13 OAuth, #24 QR scan).
-- **MVP stack (2026-06-11):** Issues #11–#24 integrated on branch `integrate-mvp` — auth (email + Google OAuth), public catalog browse, admin catalog CRUD + dashboard, seat map + Redis holds + WebSocket, booking confirm, my bookings, digital ticket + SendGrid email worker, admin booking search, audit/email logs, admin QR scan.
+- **MVP stack (2026-06-11):** Issues #11–#24 — auth (email + Google OAuth), public catalog browse, admin catalog CRUD + dashboard, seat map + Redis holds + WebSocket, booking confirm, my bookings, digital ticket + SendGrid email worker, admin booking search, audit/email logs, admin QR scan.
 
 ## In Progress
 
-- None — merge `integrate-mvp` → `main` when CI passes.
+- None.
 
 ## Next Up
 
-Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL: #13 (Google OAuth), #24 (QR scan).
+- Production readiness: complete HITL checks (OAuth, SendGrid, two-browser WS smoke).
+- Post-MVP features TBD (payment, cancellation, etc.).
 
 | Order | Issue | Slice | Spec |
 | ----- | ----- | ----- | ---- |
-| ~~1~~ | [#11](https://github.com/Jarukit-PM/TicketBookingSystem/issues/11) | Email/password auth + middleware + route guards ✅ `issue-11-auth` | 05 |
-| ~~2~~ | [#12](https://github.com/Jarukit-PM/TicketBookingSystem/issues/12) | ~~Public catalog browse~~ ✅ | 06 |
-| ~~3~~ | [#13](https://github.com/Jarukit-PM/TicketBookingSystem/issues/13) | ~~Google OAuth (HITL)~~ ✅ | 05 |
-| ~~4~~ | [#14](https://github.com/Jarukit-PM/TicketBookingSystem/issues/14) | ~~Admin catalog CRUD~~ ✅ | 06 |
-| ~~5~~ | [#15](https://github.com/Jarukit-PM/TicketBookingSystem/issues/15) | ~~Read-only seat map~~ ✅ | 07 |
-| ~~6~~ | [#16](https://github.com/Jarukit-PM/TicketBookingSystem/issues/16) | ~~Redis seat holds API~~ ✅ | 07 |
-| ~~7~~ | [#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17) | ~~Interactive seat map + WebSocket~~ ✅ | 07 |
-| ~~8~~ | [#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18) | ~~Booking confirm~~ ✅ | 08 |
-| ~~9~~ | [#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19) | ~~My Bookings~~ ✅ | 08 |
-| ~~10~~ | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | ~~Digital ticket + confirmation email~~ ✅ | 09 |
-| ~~11~~ | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | ~~Admin shell + dashboard~~ ✅ | 10 |
-| ~~12~~ | [#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22) | ~~Admin booking search~~ ✅ | 10 |
-| ~~13~~ | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | ~~Admin audit + email logs~~ ✅ | 10 |
-| ~~14~~ | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | ~~Admin QR scan (HITL)~~ ✅ | 10 |
+| ~~1~~ | [#11](https://github.com/Jarukit-PM/TicketBookingSystem/issues/11) | Email/password auth + middleware + route guards ✅ | 05 |
+| ~~2~~ | [#12](https://github.com/Jarukit-PM/TicketBookingSystem/issues/12) | Public catalog browse ✅ | 06 |
+| ~~3~~ | [#13](https://github.com/Jarukit-PM/TicketBookingSystem/issues/13) | Google OAuth (HITL) ✅ | 05 |
+| ~~4~~ | [#14](https://github.com/Jarukit-PM/TicketBookingSystem/issues/14) | Admin catalog CRUD ✅ | 06 |
+| ~~5~~ | [#15](https://github.com/Jarukit-PM/TicketBookingSystem/issues/15) | Read-only seat map ✅ | 07 |
+| ~~6~~ | [#16](https://github.com/Jarukit-PM/TicketBookingSystem/issues/16) | Redis seat holds API ✅ | 07 |
+| ~~7~~ | [#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17) | Interactive seat map + WebSocket ✅ | 07 |
+| ~~8~~ | [#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18) | Booking confirm ✅ | 08 |
+| ~~9~~ | [#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19) | My Bookings ✅ | 08 |
+| ~~10~~ | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email ✅ | 09 |
+| ~~11~~ | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | Admin shell + dashboard ✅ | 10 |
+| ~~12~~ | [#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22) | Admin booking search ✅ | 10 |
+| ~~13~~ | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs ✅ | 10 |
+| ~~14~~ | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) ✅ | 10 |
 
-**HITL before production:** set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and `SENDGRID_API_KEY` / `EMAIL_FROM` in `.env`.
+**HITL before production:** manual Google OAuth sign-in test; set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and `SENDGRID_API_KEY` / `EMAIL_FROM` in `.env`; two-browser WebSocket seat-map smoke test.
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
@@ -97,6 +99,7 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-11:** MVP merged to `main` at `e0c2d67` (PR #39); issues #11–#24 closed.
 - **2026-06-11:** Issue #2 CI merged to `main` — workflow + minimal `api/` module before full API scaffold.
 - **2026-06-11:** Issue #5 — MongoDB data model on branch `issue-5-data-model` (models, indexes, repos, seed, booking ref generator).
 - **2026-06-11:** Issue #4 — Go API scaffold on branch `issue-4-api-scaffold` (Gin, Viper, Mongo/Redis, asynq worker stub, health route).
