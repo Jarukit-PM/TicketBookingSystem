@@ -34,6 +34,53 @@ const router = createRouter({
       component: () => import('../views/MyBookingsPlaceholderView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin',
+      component: () => import('../views/admin/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: '',
+          name: 'admin-dashboard',
+          component: () => import('../views/admin/AdminDashboardView.vue'),
+        },
+        {
+          path: 'movies',
+          name: 'admin-movies',
+          component: () => import('../views/admin/AdminMoviesView.vue'),
+        },
+        {
+          path: 'cinemas',
+          name: 'admin-cinemas',
+          component: () => import('../views/admin/AdminCinemasView.vue'),
+        },
+        {
+          path: 'screens',
+          name: 'admin-screens',
+          component: () => import('../views/admin/AdminScreensView.vue'),
+        },
+        {
+          path: 'showtimes',
+          name: 'admin-showtimes',
+          component: () => import('../views/admin/AdminShowtimesView.vue'),
+        },
+        {
+          path: 'bookings',
+          name: 'admin-bookings',
+          component: () => import('../views/admin/AdminPlaceholderView.vue'),
+        },
+        {
+          path: 'scan',
+          name: 'admin-scan',
+          component: () => import('../views/admin/AdminPlaceholderView.vue'),
+        },
+        {
+          path: 'logs',
+          name: 'admin-logs',
+          component: () => import('../views/admin/AdminPlaceholderView.vue'),
+        },
+      ],
+    },
   ],
 })
 
@@ -43,6 +90,15 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin) {
+    if (!auth.isAuthenticated) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+    if (!auth.isAdmin) {
+      return { name: 'home' }
+    }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {

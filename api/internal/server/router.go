@@ -5,7 +5,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	adminpkg "github.com/Jarukit-PM/TicketBookingSystem/api/internal/admin"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/audit"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
@@ -75,6 +78,51 @@ func NewRouter(deps Deps) *gin.Engine {
 	api.GET("/movies", handler.ListMovies(catalogDeps))
 	api.GET("/movies/:id", handler.GetMovie(catalogDeps))
 	api.GET("/showtimes", handler.ListShowtimes(catalogDeps))
+
+	auditRepos := audit.NewMongoRepositories(database)
+	adminCatalogSvc := catalog.NewAdminService(catalogRepos, auditRepos.AuditLogs)
+	adminCatalogDeps := handler.AdminCatalogDeps{Service: adminCatalogSvc}
+
+	admin := api.Group("/admin")
+	admin.Use(auth.RequireAuth(authMw), auth.RequireAdmin(authMw))
+
+	bookingRepo := booking.NewMongoRepository(database)
+	dashboardSvc := &adminpkg.DashboardService{
+		Showtimes: catalogRepos.Showtimes,
+		Screens:   catalogRepos.Screens,
+		Movies:    catalogRepos.Movies,
+		Bookings:  bookingRepo,
+	}
+	dashboardDeps := handler.AdminDashboardDeps{Service: dashboardSvc}
+	admin.GET("/dashboard", handler.GetAdminDashboard(dashboardDeps))
+
+	movies := admin.Group("/movies")
+	movies.GET("", handler.ListAdminMovies(adminCatalogDeps))
+	movies.POST("", handler.CreateAdminMovie(adminCatalogDeps))
+	movies.GET("/:id", handler.GetAdminMovie(adminCatalogDeps))
+	movies.PUT("/:id", handler.UpdateAdminMovie(adminCatalogDeps))
+	movies.DELETE("/:id", handler.DeleteAdminMovie(adminCatalogDeps))
+
+	cinemas := admin.Group("/cinemas")
+	cinemas.GET("", handler.ListAdminCinemas(adminCatalogDeps))
+	cinemas.POST("", handler.CreateAdminCinema(adminCatalogDeps))
+	cinemas.GET("/:id", handler.GetAdminCinema(adminCatalogDeps))
+	cinemas.PUT("/:id", handler.UpdateAdminCinema(adminCatalogDeps))
+	cinemas.DELETE("/:id", handler.DeleteAdminCinema(adminCatalogDeps))
+
+	screens := admin.Group("/screens")
+	screens.GET("", handler.ListAdminScreens(adminCatalogDeps))
+	screens.POST("", handler.CreateAdminScreen(adminCatalogDeps))
+	screens.GET("/:id", handler.GetAdminScreen(adminCatalogDeps))
+	screens.PUT("/:id", handler.UpdateAdminScreen(adminCatalogDeps))
+	screens.DELETE("/:id", handler.DeleteAdminScreen(adminCatalogDeps))
+
+	showtimes := admin.Group("/showtimes")
+	showtimes.GET("", handler.ListAdminShowtimes(adminCatalogDeps))
+	showtimes.POST("", handler.CreateAdminShowtime(adminCatalogDeps))
+	showtimes.GET("/:id", handler.GetAdminShowtime(adminCatalogDeps))
+	showtimes.PUT("/:id", handler.UpdateAdminShowtime(adminCatalogDeps))
+	showtimes.DELETE("/:id", handler.DeleteAdminShowtime(adminCatalogDeps))
 
 	return r
 }

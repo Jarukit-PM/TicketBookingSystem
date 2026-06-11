@@ -5,6 +5,8 @@ export interface Cinema {
   timezone: string
 }
 
+export type MovieStatus = 'NOW_SHOWING' | 'COMING_SOON' | 'ARCHIVED'
+
 export interface Movie {
   id: string
   title: string
@@ -12,8 +14,28 @@ export interface Movie {
   durationMin: number
   rating: string
   synopsis: string
-  status: 'NOW_SHOWING' | 'COMING_SOON' | 'ARCHIVED'
+  status: MovieStatus
 }
+
+export interface LayoutSeat {
+  seatId: string
+  row: number
+  col: number
+  type: string
+}
+
+export interface ScreenLayout {
+  seats: LayoutSeat[]
+}
+
+export interface Screen {
+  id: string
+  cinemaId: string
+  name: string
+  layout: ScreenLayout
+}
+
+export type ShowtimeStatus = 'OPEN' | 'CANCELLED'
 
 export interface PriceTiers {
   standard: number
@@ -25,10 +47,10 @@ export interface Showtime {
   id: string
   movieId: string
   screenId: string
-  screenName: string
+  screenName?: string
   startsAt: string
   priceTiers: PriceTiers
-  status: string
+  status: ShowtimeStatus | string
 }
 
 export interface MovieDetail extends Movie {

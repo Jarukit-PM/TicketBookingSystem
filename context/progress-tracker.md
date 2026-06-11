@@ -29,6 +29,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Email/password auth (2026-06-11):** Issue #11 on branch `issue-11-auth` — full auth slice (API + SPA guards); Google OAuth deferred to #13.
 - **Google OAuth (2026-06-11):** Issue #13 on branch `issue-13-google-oauth` — authorization code flow (`GET /api/auth/google`, callback sets JWT cookie), email auto-link, login page button; requires HITL Google Cloud credentials.
 - **Read-only seat map (2026-06-11):** Issue #15 on branch `issue-15-seat-map` — `GET /api/showtimes/:id/seats` inventory snapshot (`AVAILABLE`/`HELD`/`SOLD`/`BLOCKED`), `internal/inventory` + Redis hold reader, `SeatMapView` with `SeatMapGrid`/`SeatCell`/`SeatLegend`, public route `/book/:showtimeId`; Go table tests for inventory computation.
+- **Admin shell + dashboard (2026-06-11):** Issue #21 on branch `issue-21-admin-dashboard` — `GET /api/admin/dashboard` (bookings today, showtimes today, avg occupancy, recent bookings), dark sidebar `AdminLayout`, `AdminDashboardView` with stats cards + bookings table, catalog admin routes wired; seed adds today showtimes + demo booking; `go test ./...` and `npm run build` pass.
 
 ## In Progress
 
@@ -50,12 +51,12 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 8 | [#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18) | Booking confirm | 08 |
 | 9 | [#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19) | My Bookings | 08 |
 | 10 | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email | 09 |
-| 11 | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | Admin shell + dashboard | 10 |
+| ~~11~~ | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | ~~Admin shell + dashboard~~ ✅ `issue-21-admin-dashboard` | 10 |
 | 12 | [#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22) | Admin booking search | 10 |
 | 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |
 | 14 | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) | 10 |
 
-**Start immediately (no blockers):** #12 (public catalog browse) or #16 (Redis seat holds API). **#13:** merge after setting `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`.
+**Start immediately (no blockers):** #22 (admin booking search) or #16 (Redis seat holds API). **#13:** set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env` for Google sign-in.
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
@@ -109,3 +110,4 @@ See `context/architecture-context.md`. Summary:
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
 - **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. `api/` scaffolded per spec 03.
 - **2026-06-11:** Issue #15 — read-only seat map on branch `issue-15-seat-map` (inventory API, seat map UI, public `/book/:showtimeId`).
+- **2026-06-11:** Issue #21 — admin shell + dashboard on branch `issue-21-admin-dashboard` (dashboard API, sidebar layout, seed demo data).

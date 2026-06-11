@@ -143,7 +143,14 @@ func writeCatalogError(c *gin.Context, err error) {
 		httputil.Error(c, http.StatusNotFound, "CINEMA_NOT_FOUND", "cinema not found")
 	case errors.Is(err, catalog.ErrMovieNotFound):
 		httputil.Error(c, http.StatusNotFound, "MOVIE_NOT_FOUND", "movie not found")
+	case errors.Is(err, catalog.ErrNotFound):
+		httputil.Error(c, http.StatusNotFound, "NOT_FOUND", err.Error())
+	case errors.Is(err, catalog.ErrInvalidInput),
+		errors.Is(err, catalog.ErrInvalidStatus),
+		errors.Is(err, catalog.ErrInvalidSeat),
+		errors.Is(err, catalog.ErrInvalidShowtime):
+		httputil.Error(c, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
 	default:
-		httputil.Error(c, http.StatusInternalServerError, "CATALOG_ERROR", err.Error())
+		httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error())
 	}
 }
