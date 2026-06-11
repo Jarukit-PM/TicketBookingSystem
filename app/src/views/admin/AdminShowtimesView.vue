@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Calendar } from 'lucide-vue-next'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { Cinema, Movie, Screen, Showtime, ShowtimeStatus } from '@/types/catalog'
 
@@ -259,7 +261,7 @@ onMounted(loadAll)
       </CardContent>
     </Card>
 
-    <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
+    <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
     <Card>
       <CardHeader>
@@ -288,7 +290,13 @@ onMounted(loadAll)
         </div>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
+        <TableSkeleton v-if="loading" :columns="5" :rows="6" />
+        <EmptyState
+          v-else-if="!showtimes.length"
+          :icon="Calendar"
+          :title="t('admin.showtimes.empty')"
+          class="py-10"
+        />
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
@@ -323,7 +331,6 @@ onMounted(loadAll)
               </tr>
             </tbody>
           </table>
-          <p v-if="!showtimes.length" class="text-sm text-copy-muted">{{ t('admin.showtimes.empty') }}</p>
         </div>
       </CardContent>
     </Card>

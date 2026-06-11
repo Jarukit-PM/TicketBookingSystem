@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { BarChart3, Calendar, Ticket } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -6,7 +7,8 @@ import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import BookingsTable from '@/components/admin/BookingsTable.vue'
 import StatsCard from '@/components/admin/StatsCard.vue'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import StatsGridSkeleton from '@/components/skeletons/StatsGridSkeleton.vue'
+import { Card, CardContent, CardHeader, CardTitle, ErrorAlert } from '@/components/ui'
 import type { AdminDashboard } from '@/types/admin'
 
 const { t } = useI18n()
@@ -40,20 +42,24 @@ onMounted(loadDashboard)
       <p class="mt-1 text-sm text-copy-secondary">{{ t('admin.dashboard.subtitle') }}</p>
     </div>
 
-    <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
+    <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <StatsGridSkeleton v-if="loading" />
+    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <StatsCard
+        :icon="Ticket"
         :label="t('admin.dashboard.bookingsToday')"
-        :value="loading ? t('common.dash') : String(dashboard?.bookingsToday ?? 0)"
+        :value="String(dashboard?.bookingsToday ?? 0)"
       />
       <StatsCard
+        :icon="Calendar"
         :label="t('admin.dashboard.showtimesToday')"
-        :value="loading ? t('common.dash') : String(dashboard?.showtimesToday ?? 0)"
+        :value="String(dashboard?.showtimesToday ?? 0)"
       />
       <StatsCard
+        :icon="BarChart3"
         :label="t('admin.dashboard.avgOccupancy')"
-        :value="loading ? t('common.dash') : `${(dashboard?.avgOccupancyPct ?? 0).toFixed(1)}%`"
+        :value="`${(dashboard?.avgOccupancyPct ?? 0).toFixed(1)}%`"
         :hint="t('admin.dashboard.occupancyHint')"
       />
     </div>

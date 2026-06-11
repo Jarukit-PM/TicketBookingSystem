@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Clapperboard } from 'lucide-vue-next'
 import type { Movie, MovieStatus } from '@/types/catalog'
 
 const { t } = useI18n()
@@ -160,14 +162,20 @@ onMounted(loadMovies)
       </CardContent>
     </Card>
 
-    <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
+    <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
     <Card>
       <CardHeader>
         <CardTitle>{{ t('admin.movies.allTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
+        <TableSkeleton v-if="loading" :columns="4" :rows="5" />
+        <EmptyState
+          v-else-if="!movies.length"
+          :icon="Clapperboard"
+          :title="t('admin.movies.empty')"
+          class="py-10"
+        />
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
@@ -196,7 +204,6 @@ onMounted(loadMovies)
               </tr>
             </tbody>
           </table>
-          <p v-if="!movies.length" class="text-sm text-copy-muted">{{ t('admin.movies.empty') }}</p>
         </div>
       </CardContent>
     </Card>

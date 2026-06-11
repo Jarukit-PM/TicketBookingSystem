@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Monitor } from 'lucide-vue-next'
 import type { Cinema, Screen, ScreenLayout } from '@/types/catalog'
 
 const { t } = useI18n()
@@ -195,7 +197,7 @@ onMounted(async () => {
       </CardContent>
     </Card>
 
-    <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
+    <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
     <Card>
       <CardHeader>
@@ -214,7 +216,13 @@ onMounted(async () => {
         </div>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
+        <TableSkeleton v-if="loading" :columns="4" :rows="5" />
+        <EmptyState
+          v-else-if="!filteredScreens.length"
+          :icon="Monitor"
+          :title="t('admin.screens.empty')"
+          class="py-10"
+        />
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
@@ -243,7 +251,6 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
-          <p v-if="!filteredScreens.length" class="text-sm text-copy-muted">{{ t('admin.screens.empty') }}</p>
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CalendarClock, Ticket } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -24,6 +25,8 @@ const actionLabel = computed(() =>
   props.tab === 'coming_soon' ? t('catalog.viewDetails') : t('catalog.viewShowtimes'),
 )
 
+const ActionIcon = computed(() => (props.tab === 'coming_soon' ? CalendarClock : Ticket))
+
 function openMovie(): void {
   router.push({ name: 'movie-detail', params: { id: props.movie.id } })
 }
@@ -32,7 +35,7 @@ function openMovie(): void {
 <template>
   <Card class="group overflow-hidden transition-shadow hover:shadow-glow-brand/20">
     <div
-      class="aspect-[2/3] w-full rounded-t-xl bg-subtle bg-cover bg-center ring-1 ring-white/10"
+      class="aspect-[2/3] w-full rounded-t-xl bg-subtle bg-cover bg-center ring-1 ring-white/10 transition-transform duration-300 group-hover:scale-[1.02]"
       :style="posterStyle"
       role="img"
       :aria-label="posterAria"
@@ -44,7 +47,8 @@ function openMovie(): void {
           {{ movie.rating }} · {{ formatDuration(movie.durationMin) }}
         </p>
       </div>
-      <Button variant="primary" class="w-full" @click="openMovie">
+      <Button variant="primary" class="w-full gap-1.5" @click="openMovie">
+        <component :is="ActionIcon" class="h-4 w-4" aria-hidden="true" />
         {{ actionLabel }}
       </Button>
     </CardContent>

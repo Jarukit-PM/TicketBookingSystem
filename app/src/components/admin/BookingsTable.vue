@@ -2,8 +2,11 @@
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
+import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
+import { EmptyState } from '@/components/ui'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { BookingSummary } from '@/types/admin'
+import { Inbox } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const { formatDateTime, formatTHB } = useLocaleFormat()
@@ -24,7 +27,16 @@ withDefaults(
 </script>
 
 <template>
-  <div class="overflow-x-auto">
+  <TableSkeleton v-if="loading" :columns="showCustomer ? 7 : 6" :rows="4" />
+
+  <EmptyState
+    v-else-if="!bookings.length"
+    :icon="Inbox"
+    :title="emptyMessage ?? t('admin.bookings.table.empty')"
+    class="py-10"
+  />
+
+  <div v-else class="overflow-x-auto">
     <table class="w-full text-left text-sm">
       <thead class="sticky top-0 bg-surface text-copy-muted">
         <tr>
@@ -40,19 +52,8 @@ withDefaults(
         </tr>
       </thead>
       <tbody>
-        <tr v-if="loading">
-          <td :colspan="showCustomer ? 7 : 6" class="py-6 text-copy-muted">
-            {{ t('admin.bookings.table.loading') }}
-          </td>
-        </tr>
-        <tr v-else-if="!bookings.length">
-          <td :colspan="showCustomer ? 7 : 6" class="py-6 text-copy-muted">
-            {{ emptyMessage ?? t('admin.bookings.table.empty') }}
-          </td>
-        </tr>
         <tr
           v-for="booking in bookings"
-          v-else
           :key="booking.id"
           class="border-t border-surface-border"
         >

@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Building2 } from 'lucide-vue-next'
 import type { Cinema } from '@/types/catalog'
 
 const { t } = useI18n()
@@ -120,14 +122,20 @@ onMounted(loadCinemas)
       </CardContent>
     </Card>
 
-    <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
+    <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
     <Card>
       <CardHeader>
         <CardTitle>{{ t('admin.cinemas.allTitle') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p v-if="loading" class="text-sm text-copy-muted">{{ t('common.loading') }}</p>
+        <TableSkeleton v-if="loading" :columns="4" :rows="4" />
+        <EmptyState
+          v-else-if="!cinemas.length"
+          :icon="Building2"
+          :title="t('admin.cinemas.empty')"
+          class="py-10"
+        />
         <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="text-copy-muted">
@@ -156,7 +164,6 @@ onMounted(loadCinemas)
               </tr>
             </tbody>
           </table>
-          <p v-if="!cinemas.length" class="text-sm text-copy-muted">{{ t('admin.cinemas.empty') }}</p>
         </div>
       </CardContent>
     </Card>

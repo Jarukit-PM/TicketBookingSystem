@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { Film, LogIn, Mail } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, ErrorAlert, Input } from '@/components/ui'
 import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
@@ -47,16 +48,24 @@ async function onSubmit() {
       <div class="mb-8 text-center">
         <RouterLink
           to="/"
-          class="bg-gradient-brand bg-clip-text text-2xl font-semibold tracking-tight text-transparent"
+          class="inline-flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
         >
-          {{ t('common.appName') }}
+          <Film class="h-6 w-6 text-brand" aria-hidden="true" />
+          <span
+            class="bg-gradient-brand bg-clip-text text-2xl font-semibold tracking-tight text-transparent"
+          >
+            {{ t('common.appName') }}
+          </span>
         </RouterLink>
         <p class="mt-2 text-sm text-copy-secondary">{{ t('auth.login.subtitle') }}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{{ t('auth.login.title') }}</CardTitle>
+          <CardTitle class="flex items-center gap-2">
+            <LogIn class="h-5 w-5 text-brand" aria-hidden="true" />
+            {{ t('auth.login.title') }}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form class="space-y-4" @submit.prevent="onSubmit">
@@ -86,18 +95,17 @@ async function onSubmit() {
               />
             </div>
 
-            <p v-if="errorMessage" class="text-sm text-state-error" role="alert">
-              {{ errorMessage }}
-            </p>
+            <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
-            <Button type="submit" class="w-full" :disabled="submitting || auth.loading">
+            <Button type="submit" class="w-full gap-1.5" :disabled="submitting || auth.loading">
+              <LogIn class="h-4 w-4" aria-hidden="true" />
               {{ submitting ? t('auth.login.submitting') : t('auth.login.submit') }}
             </Button>
           </form>
 
           <div class="relative my-6">
             <div class="absolute inset-0 flex items-center">
-              <span class="w-full border-t border-border" />
+              <span class="w-full border-t border-surface-border" />
             </div>
             <div class="relative flex justify-center text-xs uppercase">
               <span class="bg-surface px-2 text-copy-secondary">{{ t('common.or') }}</span>
@@ -106,8 +114,9 @@ async function onSubmit() {
 
           <a
             href="/api/auth/google"
-            class="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-copy-primary transition hover:bg-surface-elevated"
+            class="flex w-full items-center justify-center gap-2 rounded-full border border-surface-border bg-surface px-4 py-2.5 text-sm font-medium text-copy-primary transition-colors hover:bg-subtle"
           >
+            <Mail class="h-4 w-4" aria-hidden="true" />
             {{ t('auth.login.google') }}
           </a>
 

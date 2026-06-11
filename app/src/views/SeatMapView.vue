@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft, ShoppingCart } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -7,7 +8,8 @@ import { fetchSeatMap } from '@/api/seats'
 import HoldCountdown from '@/components/seat-map/HoldCountdown.vue'
 import SeatLegend from '@/components/seat-map/SeatLegend.vue'
 import SeatMapGrid from '@/components/seat-map/SeatMapGrid.vue'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import SeatMapSkeleton from '@/components/skeletons/SeatMapSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, ErrorAlert } from '@/components/ui'
 import { translateApiError } from '@/api/errors'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useShowtimeSocket } from '@/composables/useShowtimeSocket'
@@ -150,18 +152,21 @@ watch(
     <header
       class="sticky top-0 z-10 flex h-16 items-center border-b border-surface-border bg-base/80 px-4 backdrop-blur-md md:px-6"
     >
-      <Button variant="ghost" type="button" @click="goBack">{{ t('common.back') }}</Button>
+      <Button variant="ghost" type="button" class="gap-1.5" @click="goBack">
+        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
+        {{ t('common.back') }}
+      </Button>
       <span class="ml-4 text-sm text-copy-secondary">{{ t('seatMap.selectSeats') }}</span>
     </header>
 
     <main class="mx-auto max-w-4xl px-4 py-8 md:px-6">
-      <p v-if="loading && !snapshot" class="text-copy-secondary">{{ t('seatMap.loading') }}</p>
-      <p v-else-if="error" class="text-state-error">{{ error }}</p>
+      <SeatMapSkeleton v-if="loading && !snapshot" />
+      <ErrorAlert v-else-if="error" :message="error" />
 
       <template v-else-if="snapshot">
         <div class="mb-6 space-y-4">
           <HoldCountdown :expires-at="session.expiresAt" />
-          <p v-if="actionError" class="text-sm text-state-error">{{ actionError }}</p>
+          <ErrorAlert v-if="actionError" :message="actionError" />
         </div>
 
         <Card>
@@ -202,7 +207,10 @@ watch(
                 {{ formatTHB(totalPrice) }}
               </p>
             </div>
-            <Button type="button" @click="goCheckout">{{ t('seatMap.continueCheckout') }}</Button>
+            <Button type="button" class="gap-1.5" @click="goCheckout">
+              <ShoppingCart class="h-4 w-4" aria-hidden="true" />
+              {{ t('seatMap.continueCheckout') }}
+            </Button>
           </div>
         </div>
       </template>

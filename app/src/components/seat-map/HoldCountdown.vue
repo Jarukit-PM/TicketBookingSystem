@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Timer } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cn } from '@/lib/cn'
@@ -25,7 +26,10 @@ const classes = computed(() =>
 
 <template>
   <div v-if="isActive" :class="classes" role="timer" aria-live="polite">
-    <p class="text-xs font-medium uppercase tracking-wide">{{ t('seatMap.holdExpiresIn') }}</p>
+    <p class="inline-flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-wide">
+      <Timer class="h-3.5 w-3.5" aria-hidden="true" />
+      {{ t('seatMap.holdExpiresIn') }}
+    </p>
     <p class="text-2xl font-semibold tabular-nums">{{ formatted }}</p>
   </div>
 </template>

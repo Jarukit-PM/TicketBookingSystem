@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { ArrowLeft, QrCode } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import { fetchBookingDetail } from '@/api/bookings'
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import BookingDetailSkeleton from '@/components/skeletons/BookingDetailSkeleton.vue'
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, ErrorAlert } from '@/components/ui'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { BookingListItem } from '@/types/bookings'
 
@@ -29,11 +31,16 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-base px-4 py-8 md:px-6">
     <div class="mx-auto max-w-lg space-y-6">
-      <RouterLink to="/my-bookings" class="text-sm text-copy-secondary hover:text-copy-primary">
+      <RouterLink
+        to="/my-bookings"
+        class="inline-flex items-center gap-1.5 text-sm text-copy-secondary transition-colors hover:text-copy-primary"
+      >
+        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
         {{ t('nav.backToMyBookings') }}
       </RouterLink>
-      <p v-if="loading" class="text-sm text-copy-secondary">{{ t('booking.detail.loading') }}</p>
-      <p v-else-if="error" class="text-sm text-state-error">{{ error }}</p>
+
+      <BookingDetailSkeleton v-if="loading" />
+      <ErrorAlert v-else-if="error" :message="error" />
       <Card v-else-if="booking">
         <CardHeader class="flex flex-row items-start justify-between gap-3">
           <CardTitle>{{ booking.movie.title }}</CardTitle>
@@ -64,7 +71,10 @@ onMounted(async () => {
             </div>
           </dl>
           <RouterLink :to="{ name: 'ticket', params: { bookingRef: booking.bookingRef } }">
-            <Button variant="primary" class="w-full">{{ t('booking.detail.viewTicket') }}</Button>
+            <Button variant="primary" class="w-full gap-1.5">
+              <QrCode class="h-4 w-4" aria-hidden="true" />
+              {{ t('booking.detail.viewTicket') }}
+            </Button>
           </RouterLink>
         </CardContent>
       </Card>

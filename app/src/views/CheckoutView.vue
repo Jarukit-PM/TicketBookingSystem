@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft, CheckCircle2, CreditCard } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -7,7 +8,8 @@ import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
 import { fetchSeatMap } from '@/api/seats'
 import HoldCountdown from '@/components/seat-map/HoldCountdown.vue'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import CheckoutSkeleton from '@/components/skeletons/CheckoutSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, ErrorAlert } from '@/components/ui'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useBookingSessionStore } from '@/stores/bookingSession'
 import type { SeatMapSnapshot } from '@/types/seats'
@@ -110,13 +112,16 @@ watch(
 
       <Card>
         <CardHeader>
-          <CardTitle>{{ t('booking.checkout.title') }}</CardTitle>
+          <CardTitle class="flex items-center gap-2">
+            <CreditCard class="h-5 w-5 text-brand" aria-hidden="true" />
+            {{ t('booking.checkout.title') }}
+          </CardTitle>
           <p v-if="snapshot" class="text-sm text-copy-secondary">
             {{ snapshot.screenName }} · {{ formatDateTime(snapshot.startsAt) }}
           </p>
         </CardHeader>
         <CardContent class="space-y-4">
-          <p v-if="loading" class="text-sm text-copy-secondary">{{ t('booking.checkout.loading') }}</p>
+          <CheckoutSkeleton v-if="loading" />
 
           <template v-else>
             <p v-if="session.holds.length" class="text-sm text-copy-primary">
@@ -129,17 +134,20 @@ watch(
               {{ formatTHB(totalPrice) }}
             </p>
 
-            <p v-if="error" class="text-sm text-state-error">{{ error }}</p>
+            <ErrorAlert v-if="error" :message="error" />
 
             <div class="flex flex-wrap gap-3">
-              <Button type="button" variant="ghost" @click="backToSeats">
+              <Button type="button" variant="ghost" class="gap-1.5" @click="backToSeats">
+                <ArrowLeft class="h-4 w-4" aria-hidden="true" />
                 {{ t('booking.checkout.backToSeatMap') }}
               </Button>
               <Button
                 type="button"
+                class="gap-1.5"
                 :disabled="!session.holds.length || confirming"
                 @click="handleConfirm"
               >
+                <CheckCircle2 class="h-4 w-4" aria-hidden="true" />
                 {{ confirming ? t('booking.checkout.confirming') : t('booking.checkout.confirm') }}
               </Button>
             </div>

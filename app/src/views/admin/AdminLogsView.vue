@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { FileText } from 'lucide-vue-next'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry, EmailLogEntry } from '@/types/admin'
 
@@ -113,14 +115,21 @@ watch(activeTab, loadLogs, { immediate: true })
       </CardContent>
     </Card>
 
-    <p v-if="errorMessage" class="text-sm text-state-error" role="alert">{{ errorMessage }}</p>
+    <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
     <Card>
       <CardHeader>
         <CardTitle>{{ activeTab === 'audit' ? t('admin.logs.auditEntries') : t('admin.logs.emailDeliveries') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div class="overflow-x-auto">
+        <TableSkeleton v-if="loading" :columns="5" :rows="6" />
+        <EmptyState
+          v-else-if="(activeTab === 'audit' && !auditLogs.length) || (activeTab === 'email' && !emailLogs.length)"
+          :icon="FileText"
+          :title="emptyMessage"
+          class="py-10"
+        />
+        <div v-else class="overflow-x-auto">
           <table class="w-full text-left text-sm">
             <thead class="sticky top-0 bg-surface text-copy-muted">
               <tr v-if="activeTab === 'audit'">
@@ -139,16 +148,7 @@ watch(activeTab, loadLogs, { immediate: true })
               </tr>
             </thead>
             <tbody>
-              <tr v-if="loading">
-                <td :colspan="activeTab === 'audit' ? 5 : 5" class="py-6 text-copy-muted">{{ t('common.loading') }}</td>
-              </tr>
-              <tr v-else-if="activeTab === 'audit' && !auditLogs.length">
-                <td colspan="5" class="py-6 text-copy-muted">{{ emptyMessage }}</td>
-              </tr>
-              <tr v-else-if="activeTab === 'email' && !emailLogs.length">
-                <td colspan="5" class="py-6 text-copy-muted">{{ emptyMessage }}</td>
-              </tr>
-              <template v-else-if="activeTab === 'audit'">
+              <template v-if="activeTab === 'audit'">
                 <tr
                   v-for="log in auditLogs"
                   :key="log.id"

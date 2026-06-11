@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { CalendarX, Clock, Monitor, Ticket } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchCinemas, fetchMovieDetail } from '@/api/catalog'
+import AppHeader from '@/components/AppHeader.vue'
 import CinemaPicker from '@/components/CinemaPicker.vue'
-import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
 import ShowtimeDateFilter from '@/components/ShowtimeDateFilter.vue'
-import { Button, Card, CardContent } from '@/components/ui'
+import MovieDetailSkeleton from '@/components/skeletons/MovieDetailSkeleton.vue'
+import { Button, Card, CardContent, EmptyState, ErrorAlert } from '@/components/ui'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useShowtimeDates } from '@/composables/useShowtimeDates'
 import { formatDuration, lowestTierPrice } from '@/lib/format'
@@ -104,46 +106,22 @@ watch(
 
 <template>
   <div class="min-h-screen bg-base">
-    <header
-      class="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-surface-border bg-base/80 px-4 backdrop-blur-md md:px-6"
-    >
-      <button
-        type="button"
-        class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
-        @click="goBack"
-      >
-        ← {{ t('common.back') }}
-      </button>
-      <span
-        class="bg-gradient-brand bg-clip-text text-xl font-semibold tracking-tight text-transparent"
-      >
-        {{ t('common.appName') }}
-      </span>
-      <div class="ml-auto">
-        <LocaleSwitcher />
-      </div>
-    </header>
+    <AppHeader show-back @back="goBack" />
 
     <main class="mx-auto max-w-6xl px-4 py-8 md:px-6">
       <div class="mb-8 max-w-xs">
         <CinemaPicker v-model="selectedCinema" :cinemas="cinemas" />
       </div>
 
-      <p
-        v-if="error"
-        class="mb-6 rounded-lg border border-state-error/30 bg-state-error-dim px-4 py-3 text-sm text-state-error"
-      >
-        {{ error }}
-      </p>
+      <ErrorAlert v-if="error" :message="error" class="mb-6" />
 
-      <div v-if="loading" class="py-16 text-center text-copy-secondary">{{ t('movie.loading') }}</div>
+      <MovieDetailSkeleton v-if="loading" />
 
-      <div
+      <EmptyState
         v-else-if="!catalog.selectedCinemaId"
-        class="py-16 text-center text-copy-secondary"
-      >
-        {{ t('movie.selectCinemaForShowtimes') }}
-      </div>
+        :icon="Monitor"
+        :title="t('movie.selectCinemaForShowtimes')"
+      />
 
       <div v-else-if="detail" class="grid gap-8 lg:grid-cols-[280px_1fr]">
         <div
@@ -167,15 +145,13 @@ watch(
           <section>
             <h2 class="mb-4 text-lg font-medium text-copy-primary">{{ t('movie.showtimes') }}</h2>
 
-            <div
+            <EmptyState
               v-if="detail.showtimes.length === 0"
-              class="rounded-lg border border-surface-border bg-subtle px-4 py-8 text-center"
-            >
-              <p class="text-copy-primary">{{ t('movie.showtimesNotAnnounced') }}</p>
-              <p class="mt-1 text-sm text-copy-secondary">
-                {{ t('movie.showtimesCheckBack') }}
-              </p>
-            </div>
+              :icon="CalendarX"
+              :title="t('movie.showtimesNotAnnounced')"
+              :description="t('movie.showtimesCheckBack')"
+              class="py-10"
+            />
 
             <template v-else>
               <ShowtimeDateFilter
@@ -191,17 +167,22 @@ watch(
                   class="overflow-hidden transition-shadow hover:shadow-glow-brand/10"
                 >
                   <CardContent class="flex items-center justify-between gap-4 p-4">
-                    <div>
-                      <p class="font-medium text-copy-primary">
+                    <div class="space-y-1">
+                      <p class="flex items-center gap-2 font-medium text-copy-primary">
+                        <Clock class="h-4 w-4 text-brand" aria-hidden="true" />
                         {{ formatTime(showtime.startsAt, cinemaTimezone) }}
                       </p>
-                      <p class="text-sm text-copy-secondary">{{ showtime.screenName }}</p>
+                      <p class="flex items-center gap-2 text-sm text-copy-secondary">
+                        <Monitor class="h-3.5 w-3.5" aria-hidden="true" />
+                        {{ showtime.screenName }}
+                      </p>
                       <p class="mt-1 text-xs text-copy-muted">
                         {{ t('common.from') }}
                         {{ formatTHB(lowestTierPrice(showtime.priceTiers)) }}
                       </p>
                     </div>
-                    <Button variant="primary" @click="bookShowtime(showtime.id)">
+                    <Button variant="primary" class="gap-1.5" @click="bookShowtime(showtime.id)">
+                      <Ticket class="h-4 w-4" aria-hidden="true" />
                       {{ t('movie.book') }}
                     </Button>
                   </CardContent>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { CheckCircle2, Home, Plus, QrCode } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState } from '@/components/ui'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import { useBookingSessionStore } from '@/stores/bookingSession'
 
@@ -37,14 +38,17 @@ function bookMore(): void {
   <div class="min-h-screen bg-base px-4 py-8 md:px-6">
     <div class="mx-auto max-w-lg space-y-6">
       <Card v-if="booking">
-        <CardHeader>
+        <CardHeader class="text-center">
+          <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-state-success-dim">
+            <CheckCircle2 class="h-7 w-7 text-state-success" aria-hidden="true" />
+          </div>
           <CardTitle>{{ t('booking.confirmation.title') }}</CardTitle>
           <p class="text-sm text-copy-secondary">
             {{ t('booking.confirmation.subtitle') }}
           </p>
         </CardHeader>
         <CardContent class="space-y-4">
-          <div class="rounded-lg border border-surface-border bg-elevated p-4">
+          <div class="rounded-lg border border-surface-border bg-elevated p-4 text-center">
             <p class="text-xs uppercase tracking-widest text-copy-muted">
               {{ t('booking.confirmation.reference') }}
             </p>
@@ -67,21 +71,30 @@ function bookMore(): void {
           </dl>
 
           <div class="flex flex-wrap gap-3 pt-2">
-            <Button type="button" @click="viewTicket">{{ t('booking.confirmation.viewTicket') }}</Button>
-            <Button type="button" variant="ghost" @click="goHome">{{ t('nav.backToHome') }}</Button>
-            <Button type="button" variant="ghost" @click="bookMore">
+            <Button type="button" class="gap-1.5" @click="viewTicket">
+              <QrCode class="h-4 w-4" aria-hidden="true" />
+              {{ t('booking.confirmation.viewTicket') }}
+            </Button>
+            <Button type="button" variant="ghost" class="gap-1.5" @click="goHome">
+              <Home class="h-4 w-4" aria-hidden="true" />
+              {{ t('nav.backToHome') }}
+            </Button>
+            <Button type="button" variant="ghost" class="gap-1.5" @click="bookMore">
+              <Plus class="h-4 w-4" aria-hidden="true" />
               {{ t('booking.confirmation.bookMore') }}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card v-else>
-        <CardContent class="space-y-4 py-8 text-center">
-          <p class="text-copy-secondary">{{ t('booking.confirmation.notFound') }}</p>
-          <Button type="button" @click="goHome">{{ t('nav.backToHome') }}</Button>
-        </CardContent>
-      </Card>
+      <EmptyState v-else :icon="CheckCircle2" :title="t('booking.confirmation.notFound')">
+        <template #action>
+          <Button type="button" class="gap-1.5" @click="goHome">
+            <Home class="h-4 w-4" aria-hidden="true" />
+            {{ t('nav.backToHome') }}
+          </Button>
+        </template>
+      </EmptyState>
     </div>
   </div>
 </template>
