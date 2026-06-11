@@ -1,0 +1,5 @@
+port: "8080"
+mongo_uri: mongodb://mongo:27017/tbs
+redis_url: redis://redis:6379/0
+jwt_secret: dev-only-change-me
+app_url: http://localhost
