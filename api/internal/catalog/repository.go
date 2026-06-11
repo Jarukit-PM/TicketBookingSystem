@@ -26,6 +26,8 @@ type MovieRepository interface {
 	InsertMovie(ctx context.Context, movie *Movie) error
 	FindMovieByID(ctx context.Context, id primitive.ObjectID) (*Movie, error)
 	ListMoviesByStatus(ctx context.Context, status string) ([]Movie, error)
+	ListComingSoonMovies(ctx context.Context) ([]Movie, error)
+	ListNonArchivedMovies(ctx context.Context) ([]Movie, error)
 }
 
 // ShowtimeRepository persists showtimes.
@@ -34,4 +36,6 @@ type ShowtimeRepository interface {
 	FindShowtimeByID(ctx context.Context, id primitive.ObjectID) (*Showtime, error)
 	ListShowtimesByScreen(ctx context.Context, screenID primitive.ObjectID, from time.Time) ([]Showtime, error)
 	ListShowtimesByMovie(ctx context.Context, movieID primitive.ObjectID) ([]Showtime, error)
+	ListShowtimesByScreens(ctx context.Context, screenIDs []primitive.ObjectID) ([]Showtime, error)
+	ListShowtimesByCinemaMovie(ctx context.Context, screenIDs []primitive.ObjectID, movieID primitive.ObjectID) ([]Showtime, error)
 }

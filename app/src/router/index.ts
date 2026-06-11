@@ -12,6 +12,34 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/movies/:id',
+      name: 'movie-detail',
+      component: () => import('../views/MovieDetailView.vue'),
+    },
+    {
+      path: '/book/:showtimeId',
+      name: 'book',
+      component: () => import('../views/SeatMapView.vue'),
+    },
+    {
+      path: '/book/:showtimeId/checkout',
+      name: 'checkout',
+      component: () => import('../views/CheckoutView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/book/:showtimeId/confirmation/:bookingId',
+      name: 'booking-confirmation',
+      component: () => import('../views/BookingConfirmationView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/bookings/:bookingId/ticket',
+      name: 'booking-ticket',
+      component: () => import('../views/TicketView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/auth/LoginView.vue'),
@@ -29,6 +57,37 @@ const router = createRouter({
       component: () => import('../views/MyBookingsPlaceholderView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin',
+      component: () => import('../views/admin/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: '',
+          redirect: { name: 'admin-bookings' },
+        },
+        {
+          path: 'bookings',
+          name: 'admin-bookings',
+          component: () => import('../views/admin/AdminBookingsView.vue'),
+        },
+        {
+          path: 'users/:userId/bookings',
+          name: 'admin-user-bookings',
+          component: () => import('../views/admin/AdminUserBookingsView.vue'),
+        },
+        {
+          path: 'scan',
+          name: 'admin-scan',
+          component: () => import('../views/admin/AdminScanView.vue'),
+        },
+        {
+          path: 'logs',
+          name: 'admin-logs',
+          component: () => import('../views/admin/AdminLogsView.vue'),
+        },
+      ],
+    },
   ],
 })
 
@@ -38,6 +97,15 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin) {
+    if (!auth.isAuthenticated) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+    if (!auth.isAdmin) {
+      return { name: 'home' }
+    }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {

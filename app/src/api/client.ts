@@ -75,7 +75,23 @@ export const api = {
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   },
-  delete(path: string) {
-    return apiRequest<void>(path, { method: 'DELETE' })
+  delete<T = void>(path: string, body?: unknown) {
+    return apiRequest<T>(path, {
+      method: 'DELETE',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
   },
+}
+
+function buildQuery(params?: Record<string, string>): string {
+  if (!params) {
+    return ''
+  }
+  const search = new URLSearchParams(params)
+  const qs = search.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export function apiGet<T>(path: string, params?: Record<string, string>): Promise<T> {
+  return api.get<T>(`${path}${buildQuery(params)}`)
 }
