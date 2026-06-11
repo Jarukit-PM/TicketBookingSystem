@@ -33,10 +33,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Interactive seat map + WebSocket (2026-06-11):** Issue #17 on branch `issue-17-seat-map-ws` — `GET /ws/showtimes/:id` hub with Redis pub/sub fan-out; `seat_held`/`seat_released` after HTTP mutations; `useShowtimeSocket`, `useHoldCountdown`, `bookingSession` Pinia store; interactive `SeatMapView` (select/deselect, gradient self-held, countdown urgency &lt;60s); guest seat click → login redirect; checkout stub `/book/:showtimeId/checkout`; `go test ./...` + `npm run type-check` + `npm run build` pass.
 - **Booking confirm (2026-06-11):** Issue #18 on branch `issue-18-booking-confirm` — `POST /api/bookings/confirm` with `Idempotency-Key`, sorted `lock:confirm:{showtimeId}:{seatId}` acquisition, `bookingRef` + `ticketToken`, Redis idempotency cache (~24h), holds cleared on success, `seat_sold` WS events, asynq `email:send` enqueue + worker stub; `CheckoutView` confirm flow + `BookingConfirmationView`; `go test ./internal/booking/...` + `go test ./...` + `npm run build` pass.
 - **My Bookings (2026-06-11):** Issue #19 on branch `issue-19-my-bookings` — `GET /api/bookings/mine?upcoming=true|false` and `GET /api/bookings/:id` (owner or admin), confirmed bookings only with showtime enrichment; `MyBookingsView` (upcoming/history tabs), `BookingDetailView`, `BookingCard`, ticket placeholder route; `go test ./...` + `npm run type-check` + `npm run build` pass.
+- **Admin booking search (2026-06-11):** Issue #22 on branch `issue-22-admin-booking-search` — `GET /api/admin/bookings` (email, bookingRef, userId, showtimeId filters) and `GET /api/admin/users/:userId/bookings`; minimal admin shell with `AdminBookingsView`, `AdminUserBookingsView`, `BookingsTable`; customer JWT 403 on admin routes; `go test ./...` + `npm run type-check` pass.
 
 ## In Progress
 
-- None — ready for #20 (Digital ticket + confirmation email).
+- None — ready for #23 (Admin audit + email logs).
 
 ## Next Up
 
@@ -55,7 +56,7 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 9 | ~~[#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19)~~ | ~~My Bookings~~ ✅ `issue-19-my-bookings` | 08 |
 | 10 | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email | 09 |
 | 11 | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | Admin shell + dashboard | 10 |
-| 12 | [#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22) | Admin booking search | 10 |
+| 12 | ~~[#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22)~~ | ~~Admin booking search~~ ✅ `issue-22-admin-booking-search` | 10 |
 | 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |
 | 14 | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) | 10 |
 

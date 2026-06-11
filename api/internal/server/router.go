@@ -5,6 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	adminpkg "github.com/Jarukit-PM/TicketBookingSystem/api/internal/admin"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
@@ -112,6 +113,18 @@ func NewRouter(deps Deps) *gin.Engine {
 	bookingsRoutes.POST("/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
 	bookingsRoutes.GET("/mine", auth.RequireAuth(authMw), handler.ListMyBookings(bookingsDeps))
 	bookingsRoutes.GET("/:id", auth.RequireAuth(authMw), handler.GetBooking(bookingsDeps))
+
+	adminGroup := api.Group("/admin")
+	adminGroup.Use(auth.RequireAuth(authMw), auth.RequireAdmin(authMw))
+	bookingsAdminSvc := &adminpkg.BookingsService{
+		Bookings:  bookingRepo,
+		Showtimes: catalogRepos.Showtimes,
+		Movies:    catalogRepos.Movies,
+		Users:     userRepo,
+	}
+	adminBookingsDeps := handler.AdminBookingsDeps{Service: bookingsAdminSvc}
+	adminGroup.GET("/bookings", handler.SearchAdminBookings(adminBookingsDeps))
+	adminGroup.GET("/users/:userId/bookings", handler.ListAdminUserBookings(adminBookingsDeps))
 
 	wsDeps := ws.HandlerDeps{Hub: deps.Hub, Inventory: inventorySvc}
 	r.GET("/ws/showtimes/:id", ws.Showtime(wsDeps))
