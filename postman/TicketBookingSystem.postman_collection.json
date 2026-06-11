@@ -1,0 +1,493 @@
+{
+  "info": {
+    "name": "Ticket Booking System API",
+    "description": "Cinema ticket booking MVP — local dev via nginx at http://localhost.\n\nAuth uses httpOnly JWT cookie (`tbs_session`). Run **Auth → Login** first; Postman stores the cookie automatically for `localhost`.\n\nWebSocket `GET /ws/showtimes/:id` is not included (use browser or wscat).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "ticket-booking-system"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost/api" },
+    { "key": "cinemaId", "value": "" },
+    { "key": "movieId", "value": "" },
+    { "key": "showtimeId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "bookingRef", "value": "" },
+    { "key": "ticketToken", "value": "" },
+    { "key": "idempotencyKey", "value": "{{$guid}}" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "Health check (deep)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health?deep=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"],
+              "query": [{ "key": "deep", "value": "1" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Test Customer\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Login OK', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Google OAuth start",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/google",
+            "description": "Browser redirect flow — open in browser, not typical Postman REST flow."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog (Public)",
+      "item": [
+        {
+          "name": "List cinemas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/cinemas"
+          }
+        },
+        {
+          "name": "List movies (Now Showing)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies?cinemaId={{cinemaId}}&tab=now_showing",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies"],
+              "query": [
+                { "key": "cinemaId", "value": "{{cinemaId}}" },
+                { "key": "tab", "value": "now_showing" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List movies (Coming Soon)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies?cinemaId={{cinemaId}}&tab=coming_soon",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies"],
+              "query": [
+                { "key": "cinemaId", "value": "{{cinemaId}}" },
+                { "key": "tab", "value": "coming_soon" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get movie detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/movies/{{movieId}}?cinemaId={{cinemaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["movies", "{{movieId}}"],
+              "query": [{ "key": "cinemaId", "value": "{{cinemaId}}" }]
+            }
+          }
+        },
+        {
+          "name": "List showtimes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/showtimes?cinemaId={{cinemaId}}&movieId={{movieId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["showtimes"],
+              "query": [
+                { "key": "cinemaId", "value": "{{cinemaId}}" },
+                { "key": "movieId", "value": "{{movieId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seat Map & Holds",
+      "item": [
+        {
+          "name": "Get seat snapshot",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/showtimes/{{showtimeId}}/seats"
+          }
+        },
+        {
+          "name": "Add holds",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seatIds\": [\"A-1\", \"A-2\"]\n}"
+            },
+            "url": "{{baseUrl}}/showtimes/{{showtimeId}}/holds",
+            "description": "Requires auth cookie (Login first)."
+          }
+        },
+        {
+          "name": "Release holds (selected)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seatIds\": [\"A-1\"]\n}"
+            },
+            "url": "{{baseUrl}}/showtimes/{{showtimeId}}/holds"
+          }
+        },
+        {
+          "name": "Release all holds",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/showtimes/{{showtimeId}}/holds"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Confirm booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"showtimeId\": \"{{showtimeId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/bookings/confirm"
+          }
+        },
+        {
+          "name": "My bookings (upcoming)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/mine?upcoming=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "mine"],
+              "query": [{ "key": "upcoming", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "My bookings (history)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/mine?upcoming=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "mine"],
+              "query": [{ "key": "upcoming", "value": "false" }]
+            }
+          }
+        },
+        {
+          "name": "Get booking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Get ticket (QR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bookings/{{bookingId}}/ticket"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/dashboard",
+            "description": "Admin role required."
+          }
+        },
+        {
+          "name": "Search bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings?bookingRef={{bookingRef}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "bookings"],
+              "query": [
+                { "key": "bookingRef", "value": "{{bookingRef}}" },
+                { "key": "email", "value": "", "disabled": true },
+                { "key": "userId", "value": "", "disabled": true },
+                { "key": "showtimeId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "User booking history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/users/{{userId}}/bookings"
+          }
+        },
+        {
+          "name": "Resolve ticket QR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/tickets/resolve?ref={{bookingRef}}&t={{ticketToken}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "tickets", "resolve"],
+              "query": [
+                { "key": "ref", "value": "{{bookingRef}}" },
+                { "key": "t", "value": "{{ticketToken}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Audit logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Email logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-logs?bookingId={{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-logs"],
+              "query": [{ "key": "bookingId", "value": "{{bookingId}}" }]
+            }
+          }
+        },
+        {
+          "name": "Admin Movies",
+          "item": [
+            {
+              "name": "List movies",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/admin/movies"
+              }
+            },
+            {
+              "name": "Create movie",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"New Film\",\n  \"status\": \"NOW_SHOWING\",\n  \"synopsis\": \"A great movie.\",\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"rating\": \"PG-13\"\n}"
+                },
+                "url": "{{baseUrl}}/admin/movies"
+              }
+            },
+            {
+              "name": "Get movie",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/admin/movies/{{movieId}}"
+              }
+            },
+            {
+              "name": "Update movie",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Film\",\n  \"status\": \"NOW_SHOWING\",\n  \"synopsis\": \"Updated synopsis.\",\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"rating\": \"PG-13\"\n}"
+                },
+                "url": "{{baseUrl}}/admin/movies/{{movieId}}"
+              }
+            },
+            {
+              "name": "Delete movie",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/admin/movies/{{movieId}}"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Cinemas",
+          "item": [
+            {
+              "name": "List cinemas",
+              "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/cinemas" }
+            },
+            {
+              "name": "Create cinema",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Downtown Cinema\",\n  \"address\": \"123 Main St\",\n  \"timezone\": \"Asia/Bangkok\"\n}"
+                },
+                "url": "{{baseUrl}}/admin/cinemas"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Screens",
+          "item": [
+            {
+              "name": "List screens",
+              "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/screens" }
+            },
+            {
+              "name": "Create screen",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cinemaId\": \"{{cinemaId}}\",\n  \"name\": \"Hall 1\",\n  \"layout\": [\n    { \"seatId\": \"A-1\", \"row\": \"A\", \"col\": 1, \"type\": \"standard\" },\n    { \"seatId\": \"A-2\", \"row\": \"A\", \"col\": 2, \"type\": \"standard\" }\n  ]\n}"
+                },
+                "url": "{{baseUrl}}/admin/screens"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Showtimes",
+          "item": [
+            {
+              "name": "List showtimes",
+              "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/showtimes" }
+            },
+            {
+              "name": "Create showtime",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"movieId\": \"{{movieId}}\",\n  \"screenId\": \"\",\n  \"startsAt\": \"2026-12-01T19:00:00Z\",\n  \"priceTiers\": { \"standard\": 1200, \"vip\": 1800 }\n}"
+                },
+                "url": "{{baseUrl}}/admin/showtimes"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
