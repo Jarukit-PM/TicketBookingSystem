@@ -11,6 +11,7 @@ import (
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/handler"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/hold"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/inventory"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/middleware"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
@@ -74,6 +75,18 @@ func NewRouter(deps Deps) *gin.Engine {
 	)
 	seatsDeps := handler.SeatsDeps{Inventory: inventorySvc}
 	api.GET("/showtimes/:id/seats", handler.GetShowtimeSeats(seatsDeps))
+
+	holdSvc := hold.NewService(
+		catalogRepos.Showtimes,
+		catalogRepos.Screens,
+		catalogRepos.Cinemas,
+		bookingRepo,
+		deps.Redis,
+	)
+	holdsDeps := handler.HoldsDeps{Holds: holdSvc}
+	showtimeHolds := api.Group("/showtimes/:id/holds")
+	showtimeHolds.POST("", auth.RequireAuth(authMw), handler.AddShowtimeHolds(holdsDeps))
+	showtimeHolds.DELETE("", auth.RequireAuth(authMw), handler.RemoveShowtimeHolds(holdsDeps))
 
 	return r
 }
