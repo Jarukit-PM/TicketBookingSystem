@@ -37,8 +37,19 @@ func NewRouter(deps Deps) *gin.Engine {
 	rateLimiter := auth.NewLoginRateLimiter(deps.Redis)
 	authSvc := auth.NewService(userRepo, tokenSvc, rateLimiter, deps.Config.AdminEmail)
 
+	googleOAuth := auth.NewGoogleOAuth(
+		deps.Config.GoogleClientID,
+		deps.Config.GoogleClientSecret,
+		deps.Config.GoogleRedirectURL(),
+	)
+
 	cookieOpts := auth.CookieOptions{Secure: deps.Config.CookieSecure()}
-	authDeps := handler.AuthDeps{Service: authSvc, CookieOptions: cookieOpts}
+	authDeps := handler.AuthDeps{
+		Service:       authSvc,
+		Google:        googleOAuth,
+		AppURL:        deps.Config.AppURL,
+		CookieOptions: cookieOpts,
+	}
 	authMw := auth.MiddlewareDeps{Service: authSvc}
 
 	api := r.Group("/api")
@@ -47,6 +58,8 @@ func NewRouter(deps Deps) *gin.Engine {
 	authRoutes.POST("/login", handler.Login(authDeps))
 	authRoutes.POST("/logout", handler.Logout(authDeps))
 	authRoutes.GET("/me", auth.RequireAuth(authMw), handler.Me(authDeps))
+	authRoutes.GET("/google", handler.GoogleStart(authDeps))
+	authRoutes.GET("/google/callback", handler.GoogleCallback(authDeps))
 
 	return r
 }
