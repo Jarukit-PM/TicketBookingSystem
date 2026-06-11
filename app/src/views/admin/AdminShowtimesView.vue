@@ -119,7 +119,7 @@ function startEdit(showtime: Showtime) {
     standard: showtime.priceTiers.standard,
     vip: showtime.priceTiers.vip,
     wheelchair: showtime.priceTiers.wheelchair,
-    status: showtime.status,
+    status: showtime.status as ShowtimeStatus,
   }
 }
 
