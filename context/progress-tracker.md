@@ -34,10 +34,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Booking confirm (2026-06-11):** Issue #18 on branch `issue-18-booking-confirm` — `POST /api/bookings/confirm` with `Idempotency-Key`, sorted `lock:confirm:{showtimeId}:{seatId}` acquisition, `bookingRef` + `ticketToken`, Redis idempotency cache (~24h), holds cleared on success, `seat_sold` WS events, asynq `email:send` enqueue + worker stub; `CheckoutView` confirm flow + `BookingConfirmationView`; `go test ./internal/booking/...` + `go test ./...` + `npm run build` pass.
 - **My Bookings (2026-06-11):** Issue #19 on branch `issue-19-my-bookings` — `GET /api/bookings/mine?upcoming=true|false` and `GET /api/bookings/:id` (owner or admin), confirmed bookings only with showtime enrichment; `MyBookingsView` (upcoming/history tabs), `BookingDetailView`, `BookingCard`, ticket placeholder route; `go test ./...` + `npm run type-check` + `npm run build` pass.
 - **Admin booking search (2026-06-11):** Issue #22 on branch `issue-22-admin-booking-search` — `GET /api/admin/bookings` (email, bookingRef, userId, showtimeId filters) and `GET /api/admin/users/:userId/bookings`; minimal admin shell with `AdminBookingsView`, `AdminUserBookingsView`, `BookingsTable`; customer JWT 403 on admin routes; `go test ./...` + `npm run type-check` pass.
+- **Admin QR scan (2026-06-11):** Issue #24 on branch `issue-24-admin-qr-scan` — `GET /api/admin/tickets/resolve?ref=&t=` (HMAC token validate), `AdminScanView` + `QrScanner` (`@zxing/browser` camera + file fallback), scan → `/admin/users/:userId/bookings`, error toast on invalid QR; Vitest URL parser tests; manual camera checklist in scan view; `go test ./...` + `npm run test` + `npm run build` pass.
 
 ## In Progress
 
-- None — ready for #23 (Admin audit + email logs).
+- None — ready for #20 (Digital ticket + confirmation email) or #21 (Admin dashboard).
 
 ## Next Up
 
@@ -57,8 +58,8 @@ Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL:
 | 10 | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email | 09 |
 | 11 | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | Admin shell + dashboard | 10 |
 | 12 | ~~[#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22)~~ | ~~Admin booking search~~ ✅ `issue-22-admin-booking-search` | 10 |
-| 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |
-| 14 | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) | 10 |
+| 13 | ~~[#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23)~~ | ~~Admin audit + email logs~~ ✅ `issue-23-admin-logs` | 10 |
+| 14 | ~~[#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24)~~ | ~~Admin QR scan (HITL)~~ ✅ `issue-24-admin-qr-scan` | 10 |
 
 **Start immediately (no blockers):** #20 (Digital ticket + confirmation email).
 

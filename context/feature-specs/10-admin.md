@@ -95,7 +95,7 @@ type Dashboard struct {
 - [ ] Booking search + user bookings list handlers
 - [ ] Audit log + email log list endpoints
 - [ ] AdminLayout + dashboard + bookings table views
-- [ ] QrScanner + scan flow to user bookings
+- [x] QrScanner + scan flow to user bookings
 - [ ] Link catalog admin views into sidebar (spec 06)
 - [ ] Seed data demo for dashboard metrics
 

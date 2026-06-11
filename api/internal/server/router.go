@@ -135,6 +135,13 @@ func NewRouter(deps Deps) *gin.Engine {
 	adminGroup.GET("/audit-logs", handler.ListAdminAuditLogs(logsDeps))
 	adminGroup.GET("/email-logs", handler.ListAdminEmailLogs(logsDeps))
 
+	ticketsAdminSvc := &adminpkg.TicketsService{
+		Bookings:     bookingRepo,
+		TicketSecret: deps.Config.TicketHMACSecret(),
+	}
+	adminTicketsDeps := handler.AdminTicketsDeps{Service: ticketsAdminSvc}
+	adminGroup.GET("/tickets/resolve", handler.ResolveAdminTicket(adminTicketsDeps))
+
 	wsDeps := ws.HandlerDeps{Hub: deps.Hub, Inventory: inventorySvc}
 	r.GET("/ws/showtimes/:id", ws.Showtime(wsDeps))
 

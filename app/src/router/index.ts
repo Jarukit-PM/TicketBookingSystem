@@ -77,6 +77,11 @@ const router = createRouter({
           component: () => import('../views/admin/AdminUserBookingsView.vue'),
         },
         {
+          path: 'scan',
+          name: 'admin-scan',
+          component: () => import('../views/admin/AdminScanView.vue'),
+        },
+        {
           path: 'logs',
           name: 'admin-logs',
           component: () => import('../views/admin/AdminLogsView.vue'),
