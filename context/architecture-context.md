@@ -126,6 +126,7 @@ AVAILABLE = layout seats − SOLD − BLOCKED − (others' Redis HOLDs)
 ### Session
 
 - **JWT** in `httpOnly` cookie only for MVP (`Secure`, `SameSite=Lax`, path `/api`). SPA uses `credentials: 'include'`. No Bearer token in client JS.
+- **Lifetime:** 7 days from issue; configurable via `JWT_EXPIRY` (default `168h`). No refresh tokens in MVP.
 - Claims: `sub` (user id), `role` (`customer`  `admin`), `exp`.
 - Vue Router `beforeEach`: require auth for `/book/`*, `/my-bookings`, `/admin/*`.
 - Gin middleware: validate JWT on protected routes; `RequireAdmin` for `/api/admin/*`.

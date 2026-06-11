@@ -19,6 +19,7 @@ Customers and admins sign in securely. SPA uses cookie-based sessions (`credenti
 3. First admin via `ADMIN_EMAIL` env on bootstrap or seed.
 4. bcrypt cost 12 for password hashes.
 5. Google OAuth: authorization code flow; callback `GET /api/auth/google/callback`.
+6. **JWT session lifetime: 7 days** — default `JWT_EXPIRY=168h` (env override allowed; no refresh tokens in MVP).
 
 ## Commands
 
@@ -39,7 +40,7 @@ cd app && npm run type-check && npm run build
 | GET | `/api/auth/google` | Public | Redirect to Google |
 | GET | `/api/auth/google/callback` | Public | Set-Cookie, redirect to `APP_URL` |
 
-JWT claims: `sub` (user id), `role`, `exp`.
+JWT claims: `sub` (user id), `role`, `exp` (7 days from issue unless `JWT_EXPIRY` overrides).
 
 ## Vue Structure
 
@@ -124,4 +125,4 @@ func RequireAdmin() gin.HandlerFunc { /* role == admin */ }
 
 ## Open Questions
 
-- JWT expiry duration (recommend **7d** session) — confirm at implementation if not set in env `JWT_EXPIRY`.
+- None — JWT expiry confirmed **7 days** (`JWT_EXPIRY`, default `168h`).

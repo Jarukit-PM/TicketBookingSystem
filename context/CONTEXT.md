@@ -75,7 +75,7 @@ A user with elevated role who can manage all cinemas, catalogs, showtimes, booki
 _Avoid_: Venue manager, cinema-scoped admin (MVP)
 
 **Session**:
-Authenticated API access for the SPA via JWT in an `httpOnly` cookie (same origin behind nginx). No Bearer token in client JS for MVP.
+Authenticated API access for the SPA via JWT in an `httpOnly` cookie (same origin behind nginx). **7-day** lifetime (`JWT_EXPIRY`, default `168h`). No Bearer token in client JS for MVP.
 _Avoid_: localStorage JWT, Authorization header in SPA (MVP)
 
 **Account link**:

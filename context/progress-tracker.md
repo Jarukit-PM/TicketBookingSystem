@@ -57,6 +57,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Idempotency:** Same key returns cached booking on success; expired holds on failed retry → `409`, new key for fresh checkout.
 - **Admin scope:** Global — any admin manages all cinemas in MVP; no per-cinema RBAC.
 - **Auth session:** httpOnly JWT cookie only for SPA (same origin via nginx); no Bearer in client for MVP.
+- **JWT expiry:** **7 days** (`JWT_EXPIRY`, default `168h`); no refresh tokens in MVP.
 - **OAuth link:** Google sign-in auto-links to existing user when verified email matches.
 - **Showtime cutoff:** No hold/confirm after `startsAt`; cinema timezone for comparison.
 - **Seat limit:** Max 10 seats per hold/booking per user per showtime.
@@ -87,5 +88,6 @@ See `context/architecture-context.md`. Summary:
 - **2026-06-11:** Issue #3 — Docker Compose + nginx on branch `issue-3-docker-nginx` (six services, SPA volume, api/worker stubs).
 - **2026-06-11:** Feature spec 01 design system implemented on branch `issue-1-design-system` (tokens, Tailwind v4, UI primitives, preview page).
 - **2026-06-11:** Grill-with-docs session — 19 domain decisions captured in `CONTEXT.md`; specs 02–10 written per `spec-driven-development`.
+- **2026-06-11:** Auth JWT session lifetime confirmed — **7 days** (`JWT_EXPIRY`, default `168h`); spec 05 open question closed.
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
 - **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. `api/` scaffolded per spec 03.
