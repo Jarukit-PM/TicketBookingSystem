@@ -12,6 +12,11 @@ const session = useBookingSessionStore()
 const booking = computed(() => session.confirmedBooking)
 
 const showtimeId = computed(() => route.params.showtimeId as string)
+const bookingId = computed(() => route.params.bookingId as string)
+
+function viewTicket(): void {
+  router.push({ name: 'booking-ticket', params: { bookingId: bookingId.value } })
+}
 
 function goHome(): void {
   session.clear()
@@ -57,7 +62,8 @@ function bookMore(): void {
           </dl>
 
           <div class="flex flex-wrap gap-3 pt-2">
-            <Button type="button" @click="goHome">Back to home</Button>
+            <Button type="button" @click="viewTicket">View ticket</Button>
+            <Button type="button" variant="ghost" @click="goHome">Back to home</Button>
             <Button type="button" variant="ghost" @click="bookMore">Book more seats</Button>
           </div>
         </CardContent>

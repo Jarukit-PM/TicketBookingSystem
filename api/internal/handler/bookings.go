@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -60,7 +61,7 @@ func ConfirmBooking(deps BookingsDeps) gin.HandlerFunc {
 
 		if deps.Tasks != nil {
 			if err := deps.Tasks.EnqueueEmailSend(c.Request.Context(), result.ID.Hex()); err != nil {
-				_ = err
+				log.Printf("enqueue email:send booking=%s: %v", result.ID.Hex(), err)
 			}
 		}
 
@@ -100,6 +101,35 @@ func GetBooking(deps BookingsDeps) gin.HandlerFunc {
 			return
 		}
 		httputil.OK(c, item)
+	}
+}
+
+// GetBookingTicket handles GET /api/bookings/:id/ticket.
+func GetBookingTicket(deps BookingsDeps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, ok := auth.UserFromContext(c)
+		if !ok {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		ticket, err := deps.Bookings.GetTicket(c.Request.Context(), user.ID.Hex(), c.Param("id"))
+		if err != nil {
+			writeTicketError(c, err)
+			return
+		}
+		httputil.OK(c, ticket)
+	}
+}
+
+func writeTicketError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, booking.ErrBookingNotFound):
+		httputil.Error(c, http.StatusNotFound, "BOOKING_NOT_FOUND", "booking not found")
+	case errors.Is(err, booking.ErrForbidden):
+		httputil.Error(c, http.StatusForbidden, "FORBIDDEN", "not allowed to view this ticket")
+	default:
+		httputil.Error(c, http.StatusInternalServerError, "TICKET_ERROR", "failed to load ticket")
 	}
 }
 

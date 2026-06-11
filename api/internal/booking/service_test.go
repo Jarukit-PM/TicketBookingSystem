@@ -224,6 +224,7 @@ func newConfirmEnv(t *testing.T, now time.Time, sold []string) *confirmEnv {
 		rdb,
 		booking.NewIdempotencyStore(rdb, time.Hour),
 		booking.WithClock(func() time.Time { return now }),
+		booking.WithTicketConfig("test-ticket-secret", "http://localhost"),
 	)
 
 	return &confirmEnv{
@@ -373,6 +374,9 @@ func TestConfirm_TotalPriceAndBookingRef(t *testing.T) {
 	}
 	if got.TicketToken == "" || got.TicketToken == got.BookingRef {
 		t.Fatalf("expected opaque ticket token distinct from booking ref")
+	}
+	if !booking.ValidateTicketToken(got.BookingRef, got.TicketToken, got, "test-ticket-secret") {
+		t.Fatalf("expected signed ticket token to validate")
 	}
 }
 
