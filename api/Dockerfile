@@ -14,7 +14,7 @@ RUN CGO_ENABLED=0 go build -o /worker ./cmd/worker
 
 FROM alpine:3.20
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates tzdata
 
 COPY --from=builder /server /server
 COPY --from=builder /worker /worker

@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "time/tzdata" // embed IANA zones for Alpine/scratch images (Asia/Bangkok, etc.)
+
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/server"

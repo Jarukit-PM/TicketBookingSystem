@@ -28,6 +28,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Feature specs (2026-06-11):** `context/CONTEXT.md` glossary + grill decisions; feature specs **02–10** authored (`spec-driven-development`).
 - **Implementation issues (2026-06-11):** Specs **05–10** broken into 14 vertical-slice GitHub issues **#11–#24** (`to-issues`); label `ready-for-human` added for HITL slices (#13 OAuth, #24 QR scan).
 - **MVP stack (2026-06-11):** Issues #11–#24 — auth (email + Google OAuth), public catalog browse, admin catalog CRUD + dashboard, seat map + Redis holds + WebSocket, booking confirm, my bookings, digital ticket + SendGrid email worker, admin booking search, audit/email logs, admin QR scan.
+- **Thai catalog seed (2026-06-11):** `cmd/seed` loads Bangkok Major/SF data — 7 cinemas, 17 screens, 14 movies (cinematic.asia posters), 30 days of showtimes; `-reset-catalog` replaces existing catalog. API embeds `time/tzdata` + Alpine `tzdata` for `Asia/Bangkok` browse cutoffs.
 
 ## In Progress
 

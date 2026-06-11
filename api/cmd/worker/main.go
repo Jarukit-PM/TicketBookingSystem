@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "time/tzdata"
+
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 

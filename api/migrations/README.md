@@ -34,4 +34,8 @@ cd api
 go run ./cmd/seed
 ```
 
-Creates one cinema, two screens, two movies, and several future showtimes for local API testing.
+Fresh installs seed **7 Bangkok cinemas** (Major Cineplex + SF Cinema), **17 screens**, **14 movies** (with real posters from [cinematic.asia](https://cinematic.asia)), and **30 days** of showtimes. To replace an existing catalog:
+
+```bash
+go run ./cmd/seed -reset-catalog
+```
