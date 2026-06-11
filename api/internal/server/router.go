@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/handler"
@@ -47,6 +48,20 @@ func NewRouter(deps Deps) *gin.Engine {
 	authRoutes.POST("/login", handler.Login(authDeps))
 	authRoutes.POST("/logout", handler.Logout(authDeps))
 	authRoutes.GET("/me", auth.RequireAuth(authMw), handler.Me(authDeps))
+
+
+	catalogRepos := catalog.NewMongoRepositories(database)
+	catalogSvc := &catalog.Service{
+		Cinemas:   catalogRepos.Cinemas,
+		Screens:   catalogRepos.Screens,
+		Movies:    catalogRepos.Movies,
+		Showtimes: catalogRepos.Showtimes,
+	}
+	catalogDeps := handler.CatalogDeps{Service: catalogSvc}
+	api.GET("/cinemas", handler.ListCinemas(catalogDeps))
+	api.GET("/movies", handler.ListMovies(catalogDeps))
+	api.GET("/movies/:id", handler.GetMovie(catalogDeps))
+	api.GET("/showtimes", handler.ListShowtimes(catalogDeps))
 
 	return r
 }

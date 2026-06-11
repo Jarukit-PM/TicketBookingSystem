@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import {
   Badge,
   Button,
@@ -23,6 +24,17 @@ const searchQuery = ref('')
       >
         Cinema Tickets
       </span>
+      <div class="ml-auto flex items-center gap-3">
+        <RouterLink
+          to="/login"
+          class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
+        >
+          Sign in
+        </RouterLink>
+        <RouterLink to="/register">
+          <Button variant="secondary">Register</Button>
+        </RouterLink>
+      </div>
     </header>
 
     <main class="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">

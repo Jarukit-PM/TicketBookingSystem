@@ -79,3 +79,16 @@ export const api = {
     return apiRequest<void>(path, { method: 'DELETE' })
   },
 }
+
+function buildQuery(params?: Record<string, string>): string {
+  if (!params) {
+    return ''
+  }
+  const search = new URLSearchParams(params)
+  const qs = search.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export function apiGet<T>(path: string, params?: Record<string, string>): Promise<T> {
+  return api.get<T>(`${path}${buildQuery(params)}`)
+}
