@@ -6,10 +6,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/handler"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/inventory"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/middleware"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
 )
@@ -62,6 +64,16 @@ func NewRouter(deps Deps) *gin.Engine {
 	api.GET("/movies", handler.ListMovies(catalogDeps))
 	api.GET("/movies/:id", handler.GetMovie(catalogDeps))
 	api.GET("/showtimes", handler.ListShowtimes(catalogDeps))
+
+	bookingRepo := booking.NewMongoRepository(database)
+	inventorySvc := inventory.NewService(
+		catalogRepos.Showtimes,
+		catalogRepos.Screens,
+		bookingRepo,
+		deps.Redis,
+	)
+	seatsDeps := handler.SeatsDeps{Inventory: inventorySvc}
+	api.GET("/showtimes/:id/seats", handler.GetShowtimeSeats(seatsDeps))
 
 	return r
 }
