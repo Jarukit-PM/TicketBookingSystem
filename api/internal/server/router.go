@@ -5,8 +5,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	adminpkg "github.com/Jarukit-PM/TicketBookingSystem/api/internal/admin"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/audit"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
@@ -57,6 +59,16 @@ func NewRouter(deps Deps) *gin.Engine {
 
 	admin := api.Group("/admin")
 	admin.Use(auth.RequireAuth(authMw), auth.RequireAdmin(authMw))
+
+	bookingRepo := booking.NewMongoRepository(database)
+	dashboardSvc := &adminpkg.DashboardService{
+		Showtimes: catalogRepos.Showtimes,
+		Screens:   catalogRepos.Screens,
+		Movies:    catalogRepos.Movies,
+		Bookings:  bookingRepo,
+	}
+	dashboardDeps := handler.AdminDashboardDeps{Service: dashboardSvc}
+	admin.GET("/dashboard", handler.GetAdminDashboard(dashboardDeps))
 
 	movies := admin.Group("/movies")
 	movies.GET("", handler.ListAdminMovies(adminCatalogDeps))

@@ -34,7 +34,11 @@ const router = createRouter({
       component: () => import('../views/admin/AdminLayout.vue'),
       meta: { requiresAdmin: true },
       children: [
-        { path: '', redirect: { name: 'admin-movies' } },
+        {
+          path: '',
+          name: 'admin-dashboard',
+          component: () => import('../views/admin/AdminDashboardView.vue'),
+        },
         {
           path: 'movies',
           name: 'admin-movies',
@@ -54,6 +58,21 @@ const router = createRouter({
           path: 'showtimes',
           name: 'admin-showtimes',
           component: () => import('../views/admin/AdminShowtimesView.vue'),
+        },
+        {
+          path: 'bookings',
+          name: 'admin-bookings',
+          component: () => import('../views/admin/AdminPlaceholderView.vue'),
+        },
+        {
+          path: 'scan',
+          name: 'admin-scan',
+          component: () => import('../views/admin/AdminPlaceholderView.vue'),
+        },
+        {
+          path: 'logs',
+          name: 'admin-logs',
+          component: () => import('../views/admin/AdminPlaceholderView.vue'),
         },
       ],
     },
