@@ -48,12 +48,15 @@ export function useLocaleFormat() {
     }).format(new Date(iso))
   }
 
-  function formatTHB(amount: number): string {
+  /** Format an amount stored in satang (minor units) as THB. */
+  function formatTHB(satang: number): string {
+    const baht = satang / 100
     return new Intl.NumberFormat(intlLocale(), {
       style: 'currency',
       currency: 'THB',
-      maximumFractionDigits: 0,
-    }).format(amount)
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(baht)
   }
 
   return {

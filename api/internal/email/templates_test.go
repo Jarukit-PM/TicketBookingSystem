@@ -7,6 +7,24 @@ import (
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 )
 
+func TestFormatTHBAmount(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		satang int64
+		want   string
+	}{
+		{2500, "25"},
+		{22000, "220"},
+		{1250, "12.50"},
+	}
+	for _, tc := range tests {
+		if got := formatTHBAmount(tc.satang); got != tc.want {
+			t.Fatalf("formatTHBAmount(%d) = %q, want %q", tc.satang, got, tc.want)
+		}
+	}
+}
+
 func TestRenderConfirmationEnglish(t *testing.T) {
 	t.Parallel()
 

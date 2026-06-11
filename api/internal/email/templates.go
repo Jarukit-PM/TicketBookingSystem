@@ -45,3 +45,13 @@ func confirmationSubject(locale, movieTitle string) string {
 }
 
 func formatSeats(seats []string) string { return strings.Join(seats, ", ") }
+
+// formatTHBAmount converts satang (minor units) to a THB display string.
+func formatTHBAmount(satang int64) string {
+	baht := satang / 100
+	remainder := satang % 100
+	if remainder == 0 {
+		return fmt.Sprintf("%d", baht)
+	}
+	return fmt.Sprintf("%d.%02d", baht, remainder)
+}

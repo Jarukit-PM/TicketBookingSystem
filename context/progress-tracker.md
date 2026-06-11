@@ -37,6 +37,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Showtime date filter (2026-06-12):** `MovieDetailView` — horizontal date strip (`ShowtimeDateFilter`) groups showtimes by cinema-local calendar day; cards show time-only once a date is selected; EN/TH i18n + locale-aware labels.
 - **Feature spec 11 — i18n (2026-06-12):** `vue-i18n@10`, `en.json` / `th.json`, browser-detect + `LocaleSwitcher` (customer header + admin sidebar), `useLocaleFormat`, `translateApiError`; `bookings.locale` at confirm via `X-Locale`; EN/TH SendGrid templates; Noto Sans Thai + Inter fonts; admin bookings table locale column; Vitest + Go tests pass.
 - **UI polish — icons + skeleton loading (2026-06-12):** Lucide icons across customer + admin pages; reusable `Skeleton`, `EmptyState`, `ErrorAlert`; feature skeletons (movie grid/detail, bookings, seat map, checkout, ticket, stats, table); shared `AppHeader`; shimmer animation with `prefers-reduced-motion`; `vue-tsc` + production build pass.
+- **THB currency display (2026-06-12):** Admin showtime pricing inputs/labels use baht (THB); API still stores satang; `formatTHB` and confirmation emails convert minor units to THB for display.
 
 ## In Progress
 

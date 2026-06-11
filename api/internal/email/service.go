@@ -103,7 +103,7 @@ func (s *Service) HandleEmailSend(ctx context.Context, t *asynq.Task) error {
 		ScreenName: sc.Name,
 		StartsAt:   st.StartsAt.UTC().Format(time.RFC1123),
 		Seats:      formatSeats(b.Seats),
-		Total:      fmt.Sprintf("%d", b.Total),
+		Total:      formatTHBAmount(b.Total),
 		TicketURL:  ticketURL,
 	})
 	if err != nil {

@@ -26,13 +26,23 @@ const filter = ref({
   movieId: '',
 })
 
+const SATANG_PER_BAHT = 100
+
+function satangToBaht(satang: number): number {
+  return satang / SATANG_PER_BAHT
+}
+
+function bahtToSatang(baht: number): number {
+  return Math.round(baht * SATANG_PER_BAHT)
+}
+
 const form = ref({
   movieId: '',
   screenId: '',
   startsAtLocal: '',
-  standard: 1200,
-  vip: 1800,
-  wheelchair: 1200,
+  standard: 220,
+  vip: 320,
+  wheelchair: 220,
   status: 'OPEN' as ShowtimeStatus,
 })
 
@@ -65,9 +75,9 @@ function resetForm() {
     movieId: movies.value[0]?.id || '',
     screenId: screens.value[0]?.id || '',
     startsAtLocal: toLocalInputValue(tomorrow.toISOString()),
-    standard: 1200,
-    vip: 1800,
-    wheelchair: 1200,
+    standard: 220,
+    vip: 320,
+    wheelchair: 220,
     status: 'OPEN',
   }
 }
@@ -130,9 +140,9 @@ function startEdit(showtime: Showtime) {
     movieId: showtime.movieId,
     screenId: showtime.screenId,
     startsAtLocal: toLocalInputValue(showtime.startsAt),
-    standard: showtime.priceTiers.standard,
-    vip: showtime.priceTiers.vip,
-    wheelchair: showtime.priceTiers.wheelchair,
+    standard: satangToBaht(showtime.priceTiers.standard),
+    vip: satangToBaht(showtime.priceTiers.vip),
+    wheelchair: satangToBaht(showtime.priceTiers.wheelchair),
     status: showtime.status as ShowtimeStatus,
   }
 }
@@ -145,9 +155,9 @@ async function onSubmit() {
       screenId: form.value.screenId,
       startsAt: new Date(form.value.startsAtLocal).toISOString(),
       priceTiers: {
-        standard: Number(form.value.standard),
-        vip: Number(form.value.vip),
-        wheelchair: Number(form.value.wheelchair),
+        standard: bahtToSatang(Number(form.value.standard)),
+        vip: bahtToSatang(Number(form.value.vip)),
+        wheelchair: bahtToSatang(Number(form.value.wheelchair)),
       },
       status: form.value.status,
     }
@@ -238,16 +248,16 @@ onMounted(loadAll)
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="standard">{{ t('admin.showtimes.standardCents') }}</label>
-            <Input id="standard" :model-value="String(form.standard)" @update:model-value="form.standard = Number($event) || 0" type="number" min="0" required />
+            <label class="text-sm text-copy-secondary" for="standard">{{ t('admin.showtimes.standardTHB') }}</label>
+            <Input id="standard" :model-value="String(form.standard)" @update:model-value="form.standard = Number($event) || 0" type="number" min="0" step="1" required />
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="vip">{{ t('admin.showtimes.vipCents') }}</label>
-            <Input id="vip" :model-value="String(form.vip)" @update:model-value="form.vip = Number($event) || 0" type="number" min="0" required />
+            <label class="text-sm text-copy-secondary" for="vip">{{ t('admin.showtimes.vipTHB') }}</label>
+            <Input id="vip" :model-value="String(form.vip)" @update:model-value="form.vip = Number($event) || 0" type="number" min="0" step="1" required />
           </div>
           <div class="space-y-2 md:col-span-2">
-            <label class="text-sm text-copy-secondary" for="wheelchair">{{ t('admin.showtimes.wheelchairCents') }}</label>
-            <Input id="wheelchair" :model-value="String(form.wheelchair)" @update:model-value="form.wheelchair = Number($event) || 0" type="number" min="0" required />
+            <label class="text-sm text-copy-secondary" for="wheelchair">{{ t('admin.showtimes.wheelchairTHB') }}</label>
+            <Input id="wheelchair" :model-value="String(form.wheelchair)" @update:model-value="form.wheelchair = Number($event) || 0" type="number" min="0" step="1" required />
           </div>
           <div class="flex gap-2 md:col-span-2">
             <Button type="submit" :disabled="movies.length === 0 || screens.length === 0">
