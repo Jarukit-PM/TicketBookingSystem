@@ -41,6 +41,8 @@ type MovieRepository interface {
 	FindMovieByID(ctx context.Context, id primitive.ObjectID) (*Movie, error)
 	ListMoviesByStatus(ctx context.Context, status string) ([]Movie, error)
 	ListMovies(ctx context.Context) ([]Movie, error)
+	ListComingSoonMovies(ctx context.Context) ([]Movie, error)
+	ListNonArchivedMovies(ctx context.Context) ([]Movie, error)
 	UpdateMovie(ctx context.Context, movie *Movie) error
 	DeleteMovie(ctx context.Context, id primitive.ObjectID) error
 }
@@ -52,6 +54,8 @@ type ShowtimeRepository interface {
 	ListShowtimesByScreen(ctx context.Context, screenID primitive.ObjectID, from time.Time) ([]Showtime, error)
 	ListShowtimesByMovie(ctx context.Context, movieID primitive.ObjectID) ([]Showtime, error)
 	ListAdminShowtimes(ctx context.Context, filter AdminShowtimeFilter) ([]Showtime, error)
+	ListShowtimesByScreens(ctx context.Context, screenIDs []primitive.ObjectID) ([]Showtime, error)
+	ListShowtimesByCinemaMovie(ctx context.Context, screenIDs []primitive.ObjectID, movieID primitive.ObjectID) ([]Showtime, error)
 	UpdateShowtime(ctx context.Context, showtime *Showtime) error
 	DeleteShowtime(ctx context.Context, id primitive.ObjectID) error
 }

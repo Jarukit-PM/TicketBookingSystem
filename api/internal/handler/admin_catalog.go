@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -466,16 +465,3 @@ func parseShowtimeFilter(c *gin.Context) (catalog.AdminShowtimeFilter, bool) {
 	return filter, true
 }
 
-func writeCatalogError(c *gin.Context, err error) {
-	switch {
-	case errors.Is(err, catalog.ErrNotFound):
-		httputil.Error(c, http.StatusNotFound, "NOT_FOUND", err.Error())
-	case errors.Is(err, catalog.ErrInvalidInput),
-		errors.Is(err, catalog.ErrInvalidStatus),
-		errors.Is(err, catalog.ErrInvalidSeat),
-		errors.Is(err, catalog.ErrInvalidShowtime):
-		httputil.Error(c, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
-	default:
-		httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
-	}
-}

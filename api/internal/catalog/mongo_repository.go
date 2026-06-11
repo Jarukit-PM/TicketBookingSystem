@@ -207,6 +207,28 @@ func (r *mongoMovieRepo) ListMovies(ctx context.Context) ([]Movie, error) {
 	return out, nil
 }
 
+func (r *mongoMovieRepo) ListComingSoonMovies(ctx context.Context) ([]Movie, error) {
+	return r.ListMoviesByStatus(ctx, MovieStatusComingSoon)
+}
+
+func (r *mongoMovieRepo) ListNonArchivedMovies(ctx context.Context) ([]Movie, error) {
+	cur, err := r.coll.Find(
+		ctx,
+		bson.M{"status": bson.M{"$ne": MovieStatusArchived}},
+		options.Find().SetSort(bson.D{{Key: "title", Value: 1}}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list non-archived movies: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Movie
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode movies: %w", err)
+	}
+	return out, nil
+}
+
 func (r *mongoMovieRepo) UpdateMovie(ctx context.Context, movie *Movie) error {
 	_, err := r.coll.ReplaceOne(ctx, bson.M{"_id": movie.ID}, movie)
 	if err != nil {
@@ -335,6 +357,55 @@ func (r *mongoShowtimeRepo) ListAdminShowtimes(ctx context.Context, filter Admin
 	return filtered, nil
 }
 
+func (r *mongoShowtimeRepo) ListShowtimesByScreens(ctx context.Context, screenIDs []primitive.ObjectID) ([]Showtime, error) {
+	if len(screenIDs) == 0 {
+		return []Showtime{}, nil
+	}
+	cur, err := r.coll.Find(
+		ctx,
+		bson.M{"screenId": bson.M{"$in": screenIDs}},
+		options.Find().SetSort(bson.D{{Key: "startsAt", Value: 1}}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list showtimes by screens: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Showtime
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode showtimes: %w", err)
+	}
+	return out, nil
+}
+
+func (r *mongoShowtimeRepo) ListShowtimesByCinemaMovie(
+	ctx context.Context,
+	screenIDs []primitive.ObjectID,
+	movieID primitive.ObjectID,
+) ([]Showtime, error) {
+	if len(screenIDs) == 0 {
+		return []Showtime{}, nil
+	}
+	cur, err := r.coll.Find(
+		ctx,
+		bson.M{
+			"screenId": bson.M{"$in": screenIDs},
+			"movieId":  movieID,
+		},
+		options.Find().SetSort(bson.D{{Key: "startsAt", Value: 1}}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list showtimes by cinema movie: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Showtime
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode showtimes: %w", err)
+	}
+	return out, nil
+}
+
 func (r *mongoShowtimeRepo) UpdateShowtime(ctx context.Context, showtime *Showtime) error {
 	_, err := r.coll.ReplaceOne(ctx, bson.M{"_id": showtime.ID}, showtime)
 	if err != nil {
@@ -350,3 +421,4 @@ func (r *mongoShowtimeRepo) DeleteShowtime(ctx context.Context, id primitive.Obj
 	}
 	return nil
 }
+

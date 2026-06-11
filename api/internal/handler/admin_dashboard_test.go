@@ -55,6 +55,12 @@ func (r *memShowtimeRepo) ListShowtimesByMovie(_ context.Context, _ primitive.Ob
 func (r *memShowtimeRepo) ListAdminShowtimes(_ context.Context, _ catalog.AdminShowtimeFilter) ([]catalog.Showtime, error) {
 	return nil, nil
 }
+func (r *memShowtimeRepo) ListShowtimesByScreens(_ context.Context, _ []primitive.ObjectID) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (r *memShowtimeRepo) ListShowtimesByCinemaMovie(_ context.Context, _ []primitive.ObjectID, _ primitive.ObjectID) ([]catalog.Showtime, error) {
+	return nil, nil
+}
 func (r *memShowtimeRepo) UpdateShowtime(_ context.Context, _ *catalog.Showtime) error { return nil }
 func (r *memShowtimeRepo) DeleteShowtime(_ context.Context, _ primitive.ObjectID) error { return nil }
 
@@ -83,6 +89,8 @@ func (r *memMovieRepo) ListMoviesByStatus(_ context.Context, _ string) ([]catalo
 	return nil, nil
 }
 func (r *memMovieRepo) ListMovies(_ context.Context) ([]catalog.Movie, error) { return nil, nil }
+func (r *memMovieRepo) ListComingSoonMovies(_ context.Context) ([]catalog.Movie, error) { return nil, nil }
+func (r *memMovieRepo) ListNonArchivedMovies(_ context.Context) ([]catalog.Movie, error) { return nil, nil }
 func (r *memMovieRepo) UpdateMovie(_ context.Context, _ *catalog.Movie) error { return nil }
 func (r *memMovieRepo) DeleteMovie(_ context.Context, _ primitive.ObjectID) error { return nil }
 

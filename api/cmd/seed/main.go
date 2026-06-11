@@ -275,9 +275,9 @@ func seedAdmin(ctx context.Context, cfg config.Config, database *mongo.Database)
 	}
 
 	userRepo := user.NewMongoRepository(database)
-	tokenSvc := auth.NewTokenService(cfg.JWTSecret, cfg.JWTExpiryDuration())
-	authSvc := auth.NewService(userRepo, tokenSvc, auth.NewLoginRateLimiter(nil), cfg.AdminEmail)
-	return authSvc.BootstrapAdmin(ctx, cfg.AdminEmail, cfg.AdminSeedPassword)
+	tokenService := auth.NewTokenService(cfg.JWTSecret, cfg.JWTExpiryDuration())
+	authService := auth.NewService(userRepo, tokenService, auth.NewLoginRateLimiter(nil), cfg.AdminEmail)
+	return authService.BootstrapAdmin(ctx, cfg.AdminEmail, cfg.AdminSeedPassword)
 }
 
 func sampleLayout(rowPrefix string) catalog.ScreenLayout {

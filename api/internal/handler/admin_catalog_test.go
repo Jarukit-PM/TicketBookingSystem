@@ -125,6 +125,14 @@ func (r *memCatalogRepos) ListMovies(_ context.Context) ([]catalog.Movie, error)
 	return out, nil
 }
 
+func (r *memCatalogRepos) ListComingSoonMovies(ctx context.Context) ([]catalog.Movie, error) {
+	return r.ListMoviesByStatus(ctx, catalog.MovieStatusComingSoon)
+}
+
+func (r *memCatalogRepos) ListNonArchivedMovies(_ context.Context) ([]catalog.Movie, error) {
+	return nil, nil
+}
+
 func (r *memCatalogRepos) UpdateMovie(_ context.Context, movie *catalog.Movie) error {
 	r.movies[movie.ID] = movie
 	return nil
@@ -146,6 +154,12 @@ func (r *memCatalogRepos) ListShowtimesByMovie(_ context.Context, _ primitive.Ob
 	return nil, nil
 }
 func (r *memCatalogRepos) ListAdminShowtimes(_ context.Context, _ catalog.AdminShowtimeFilter) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (r *memCatalogRepos) ListShowtimesByScreens(_ context.Context, _ []primitive.ObjectID) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (r *memCatalogRepos) ListShowtimesByCinemaMovie(_ context.Context, _ []primitive.ObjectID, _ primitive.ObjectID) ([]catalog.Showtime, error) {
 	return nil, nil
 }
 func (r *memCatalogRepos) UpdateShowtime(_ context.Context, _ *catalog.Showtime) error { return nil }

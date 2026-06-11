@@ -41,8 +41,19 @@ func NewRouter(deps Deps) *gin.Engine {
 	rateLimiter := auth.NewLoginRateLimiter(deps.Redis)
 	authSvc := auth.NewService(userRepo, tokenSvc, rateLimiter, deps.Config.AdminEmail)
 
+	googleOAuth := auth.NewGoogleOAuth(
+		deps.Config.GoogleClientID,
+		deps.Config.GoogleClientSecret,
+		deps.Config.GoogleRedirectURL(),
+	)
+
 	cookieOpts := auth.CookieOptions{Secure: deps.Config.CookieSecure()}
-	authDeps := handler.AuthDeps{Service: authSvc, CookieOptions: cookieOpts}
+	authDeps := handler.AuthDeps{
+		Service:       authSvc,
+		Google:        googleOAuth,
+		AppURL:        deps.Config.AppURL,
+		CookieOptions: cookieOpts,
+	}
 	authMw := auth.MiddlewareDeps{Service: authSvc}
 
 	api := r.Group("/api")
@@ -51,8 +62,23 @@ func NewRouter(deps Deps) *gin.Engine {
 	authRoutes.POST("/login", handler.Login(authDeps))
 	authRoutes.POST("/logout", handler.Logout(authDeps))
 	authRoutes.GET("/me", auth.RequireAuth(authMw), handler.Me(authDeps))
+	authRoutes.GET("/google", handler.GoogleStart(authDeps))
+	authRoutes.GET("/google/callback", handler.GoogleCallback(authDeps))
+
 
 	catalogRepos := catalog.NewMongoRepositories(database)
+	catalogSvc := &catalog.Service{
+		Cinemas:   catalogRepos.Cinemas,
+		Screens:   catalogRepos.Screens,
+		Movies:    catalogRepos.Movies,
+		Showtimes: catalogRepos.Showtimes,
+	}
+	catalogDeps := handler.CatalogDeps{Service: catalogSvc}
+	api.GET("/cinemas", handler.ListCinemas(catalogDeps))
+	api.GET("/movies", handler.ListMovies(catalogDeps))
+	api.GET("/movies/:id", handler.GetMovie(catalogDeps))
+	api.GET("/showtimes", handler.ListShowtimes(catalogDeps))
+
 	auditRepos := audit.NewMongoRepositories(database)
 	adminCatalogSvc := catalog.NewAdminService(catalogRepos, auditRepos.AuditLogs)
 	adminCatalogDeps := handler.AdminCatalogDeps{Service: adminCatalogSvc}

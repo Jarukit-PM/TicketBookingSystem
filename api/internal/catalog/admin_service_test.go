@@ -152,6 +152,20 @@ func (r *memCatalogRepos) ListMovies(_ context.Context) ([]catalog.Movie, error)
 	return out, nil
 }
 
+func (r *memCatalogRepos) ListComingSoonMovies(ctx context.Context) ([]catalog.Movie, error) {
+	return r.ListMoviesByStatus(ctx, catalog.MovieStatusComingSoon)
+}
+
+func (r *memCatalogRepos) ListNonArchivedMovies(_ context.Context) ([]catalog.Movie, error) {
+	out := make([]catalog.Movie, 0)
+	for _, m := range r.movies {
+		if m.Status != catalog.MovieStatusArchived {
+			out = append(out, *m)
+		}
+	}
+	return out, nil
+}
+
 func (r *memCatalogRepos) UpdateMovie(_ context.Context, movie *catalog.Movie) error {
 	r.movies[movie.ID] = movie
 	return nil
@@ -218,6 +232,40 @@ func (r *memCatalogRepos) ListAdminShowtimes(_ context.Context, filter catalog.A
 			}
 		}
 		out = append(out, *s)
+	}
+	return out, nil
+}
+
+func (r *memCatalogRepos) ListShowtimesByScreens(_ context.Context, screenIDs []primitive.ObjectID) ([]catalog.Showtime, error) {
+	allowed := make(map[primitive.ObjectID]struct{}, len(screenIDs))
+	for _, id := range screenIDs {
+		allowed[id] = struct{}{}
+	}
+	out := make([]catalog.Showtime, 0)
+	for _, s := range r.showtimes {
+		if _, ok := allowed[s.ScreenID]; ok {
+			out = append(out, *s)
+		}
+	}
+	return out, nil
+}
+
+func (r *memCatalogRepos) ListShowtimesByCinemaMovie(
+	_ context.Context,
+	screenIDs []primitive.ObjectID,
+	movieID primitive.ObjectID,
+) ([]catalog.Showtime, error) {
+	allowed := make(map[primitive.ObjectID]struct{}, len(screenIDs))
+	for _, id := range screenIDs {
+		allowed[id] = struct{}{}
+	}
+	out := make([]catalog.Showtime, 0)
+	for _, s := range r.showtimes {
+		if s.MovieID == movieID {
+			if _, ok := allowed[s.ScreenID]; ok {
+				out = append(out, *s)
+			}
+		}
 	}
 	return out, nil
 }
