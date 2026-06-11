@@ -75,8 +75,11 @@ export const api = {
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   },
-  delete(path: string) {
-    return apiRequest<void>(path, { method: 'DELETE' })
+  delete<T = void>(path: string, body?: unknown) {
+    return apiRequest<T>(path, {
+      method: 'DELETE',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
   },
 }
 

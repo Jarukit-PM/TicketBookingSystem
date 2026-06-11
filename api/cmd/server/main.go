@@ -13,6 +13,7 @@ import (
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/server"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/ws"
 )
 
 func main() {
@@ -34,10 +35,16 @@ func main() {
 		}
 	}()
 
+	hub := ws.NewHub(redisClient)
+	hubCtx, hubCancel := context.WithCancel(ctx)
+	defer hubCancel()
+	go hub.Run(hubCtx)
+
 	router := server.NewRouter(server.Deps{
 		Config: cfg,
 		Mongo:  mongoClient,
 		Redis:  redisClient,
+		Hub:    hub,
 	})
 
 	addr := "0.0.0.0:" + cfg.Port

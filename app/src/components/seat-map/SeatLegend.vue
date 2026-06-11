@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const items = [
   { label: 'Available', class: 'bg-subtle border-surface-border' },
+  { label: 'Your seats', class: 'bg-accent-dim border-brand/60' },
   { label: 'Held', class: 'bg-state-warning-dim border-state-warning' },
   { label: 'Sold', class: 'bg-elevated border-surface-border-subtle' },
   { label: 'Blocked', class: 'bg-state-error-dim border-state-error/50' },

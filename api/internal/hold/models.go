@@ -12,4 +12,6 @@ type Record struct {
 type Result struct {
 	Holds     []string   `json:"holds"`
 	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+	Added     []string   `json:"-"`
+	Released  []string   `json:"-"`
 }
