@@ -1,0 +1,52 @@
+:root {
+  /* Surfaces */
+  --bg-base: #0a0a0a;
+  --bg-surface: #141414;
+  --bg-elevated: #1c1c1c;
+  --bg-subtle: #242424;
+
+  /* Borders */
+  --border-default: #2e2e2e;
+  --border-subtle: #1f1f1f;
+
+  /* Text */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
+  --text-faint: #525252;
+
+  /* Brand */
+  --accent-primary: #ff7a18;
+  --accent-primary-hover: #ff9533;
+  --accent-primary-dim: rgba(255, 122, 24, 0.12);
+  --accent-glow: rgba(255, 122, 24, 0.35);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, #ff6b00 0%, #ff9500 50%, #ffb347 100%);
+  --gradient-brand-hover: linear-gradient(135deg, #ff7a18 0%, #ffa033 50%, #ffc266 100%);
+  --gradient-brand-subtle: linear-gradient(180deg, rgba(255, 107, 0, 0.08) 0%, transparent 100%);
+
+  /* Status */
+  --state-error: #f87171;
+  --state-success: #4ade80;
+  --state-warning: #fbbf24;
+  --state-success-dim: rgba(74, 222, 128, 0.12);
+  --state-error-dim: rgba(248, 113, 113, 0.12);
+  --state-warning-dim: rgba(251, 191, 36, 0.12);
+
+  /* Shadows */
+  --shadow-1: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 8px 40px rgba(0, 0, 0, 0.55);
+
+  /* Typography */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gradient-brand: linear-gradient(135deg, #ff7a18 0%, #ff9533 100%);
+    --gradient-brand-hover: linear-gradient(135deg, #ff9533 0%, #ffb347 100%);
+  }
+}

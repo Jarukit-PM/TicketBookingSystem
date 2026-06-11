@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Design system (2026-06-11):** Feature spec 01 — `tokens.css` + Tailwind v4 `main.css`, `cn()` helper, UI primitives (`Button`, `Card`, `Input`, `Badge`), dark cinema preview in `HomeView.vue`; Vite green starter theme removed.
 - **Context pivot (2026-06-10):** `project-overview.md` and `architecture-context.md` rewritten for cinema ticket booking (Vue SPA, Go/Gin API, MongoDB, Redis holds, WebSocket seat map, SendGrid email, asynq worker).
 - **Context pivot (2026-06-10):** `ui-context.md`, `code-standards.md`, `ai-workflow-rules.md`, `current-issue.md`, and this file updated for the new domain.
 - **UI theme (2026-06-10):** Black + gradient orange design language in `ui-context.md`.
@@ -22,22 +23,21 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None — start with [`feature-specs/01-design-system.md`](feature-specs/01-design-system.md).
+- None — start with [`feature-specs/02-infrastructure.md`](feature-specs/02-infrastructure.md).
 
 ## Next Up
 
 | Order | Feature | Spec |
 | ----- | ------- | ---- |
-| 1 | Design system + Tailwind | [`01-design-system.md`](feature-specs/01-design-system.md) |
-| 2 | Docker + nginx + CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) |
-| 3 | Go API scaffold | [`03-api-scaffold.md`](feature-specs/03-api-scaffold.md) |
-| 4 | MongoDB models + indexes | [`04-data-model.md`](feature-specs/04-data-model.md) |
-| 5 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
-| 6 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
-| 7 | Seat map + holds + WebSocket | [`07-seat-map-and-holds.md`](feature-specs/07-seat-map-and-holds.md) |
-| 8 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
-| 9 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
-| 10 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
+| 1 | Docker + nginx + CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) |
+| 2 | Go API scaffold | [`03-api-scaffold.md`](feature-specs/03-api-scaffold.md) |
+| 3 | MongoDB models + indexes | [`04-data-model.md`](feature-specs/04-data-model.md) |
+| 4 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
+| 5 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
+| 6 | Seat map + holds + WebSocket | [`07-seat-map-and-holds.md`](feature-specs/07-seat-map-and-holds.md) |
+| 7 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
+| 8 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
+| 9 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
 
 ## Resolved Decisions
 
@@ -78,6 +78,7 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-11:** Feature spec 01 design system implemented on branch `issue-1-design-system` (tokens, Tailwind v4, UI primitives, preview page).
 - **2026-06-11:** Grill-with-docs session — 19 domain decisions captured in `CONTEXT.md`; specs 02–10 written per `spec-driven-development`.
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
 - **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. Codebase is still Vue Vite starter + no `api/` yet.
