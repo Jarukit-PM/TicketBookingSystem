@@ -71,6 +71,22 @@ func (r *mongoCinemaRepo) ListCinemas(ctx context.Context) ([]Cinema, error) {
 	return out, nil
 }
 
+func (r *mongoCinemaRepo) UpdateCinema(ctx context.Context, cinema *Cinema) error {
+	_, err := r.coll.ReplaceOne(ctx, bson.M{"_id": cinema.ID}, cinema)
+	if err != nil {
+		return fmt.Errorf("update cinema: %w", err)
+	}
+	return nil
+}
+
+func (r *mongoCinemaRepo) DeleteCinema(ctx context.Context, id primitive.ObjectID) error {
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("delete cinema: %w", err)
+	}
+	return nil
+}
+
 type mongoScreenRepo struct {
 	coll *mongo.Collection
 }
@@ -99,7 +115,15 @@ func (r *mongoScreenRepo) FindScreenByID(ctx context.Context, id primitive.Objec
 }
 
 func (r *mongoScreenRepo) ListScreensByCinema(ctx context.Context, cinemaID primitive.ObjectID) ([]Screen, error) {
-	cur, err := r.coll.Find(ctx, bson.M{"cinemaId": cinemaID}, options.Find().SetSort(bson.D{{Key: "name", Value: 1}}))
+	return r.ListScreens(ctx, &cinemaID)
+}
+
+func (r *mongoScreenRepo) ListScreens(ctx context.Context, cinemaID *primitive.ObjectID) ([]Screen, error) {
+	filter := bson.M{}
+	if cinemaID != nil {
+		filter["cinemaId"] = *cinemaID
+	}
+	cur, err := r.coll.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "name", Value: 1}}))
 	if err != nil {
 		return nil, fmt.Errorf("list screens: %w", err)
 	}
@@ -110,6 +134,22 @@ func (r *mongoScreenRepo) ListScreensByCinema(ctx context.Context, cinemaID prim
 		return nil, fmt.Errorf("decode screens: %w", err)
 	}
 	return out, nil
+}
+
+func (r *mongoScreenRepo) UpdateScreen(ctx context.Context, screen *Screen) error {
+	_, err := r.coll.ReplaceOne(ctx, bson.M{"_id": screen.ID}, screen)
+	if err != nil {
+		return fmt.Errorf("update screen: %w", err)
+	}
+	return nil
+}
+
+func (r *mongoScreenRepo) DeleteScreen(ctx context.Context, id primitive.ObjectID) error {
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("delete screen: %w", err)
+	}
+	return nil
 }
 
 type mongoMovieRepo struct {
@@ -151,6 +191,36 @@ func (r *mongoMovieRepo) ListMoviesByStatus(ctx context.Context, status string) 
 		return nil, fmt.Errorf("decode movies: %w", err)
 	}
 	return out, nil
+}
+
+func (r *mongoMovieRepo) ListMovies(ctx context.Context) ([]Movie, error) {
+	cur, err := r.coll.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{{Key: "title", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("list movies: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Movie
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode movies: %w", err)
+	}
+	return out, nil
+}
+
+func (r *mongoMovieRepo) UpdateMovie(ctx context.Context, movie *Movie) error {
+	_, err := r.coll.ReplaceOne(ctx, bson.M{"_id": movie.ID}, movie)
+	if err != nil {
+		return fmt.Errorf("update movie: %w", err)
+	}
+	return nil
+}
+
+func (r *mongoMovieRepo) DeleteMovie(ctx context.Context, id primitive.ObjectID) error {
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("delete movie: %w", err)
+	}
+	return nil
 }
 
 type mongoShowtimeRepo struct {
@@ -210,4 +280,73 @@ func (r *mongoShowtimeRepo) ListShowtimesByMovie(ctx context.Context, movieID pr
 		return nil, fmt.Errorf("decode showtimes: %w", err)
 	}
 	return out, nil
+}
+
+func (r *mongoShowtimeRepo) ListAdminShowtimes(ctx context.Context, filter AdminShowtimeFilter) ([]Showtime, error) {
+	query := bson.M{}
+	if filter.MovieID != nil {
+		query["movieId"] = *filter.MovieID
+	}
+	if filter.ScreenID != nil {
+		query["screenId"] = *filter.ScreenID
+	}
+	if filter.From != nil || filter.To != nil {
+		rangeFilter := bson.M{}
+		if filter.From != nil {
+			rangeFilter["$gte"] = *filter.From
+		}
+		if filter.To != nil {
+			rangeFilter["$lte"] = *filter.To
+		}
+		query["startsAt"] = rangeFilter
+	}
+
+	cur, err := r.coll.Find(ctx, query, options.Find().SetSort(bson.D{{Key: "startsAt", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("list admin showtimes: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Showtime
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode showtimes: %w", err)
+	}
+
+	if filter.CinemaID == nil {
+		return out, nil
+	}
+
+	screenRepo := &mongoScreenRepo{coll: r.coll.Database().Collection(CollectionScreens)}
+	screens, err := screenRepo.ListScreensByCinema(ctx, *filter.CinemaID)
+	if err != nil {
+		return nil, err
+	}
+	screenIDs := make(map[primitive.ObjectID]struct{}, len(screens))
+	for _, s := range screens {
+		screenIDs[s.ID] = struct{}{}
+	}
+
+	filtered := make([]Showtime, 0, len(out))
+	for _, st := range out {
+		if _, ok := screenIDs[st.ScreenID]; ok {
+			filtered = append(filtered, st)
+		}
+	}
+	return filtered, nil
+}
+
+func (r *mongoShowtimeRepo) UpdateShowtime(ctx context.Context, showtime *Showtime) error {
+	_, err := r.coll.ReplaceOne(ctx, bson.M{"_id": showtime.ID}, showtime)
+	if err != nil {
+		return fmt.Errorf("update showtime: %w", err)
+	}
+	return nil
+}
+
+func (r *mongoShowtimeRepo) DeleteShowtime(ctx context.Context, id primitive.ObjectID) error {
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("delete showtime: %w", err)
+	}
+	return nil
 }

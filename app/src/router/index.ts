@@ -29,6 +29,34 @@ const router = createRouter({
       component: () => import('../views/MyBookingsPlaceholderView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin',
+      component: () => import('../views/admin/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        { path: '', redirect: { name: 'admin-movies' } },
+        {
+          path: 'movies',
+          name: 'admin-movies',
+          component: () => import('../views/admin/AdminMoviesView.vue'),
+        },
+        {
+          path: 'cinemas',
+          name: 'admin-cinemas',
+          component: () => import('../views/admin/AdminCinemasView.vue'),
+        },
+        {
+          path: 'screens',
+          name: 'admin-screens',
+          component: () => import('../views/admin/AdminScreensView.vue'),
+        },
+        {
+          path: 'showtimes',
+          name: 'admin-showtimes',
+          component: () => import('../views/admin/AdminShowtimesView.vue'),
+        },
+      ],
+    },
   ],
 })
 
@@ -38,6 +66,15 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin) {
+    if (!auth.isAuthenticated) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+    if (!auth.isAdmin) {
+      return { name: 'home' }
+    }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
