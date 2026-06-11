@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **GitHub Actions CI (2026-06-11):** Issue #2 — `.github/workflows/ci.yml` (Go `vet`/`test` in `api/`, Vue `lint`/`type-check`/`build` in `app/`); minimal `api/go.mod` + stub test; ESLint override for UI primitive names.
 - **Design system (2026-06-11):** Feature spec 01 — `tokens.css` + Tailwind v4 `main.css`, `cn()` helper, UI primitives (`Button`, `Card`, `Input`, `Badge`), dark cinema preview in `HomeView.vue`; Vite green starter theme removed.
 - **Context pivot (2026-06-10):** `project-overview.md` and `architecture-context.md` rewritten for cinema ticket booking (Vue SPA, Go/Gin API, MongoDB, Redis holds, WebSocket seat map, SendGrid email, asynq worker).
 - **Context pivot (2026-06-10):** `ui-context.md`, `code-standards.md`, `ai-workflow-rules.md`, `current-issue.md`, and this file updated for the new domain.
@@ -23,13 +24,13 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None — start with [`feature-specs/02-infrastructure.md`](feature-specs/02-infrastructure.md).
+- None — start with [`feature-specs/02-infrastructure.md`](feature-specs/02-infrastructure.md) (Docker + nginx remaining).
 
 ## Next Up
 
 | Order | Feature | Spec |
 | ----- | ------- | ---- |
-| 1 | Docker + nginx + CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) |
+| 1 | Docker + nginx (compose) | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) |
 | 2 | Go API scaffold | [`03-api-scaffold.md`](feature-specs/03-api-scaffold.md) |
 | 3 | MongoDB models + indexes | [`04-data-model.md`](feature-specs/04-data-model.md) |
 | 4 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
@@ -78,6 +79,7 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-11:** Issue #2 CI on branch `issue-2-ci` — workflow + minimal `api/` module; Docker/nginx from spec 02 still pending.
 - **2026-06-11:** Feature spec 01 design system implemented on branch `issue-1-design-system` (tokens, Tailwind v4, UI primitives, preview page).
 - **2026-06-11:** Grill-with-docs session — 19 domain decisions captured in `CONTEXT.md`; specs 02–10 written per `spec-driven-development`.
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
