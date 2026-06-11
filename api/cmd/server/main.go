@@ -12,12 +12,14 @@ import (
 
 	_ "time/tzdata" // embed IANA zones for Alpine/scratch images (Asia/Bangkok, etc.)
 
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/audit"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/hold"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/server"
-	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/tasks"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/ws"
 )
 
@@ -49,6 +51,9 @@ func main() {
 	hubCtx, hubCancel := context.WithCancel(ctx)
 	defer hubCancel()
 	go hub.Run(hubCtx)
+
+	auditLogger := audit.NewLogger(audit.NewMongoRepositories(database).AuditLogs)
+	go hold.RunExpiryListener(hubCtx, redisClient, hub, auditLogger)
 
 	taskClient, err := tasks.NewClient(cfg.RedisURL)
 	if err != nil {

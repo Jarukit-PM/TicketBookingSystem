@@ -7,7 +7,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/audit"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/tasks"
@@ -24,6 +26,7 @@ type BookingsDeps struct {
 	Bookings  *booking.Service
 	Tasks     tasks.Enqueuer
 	Publisher BookingEventPublisher
+	Audit     *audit.Logger
 }
 
 type confirmRequest struct {
@@ -53,8 +56,20 @@ func ConfirmBooking(deps BookingsDeps) gin.HandlerFunc {
 
 		result, err := deps.Bookings.Confirm(c.Request.Context(), user.ID.Hex(), req.ShowtimeID, idempotencyKey)
 		if err != nil {
-			writeBookingError(c, err)
+			writeBookingError(c, deps.Audit, user.ID, req.ShowtimeID, err)
 			return
+		}
+
+		if deps.Audit != nil {
+			deps.Audit.BookingSuccess(
+				c.Request.Context(),
+				user.ID,
+				result.ID.Hex(),
+				req.ShowtimeID,
+				result.BookingRef,
+				result.Seats,
+				result.Total,
+			)
 		}
 
 		publishSeatSoldEvents(c.Request.Context(), deps.Publisher, req.ShowtimeID, result.Seats)
@@ -62,6 +77,16 @@ func ConfirmBooking(deps BookingsDeps) gin.HandlerFunc {
 		if deps.Tasks != nil {
 			if err := deps.Tasks.EnqueueEmailSend(c.Request.Context(), result.ID.Hex()); err != nil {
 				log.Printf("enqueue email:send booking=%s: %v", result.ID.Hex(), err)
+				if deps.Audit != nil {
+					deps.Audit.SystemError(
+						c.Request.Context(),
+						user.ID,
+						"booking",
+						result.ID.Hex(),
+						"EMAIL_ENQUEUE_FAILED",
+						err.Error(),
+					)
+				}
 			}
 		}
 
@@ -154,23 +179,37 @@ func publishSeatSoldEvents(ctx context.Context, pub BookingEventPublisher, showt
 	}
 }
 
-func writeBookingError(c *gin.Context, err error) {
+func writeBookingError(c *gin.Context, auditLog *audit.Logger, userID primitive.ObjectID, showtimeID string, err error) {
 	switch {
 	case errors.Is(err, booking.ErrIdempotencyRequired):
 		httputil.Error(c, http.StatusBadRequest, "IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required")
 	case errors.Is(err, booking.ErrNoActiveHolds):
+		logBookingFailed(auditLog, c, userID, showtimeID, "NO_ACTIVE_HOLDS", "no active seat holds for this showtime")
 		httputil.Error(c, http.StatusConflict, "NO_ACTIVE_HOLDS", "no active seat holds for this showtime")
 	case errors.Is(err, booking.ErrSeatConflict):
+		logBookingFailed(auditLog, c, userID, showtimeID, "SEAT_CONFLICT", "one or more seats are no longer available")
 		httputil.Error(c, http.StatusConflict, "SEAT_CONFLICT", "one or more seats are no longer available")
 	case errors.Is(err, booking.ErrShowtimeNotFound):
 		httputil.Error(c, http.StatusNotFound, "SHOWTIME_NOT_FOUND", "showtime not found")
 	case errors.Is(err, booking.ErrShowtimeStarted):
+		logBookingFailed(auditLog, c, userID, showtimeID, "SHOWTIME_STARTED", "showtime already started")
 		httputil.Error(c, http.StatusConflict, "SHOWTIME_STARTED", "showtime already started")
 	case errors.Is(err, booking.ErrSeatLimitExceeded):
+		logBookingFailed(auditLog, c, userID, showtimeID, "SEAT_LIMIT_EXCEEDED", "maximum 10 seats per booking")
 		httputil.Error(c, http.StatusConflict, "SEAT_LIMIT_EXCEEDED", "maximum 10 seats per booking")
 	default:
+		if auditLog != nil {
+			auditLog.SystemError(c.Request.Context(), userID, "booking", showtimeID, "CONFIRM_ERROR", err.Error())
+		}
 		httputil.Error(c, http.StatusInternalServerError, "CONFIRM_ERROR", "failed to confirm booking")
 	}
+}
+
+func logBookingFailed(auditLog *audit.Logger, c *gin.Context, userID primitive.ObjectID, showtimeID, code, message string) {
+	if auditLog == nil {
+		return
+	}
+	auditLog.BookingFailed(c.Request.Context(), userID, showtimeID, code, message)
 }
 
 func writeBookingQueryError(c *gin.Context, err error) {

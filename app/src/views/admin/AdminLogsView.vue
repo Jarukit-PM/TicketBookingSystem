@@ -22,6 +22,34 @@ const emptyMessage = computed(() =>
     : 'No email log entries match your filter.',
 )
 
+const auditActionLabels: Record<string, string> = {
+  booking_success: 'Booking Success',
+  booking_timeout: 'Booking Timeout',
+  seat_released: 'Seat Released',
+  booking_failed: 'Booking Failed',
+  system_error: 'System Error',
+  create: 'Create',
+  update: 'Update',
+  delete: 'Delete',
+}
+
+function formatAuditAction(action: string) {
+  return auditActionLabels[action] ?? action
+}
+
+function formatAuditDetails(meta?: Record<string, unknown>) {
+  if (!meta || !Object.keys(meta).length) return '—'
+  const parts: string[] = []
+  if (typeof meta.bookingRef === 'string') parts.push(`ref ${meta.bookingRef}`)
+  if (Array.isArray(meta.seats)) parts.push(`seats ${meta.seats.join(', ')}`)
+  if (Array.isArray(meta.seatIds)) parts.push(`seats ${meta.seatIds.join(', ')}`)
+  if (typeof meta.seatId === 'string') parts.push(`seat ${meta.seatId}`)
+  if (typeof meta.code === 'string') parts.push(meta.code)
+  if (typeof meta.reason === 'string') parts.push(meta.reason)
+  if (typeof meta.message === 'string') parts.push(meta.message)
+  return parts.length ? parts.join(' · ') : JSON.stringify(meta)
+}
+
 async function loadLogs() {
   loading.value = true
   errorMessage.value = ''
@@ -102,7 +130,8 @@ watch(activeTab, loadLogs, { immediate: true })
                 <th class="pb-3 pr-4 font-medium">When</th>
                 <th class="pb-3 pr-4 font-medium">Action</th>
                 <th class="pb-3 pr-4 font-medium">Entity</th>
-                <th class="pb-3 font-medium">Entity ID</th>
+                <th class="pb-3 pr-4 font-medium">Entity ID</th>
+                <th class="pb-3 font-medium">Details</th>
               </tr>
               <tr v-else>
                 <th class="pb-3 pr-4 font-medium">When</th>
@@ -114,10 +143,10 @@ watch(activeTab, loadLogs, { immediate: true })
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td :colspan="activeTab === 'audit' ? 4 : 5" class="py-6 text-copy-muted">Loading…</td>
+                <td :colspan="activeTab === 'audit' ? 5 : 5" class="py-6 text-copy-muted">Loading…</td>
               </tr>
               <tr v-else-if="activeTab === 'audit' && !auditLogs.length">
-                <td colspan="4" class="py-6 text-copy-muted">{{ emptyMessage }}</td>
+                <td colspan="5" class="py-6 text-copy-muted">{{ emptyMessage }}</td>
               </tr>
               <tr v-else-if="activeTab === 'email' && !emailLogs.length">
                 <td colspan="5" class="py-6 text-copy-muted">{{ emptyMessage }}</td>
@@ -131,9 +160,12 @@ watch(activeTab, loadLogs, { immediate: true })
                   <td class="py-3 pr-4 text-copy-secondary">
                     {{ new Date(log.createdAt).toLocaleString() }}
                   </td>
-                  <td class="py-3 pr-4 font-medium text-copy-primary">{{ log.action }}</td>
+                  <td class="py-3 pr-4 font-medium text-copy-primary">
+                    {{ formatAuditAction(log.action) }}
+                  </td>
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.entity }}</td>
-                  <td class="py-3 font-mono text-xs text-copy-muted">{{ log.entityId }}</td>
+                  <td class="py-3 pr-4 font-mono text-xs text-copy-muted">{{ log.entityId }}</td>
+                  <td class="py-3 text-xs text-copy-secondary">{{ formatAuditDetails(log.meta) }}</td>
                 </tr>
               </template>
               <template v-else>

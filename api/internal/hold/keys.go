@@ -34,6 +34,24 @@ func SeatKeyPattern(showtimeID string) string {
 	return SeatKey(showtimeID, "*")
 }
 
+// ParseHoldKey parses hold:{showtimeId}:{seatId}.
+func ParseHoldKey(key string) (showtimeID, seatID string, ok bool) {
+	if !strings.HasPrefix(key, keyPrefix) {
+		return "", "", false
+	}
+	rest := strings.TrimPrefix(key, keyPrefix)
+	i := strings.Index(rest, ":")
+	if i <= 0 || i >= len(rest)-1 {
+		return "", "", false
+	}
+	showtimeID = rest[:i]
+	seatID = rest[i+1:]
+	if showtimeID == "" || seatID == "" {
+		return "", "", false
+	}
+	return showtimeID, seatID, true
+}
+
 // ParseSeatIDFromKey extracts the seat ID from a hold key for the given showtime.
 func ParseSeatIDFromKey(key, showtimeID string) (string, bool) {
 	prefix := keyPrefix + showtimeID + ":"

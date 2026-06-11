@@ -85,6 +85,9 @@ func NewRouter(deps Deps) *gin.Engine {
 	api.GET("/showtimes", handler.ListShowtimes(catalogDeps))
 
 	bookingRepo := booking.NewMongoRepository(database)
+	auditRepos := audit.NewMongoRepositories(database)
+	auditLogger := audit.NewLogger(auditRepos.AuditLogs)
+
 	inventorySvc := inventory.NewService(
 		catalogRepos.Showtimes,
 		catalogRepos.Screens,
@@ -101,7 +104,7 @@ func NewRouter(deps Deps) *gin.Engine {
 		bookingRepo,
 		deps.Redis,
 	)
-	holdsDeps := handler.HoldsDeps{Holds: holdSvc, Publisher: deps.Hub}
+	holdsDeps := handler.HoldsDeps{Holds: holdSvc, Publisher: deps.Hub, Audit: auditLogger}
 	showtimeHolds := api.Group("/showtimes/:id/holds")
 	showtimeHolds.POST("", auth.RequireAuth(authMw), handler.AddShowtimeHolds(holdsDeps))
 	showtimeHolds.DELETE("", auth.RequireAuth(authMw), handler.RemoveShowtimeHolds(holdsDeps))
@@ -122,6 +125,7 @@ func NewRouter(deps Deps) *gin.Engine {
 		Bookings:  bookingSvc,
 		Tasks:     deps.TaskClient,
 		Publisher: deps.Hub,
+		Audit:     auditLogger,
 	}
 	bookingsRoutes := api.Group("/bookings")
 	bookingsRoutes.POST("/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
@@ -129,7 +133,6 @@ func NewRouter(deps Deps) *gin.Engine {
 	bookingsRoutes.GET("/:id/ticket", auth.RequireAuth(authMw), handler.GetBookingTicket(bookingsDeps))
 	bookingsRoutes.GET("/:id", auth.RequireAuth(authMw), handler.GetBooking(bookingsDeps))
 
-	auditRepos := audit.NewMongoRepositories(database)
 	adminCatalogSvc := catalog.NewAdminService(catalogRepos, auditRepos.AuditLogs)
 	adminCatalogDeps := handler.AdminCatalogDeps{Service: adminCatalogSvc}
 

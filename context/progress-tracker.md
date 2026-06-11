@@ -32,6 +32,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Admin bootstrap on API start (2026-06-11):** `ADMIN_EMAIL` + `ADMIN_SEED_PASSWORD` create or promote admin on server boot; `docker-compose.yml` passes both vars and publishes API on `8080` for Vite dev.
 - **Customer home catalog (2026-06-11):** `HomeView.vue` live cinema picker + Now Showing / Coming Soon tabs via `/api/movies`.
 - **Admin sign-out redirect (2026-06-11):** `auth.logout()` clears local session on API failure and navigates home from protected routes.
+- **Booking lifecycle audit logs (2026-06-12):** `audit_logs` records `booking_success`, `booking_timeout` (Redis hold TTL expiry listener), `seat_released` (explicit abandon), `booking_failed` (confirm 409s), `system_error` (unexpected hold/confirm/email-enqueue failures), plus existing admin catalog `create`/`update`/`delete`; Admin Logs view shows human-readable actions and meta details.
 
 ## In Progress
 

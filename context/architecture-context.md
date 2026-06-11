@@ -89,7 +89,7 @@ Supporting collections: `users`, `movies`, `audit_logs`, `email_logs`.
 | `screens`    | `cinemaId`, `name`, `layout`                                                                     | `layout.seats[]`: `{ seatId, row, col, type }`       |
 | `showtimes`  | `movieId`, `screenId`, `startsAt`, `priceTiers`, `status`                                        | `priceTiers`: `{ standard, vip, wheelchair, ... }` in minor units (cents). Index `(screenId, startsAt)` |
 | `bookings`   | `userId`, `showtimeId`, `seats[]`, `total`, `bookingRef`, `ticketToken`, `status`, `confirmedAt` | Unique `bookingRef`; index `userId` + `showtimeId` (not unique — multiple bookings per user per showtime allowed) |
-| `audit_logs` | `actorId`, `action`, `entity`, `entityId`, `meta`, `createdAt`                                   | TTL optional for old logs (phase 2)                  |
+| `audit_logs` | `actorId`, `action`, `entity`, `entityId`, `meta`, `createdAt`                                   | Actions: admin `create`/`update`/`delete`; booking `booking_success`, `booking_timeout`, `seat_released`, `booking_failed`, `system_error`. TTL optional (phase 2) |
 | `email_logs` | `bookingId`, `type`, `to`, `providerId`, `status`, `createdAt`                                   | MVP `type`: `CONFIRMATION` only                      |
 
 

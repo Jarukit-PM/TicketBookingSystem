@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/audit"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/hold"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/pkg/httputil"
@@ -23,6 +25,7 @@ type SeatEventPublisher interface {
 type HoldsDeps struct {
 	Holds     *hold.Service
 	Publisher SeatEventPublisher
+	Audit     *audit.Logger
 }
 
 type holdsRequest struct {
@@ -47,7 +50,7 @@ func AddShowtimeHolds(deps HoldsDeps) gin.HandlerFunc {
 		showtimeID := c.Param("id")
 		result, err := deps.Holds.AddSeats(c.Request.Context(), user.ID.Hex(), showtimeID, req.SeatIDs)
 		if err != nil {
-			writeHoldError(c, err)
+			writeHoldError(c, deps.Audit, user.ID, showtimeID, err)
 			return
 		}
 
@@ -71,8 +74,12 @@ func RemoveShowtimeHolds(deps HoldsDeps) gin.HandlerFunc {
 		showtimeID := c.Param("id")
 		result, err := deps.Holds.RemoveSeats(c.Request.Context(), user.ID.Hex(), showtimeID, req.SeatIDs)
 		if err != nil {
-			writeHoldError(c, err)
+			writeHoldError(c, deps.Audit, user.ID, showtimeID, err)
 			return
+		}
+
+		if deps.Audit != nil && len(result.Released) > 0 {
+			deps.Audit.SeatReleased(c.Request.Context(), user.ID, showtimeID, result.Released)
 		}
 
 		publishReleaseEvents(c.Request.Context(), deps.Publisher, showtimeID, result)
@@ -98,7 +105,7 @@ func publishReleaseEvents(ctx context.Context, pub SeatEventPublisher, showtimeI
 	}
 }
 
-func writeHoldError(c *gin.Context, err error) {
+func writeHoldError(c *gin.Context, auditLog *audit.Logger, userID primitive.ObjectID, showtimeID string, err error) {
 	switch {
 	case errors.Is(err, hold.ErrShowtimeNotFound):
 		httputil.Error(c, http.StatusNotFound, "SHOWTIME_NOT_FOUND", "showtime not found")
@@ -117,6 +124,9 @@ func writeHoldError(c *gin.Context, err error) {
 	case errors.Is(err, hold.ErrSeatNotHeld):
 		httputil.Error(c, http.StatusConflict, "SEAT_NOT_HELD", "seat not in your holds")
 	default:
+		if auditLog != nil {
+			auditLog.SystemError(c.Request.Context(), userID, "hold", showtimeID, "HOLD_ERROR", err.Error())
+		}
 		httputil.Error(c, http.StatusInternalServerError, "HOLD_ERROR", "failed to update holds")
 	}
 }

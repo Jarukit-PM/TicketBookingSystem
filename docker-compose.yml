@@ -11,6 +11,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "--notify-keyspace-events", "Ex"]
     restart: unless-stopped
     volumes:
       - redis_data:/data
