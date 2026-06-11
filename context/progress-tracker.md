@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Docker + nginx (2026-06-11):** Issue #3 — `docker-compose.yml` (nginx, app, api, worker, mongo, redis), `nginx/nginx.conf` (SPA + `/api` + `/ws` proxy), `.env.example`, minimal Go api/worker stubs + Dockerfiles; `docker compose config` validates.
 - **Design system (2026-06-11):** Feature spec 01 — `tokens.css` + Tailwind v4 `main.css`, `cn()` helper, UI primitives (`Button`, `Card`, `Input`, `Badge`), dark cinema preview in `HomeView.vue`; Vite green starter theme removed.
 - **Context pivot (2026-06-10):** `project-overview.md` and `architecture-context.md` rewritten for cinema ticket booking (Vue SPA, Go/Gin API, MongoDB, Redis holds, WebSocket seat map, SendGrid email, asynq worker).
 - **Context pivot (2026-06-10):** `ui-context.md`, `code-standards.md`, `ai-workflow-rules.md`, `current-issue.md`, and this file updated for the new domain.
@@ -23,14 +24,14 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None — start with [`feature-specs/02-infrastructure.md`](feature-specs/02-infrastructure.md).
+- None — continue with Go API scaffold ([`feature-specs/03-api-scaffold.md`](feature-specs/03-api-scaffold.md)).
 
 ## Next Up
 
 | Order | Feature | Spec |
 | ----- | ------- | ---- |
-| 1 | Docker + nginx + CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) |
-| 2 | Go API scaffold | [`03-api-scaffold.md`](feature-specs/03-api-scaffold.md) |
+| 1 | Go API scaffold | [`03-api-scaffold.md`](feature-specs/03-api-scaffold.md) |
+| 2 | GitHub Actions CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) (issue #2) |
 | 3 | MongoDB models + indexes | [`04-data-model.md`](feature-specs/04-data-model.md) |
 | 4 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
 | 5 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
@@ -38,6 +39,8 @@ Update this file whenever the current phase, active feature, or implementation s
 | 7 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
 | 8 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
 | 9 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
+
+**Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
 ## Resolved Decisions
 
@@ -78,7 +81,8 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-11:** Issue #3 — Docker Compose + nginx on branch `issue-3-docker-nginx` (six services, SPA volume, api/worker stubs).
 - **2026-06-11:** Feature spec 01 design system implemented on branch `issue-1-design-system` (tokens, Tailwind v4, UI primitives, preview page).
 - **2026-06-11:** Grill-with-docs session — 19 domain decisions captured in `CONTEXT.md`; specs 02–10 written per `spec-driven-development`.
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
-- **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. Codebase is still Vue Vite starter + no `api/` yet.
+- **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. `api/` now has minimal Docker stubs; full Gin scaffold pending spec 03.
