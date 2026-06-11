@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **MongoDB data model (2026-06-11):** Issue #5 — domain models (users, movies, cinemas, screens, showtimes, bookings, audit_logs, email_logs), `db.EnsureIndexes` on server boot, repository interfaces + mongo implementations, `booking.GenerateBookingRef` (`TBS-` format) with table-driven tests, `catalog.TotalForSeats` pricing helper, `cmd/seed` (1 cinema, 2 screens, 2 movies, 5 showtimes); `go test ./...` passes.
 - **Go API scaffold (2026-06-11):** Issue #4 — Gin server + asynq worker (`cmd/server`, `cmd/worker`), Viper config, MongoDB/Redis connect + ping, `GET /api/health` (optional `?deep=1`), middleware (request ID, recovery), `pkg/httputil` JSON errors; `go test ./...` and `go vet` pass.
 - **Docker + nginx (2026-06-11):** Issue #3 — `docker-compose.yml` (nginx, app, api, worker, mongo, redis), `nginx/nginx.conf` (SPA + `/api` + `/ws` proxy), `.env.example`, minimal Go api/worker stubs + Dockerfiles; `docker compose config` validates.
 - **Design system (2026-06-11):** Feature spec 01 — `tokens.css` + Tailwind v4 `main.css`, `cn()` helper, UI primitives (`Button`, `Card`, `Input`, `Badge`), dark cinema preview in `HomeView.vue`; Vite green starter theme removed.
@@ -25,20 +26,18 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None — continue with GitHub Actions CI or MongoDB models.
+- None — continue with authentication (spec 05).
 
 ## Next Up
 
 | Order | Feature | Spec |
 | ----- | ------- | ---- |
-| 1 | GitHub Actions CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) (issue #2) |
-| 2 | MongoDB models + indexes | [`04-data-model.md`](feature-specs/04-data-model.md) |
-| 3 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
-| 4 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
-| 5 | Seat map + holds + WebSocket | [`07-seat-map-and-holds.md`](feature-specs/07-seat-map-and-holds.md) |
-| 6 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
-| 7 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
-| 8 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
+| 1 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
+| 2 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
+| 3 | Seat map + holds + WebSocket | [`07-seat-map-and-holds.md`](feature-specs/07-seat-map-and-holds.md) |
+| 4 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
+| 5 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
+| 6 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
@@ -81,6 +80,7 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-11:** Issue #5 — MongoDB data model on branch `issue-5-data-model` (models, indexes, repos, seed, booking ref generator).
 - **2026-06-11:** Issue #4 — Go API scaffold on branch `issue-4-api-scaffold` (Gin, Viper, Mongo/Redis, asynq worker stub, health route).
 - **2026-06-11:** Issue #3 — Docker Compose + nginx on branch `issue-3-docker-nginx` (six services, SPA volume, api/worker stubs).
 - **2026-06-11:** Feature spec 01 design system implemented on branch `issue-1-design-system` (tokens, Tailwind v4, UI primitives, preview page).

@@ -20,6 +20,9 @@ func main() {
 
 	ctx := context.Background()
 	mongoClient := db.MustConnectMongo(ctx, cfg.MongoURI)
+	if err := db.EnsureIndexes(ctx, db.Database(mongoClient, cfg.MongoURI)); err != nil {
+		log.Fatalf("ensure indexes: %v", err)
+	}
 	redisClient := db.MustConnectRedis(cfg.RedisURL)
 
 	defer func() {
