@@ -76,6 +76,9 @@ func (s stubBookings) FindByBookingRef(context.Context, string) (*booking.Bookin
 func (s stubBookings) ListByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
 }
+func (s stubBookings) ListConfirmedByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
+	return nil, nil
+}
 func (s stubBookings) ListConfirmedByShowtime(_ context.Context, showtimeID primitive.ObjectID) ([]booking.Booking, error) {
 	out := make([]booking.Booking, 0)
 	for _, b := range s.bookings {

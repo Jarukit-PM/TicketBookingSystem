@@ -97,6 +97,7 @@ func NewRouter(deps Deps) *gin.Engine {
 		catalogRepos.Showtimes,
 		catalogRepos.Screens,
 		catalogRepos.Cinemas,
+		catalogRepos.Movies,
 		bookingRepo,
 		holdSvc,
 		deps.Redis,
@@ -107,7 +108,10 @@ func NewRouter(deps Deps) *gin.Engine {
 		Tasks:     deps.TaskClient,
 		Publisher: deps.Hub,
 	}
-	api.POST("/bookings/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
+	bookingsRoutes := api.Group("/bookings")
+	bookingsRoutes.POST("/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
+	bookingsRoutes.GET("/mine", auth.RequireAuth(authMw), handler.ListMyBookings(bookingsDeps))
+	bookingsRoutes.GET("/:id", auth.RequireAuth(authMw), handler.GetBooking(bookingsDeps))
 
 	wsDeps := ws.HandlerDeps{Hub: deps.Hub, Inventory: inventorySvc}
 	r.GET("/ws/showtimes/:id", ws.Showtime(wsDeps))

@@ -63,6 +63,19 @@ func (s stubCinemas) FindCinemaByID(_ context.Context, id primitive.ObjectID) (*
 }
 func (s stubCinemas) ListCinemas(context.Context) ([]catalog.Cinema, error) { return nil, nil }
 
+type stubMovies struct{ movie *catalog.Movie }
+
+func (s stubMovies) InsertMovie(context.Context, *catalog.Movie) error { return nil }
+func (s stubMovies) FindMovieByID(_ context.Context, id primitive.ObjectID) (*catalog.Movie, error) {
+	if s.movie != nil && s.movie.ID == id {
+		return s.movie, nil
+	}
+	return nil, nil
+}
+func (s stubMovies) ListMoviesByStatus(context.Context, string) ([]catalog.Movie, error) { return nil, nil }
+func (s stubMovies) ListComingSoonMovies(context.Context) ([]catalog.Movie, error)       { return nil, nil }
+func (s stubMovies) ListNonArchivedMovies(context.Context) ([]catalog.Movie, error)      { return nil, nil }
+
 type memBookings struct {
 	mu       sync.Mutex
 	bookings []booking.Booking
@@ -87,7 +100,15 @@ func (m *memBookings) Insert(_ context.Context, b *booking.Booking) error {
 	return nil
 }
 
-func (m *memBookings) FindByID(context.Context, primitive.ObjectID) (*booking.Booking, error) {
+func (m *memBookings) FindByID(_ context.Context, id primitive.ObjectID) (*booking.Booking, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i := range m.bookings {
+		if m.bookings[i].ID == id {
+			b := m.bookings[i]
+			return &b, nil
+		}
+	}
 	return nil, nil
 }
 
@@ -97,6 +118,18 @@ func (m *memBookings) FindByBookingRef(context.Context, string) (*booking.Bookin
 
 func (m *memBookings) ListByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
+}
+
+func (m *memBookings) ListConfirmedByUser(_ context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]booking.Booking, 0)
+	for _, b := range m.bookings {
+		if b.UserID == userID && b.Status == booking.StatusConfirmed {
+			out = append(out, b)
+		}
+	}
+	return out, nil
 }
 
 func (m *memBookings) ListConfirmedByShowtime(_ context.Context, showtimeID primitive.ObjectID) ([]booking.Booking, error) {
@@ -135,6 +168,7 @@ func newConfirmEnv(t *testing.T, now time.Time, sold []string) *confirmEnv {
 	cinemaID := primitive.NewObjectID()
 	screenID := primitive.NewObjectID()
 	showtimeID := primitive.NewObjectID()
+	movieID := primitive.NewObjectID()
 	userOID := primitive.NewObjectID()
 
 	layoutSeats := []catalog.LayoutSeat{
@@ -145,6 +179,7 @@ func newConfirmEnv(t *testing.T, now time.Time, sold []string) *confirmEnv {
 
 	showtime := &catalog.Showtime{
 		ID:       showtimeID,
+		MovieID:  movieID,
 		ScreenID: screenID,
 		StartsAt: now.Add(2 * time.Hour),
 		Status:   catalog.ShowtimeStatusOpen,
@@ -160,6 +195,7 @@ func newConfirmEnv(t *testing.T, now time.Time, sold []string) *confirmEnv {
 		Layout:   catalog.ScreenLayout{Seats: layoutSeats},
 	}
 	cinema := &catalog.Cinema{ID: cinemaID, Timezone: "UTC"}
+	movie := &catalog.Movie{ID: movieID, Title: "Test Movie"}
 
 	bookings := newMemBookings()
 	if len(sold) > 0 {
@@ -182,6 +218,7 @@ func newConfirmEnv(t *testing.T, now time.Time, sold []string) *confirmEnv {
 		stubShowtimes{showtime},
 		stubScreens{screen},
 		stubCinemas{cinema},
+		stubMovies{movie},
 		bookings,
 		holdSvc,
 		rdb,

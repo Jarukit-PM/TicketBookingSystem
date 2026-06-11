@@ -27,6 +27,7 @@ type Service struct {
 	showtimes   catalog.ShowtimeRepository
 	screens     catalog.ScreenRepository
 	cinemas     catalog.CinemaRepository
+	movies      catalog.MovieRepository
 	bookings    Repository
 	holds       HoldStore
 	redis       *redis.Client
@@ -47,6 +48,7 @@ func NewService(
 	showtimes catalog.ShowtimeRepository,
 	screens catalog.ScreenRepository,
 	cinemas catalog.CinemaRepository,
+	movies catalog.MovieRepository,
 	bookings Repository,
 	holds HoldStore,
 	rdb *redis.Client,
@@ -57,6 +59,7 @@ func NewService(
 		showtimes:   showtimes,
 		screens:     screens,
 		cinemas:     cinemas,
+		movies:      movies,
 		bookings:    bookings,
 		holds:       holds,
 		redis:       rdb,

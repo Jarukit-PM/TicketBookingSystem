@@ -12,5 +12,6 @@ type Repository interface {
 	FindByID(ctx context.Context, id primitive.ObjectID) (*Booking, error)
 	FindByBookingRef(ctx context.Context, ref string) (*Booking, error)
 	ListByUser(ctx context.Context, userID primitive.ObjectID) ([]Booking, error)
+	ListConfirmedByUser(ctx context.Context, userID primitive.ObjectID) ([]Booking, error)
 	ListConfirmedByShowtime(ctx context.Context, showtimeID primitive.ObjectID) ([]Booking, error)
 }
