@@ -7,6 +7,11 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 
 const navItems = [
+  { to: '/admin', label: 'Dashboard', exact: true },
+  { to: '/admin/movies', label: 'Movies' },
+  { to: '/admin/cinemas', label: 'Cinemas' },
+  { to: '/admin/screens', label: 'Screens' },
+  { to: '/admin/showtimes', label: 'Showtimes' },
   { to: '/admin/bookings', label: 'Bookings' },
   { to: '/admin/scan', label: 'Scan' },
   { to: '/admin/logs', label: 'Logs' },
@@ -33,6 +38,7 @@ const navItems = [
           :to="item.to"
           class="block rounded-lg px-3 py-2 text-sm font-medium text-copy-secondary transition-colors hover:bg-accent-dim hover:text-brand"
           active-class="!bg-accent-dim !text-brand"
+          :exact-active-class="item.exact ? '!bg-accent-dim !text-brand' : undefined"
         >
           {{ item.label }}
         </RouterLink>

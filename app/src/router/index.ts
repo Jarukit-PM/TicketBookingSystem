@@ -54,7 +54,19 @@ const router = createRouter({
     {
       path: '/my-bookings',
       name: 'my-bookings',
-      component: () => import('../views/MyBookingsPlaceholderView.vue'),
+      component: () => import('../views/MyBookingsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/my-bookings/:id',
+      name: 'booking-detail',
+      component: () => import('../views/BookingDetailView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/ticket/:bookingRef',
+      name: 'ticket',
+      component: () => import('../views/TicketPlaceholderView.vue'),
       meta: { requiresAuth: true },
     },
     {
@@ -64,7 +76,28 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: { name: 'admin-bookings' },
+          name: 'admin-dashboard',
+          component: () => import('../views/admin/AdminDashboardView.vue'),
+        },
+        {
+          path: 'movies',
+          name: 'admin-movies',
+          component: () => import('../views/admin/AdminMoviesView.vue'),
+        },
+        {
+          path: 'cinemas',
+          name: 'admin-cinemas',
+          component: () => import('../views/admin/AdminCinemasView.vue'),
+        },
+        {
+          path: 'screens',
+          name: 'admin-screens',
+          component: () => import('../views/admin/AdminScreensView.vue'),
+        },
+        {
+          path: 'showtimes',
+          name: 'admin-showtimes',
+          component: () => import('../views/admin/AdminShowtimesView.vue'),
         },
         {
           path: 'bookings',

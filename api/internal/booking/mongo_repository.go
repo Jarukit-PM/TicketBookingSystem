@@ -61,9 +61,54 @@ func (r *MongoRepository) FindByBookingRef(ctx context.Context, ref string) (*Bo
 }
 
 func (r *MongoRepository) ListByUser(ctx context.Context, userID primitive.ObjectID) ([]Booking, error) {
-	cur, err := r.coll.Find(ctx, bson.M{"userId": userID}, options.Find().SetSort(bson.D{{Key: "confirmedAt", Value: -1}}))
+	return r.ListConfirmedByUser(ctx, userID)
+}
+
+func (r *MongoRepository) ListConfirmedByUser(ctx context.Context, userID primitive.ObjectID) ([]Booking, error) {
+	filter := bson.M{
+		"userId": userID,
+		"status": StatusConfirmed,
+	}
+	cur, err := r.coll.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "confirmedAt", Value: -1}}))
 	if err != nil {
-		return nil, fmt.Errorf("list bookings by user: %w", err)
+		return nil, fmt.Errorf("list confirmed bookings by user: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Booking
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode bookings: %w", err)
+	}
+	return out, nil
+}
+
+func (r *MongoRepository) CountConfirmedBetween(ctx context.Context, from, to time.Time) (int, error) {
+	filter := bson.M{
+		"status": StatusConfirmed,
+		"confirmedAt": bson.M{
+			"$gte": from,
+			"$lt":  to,
+		},
+	}
+	count, err := r.coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("count confirmed bookings: %w", err)
+	}
+	return int(count), nil
+}
+
+func (r *MongoRepository) ListRecentConfirmed(ctx context.Context, limit int) ([]Booking, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	filter := bson.M{"status": StatusConfirmed}
+	opts := options.Find().
+		SetSort(bson.D{{Key: "confirmedAt", Value: -1}}).
+		SetLimit(int64(limit))
+
+	cur, err := r.coll.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("list recent confirmed bookings: %w", err)
 	}
 	defer cur.Close(ctx)
 

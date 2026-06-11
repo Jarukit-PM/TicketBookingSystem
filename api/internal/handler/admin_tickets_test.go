@@ -34,10 +34,19 @@ func (r *adminTicketsRepo) FindByBookingRef(_ context.Context, ref string) (*boo
 	}
 	return nil, nil
 }
-func (r *adminTicketsRepo) ListByUser(_ context.Context, _ primitive.ObjectID) ([]booking.Booking, error) {
+func (r *adminTicketsRepo) ListByUser(ctx context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
+	return r.ListConfirmedByUser(ctx, userID)
+}
+func (r *adminTicketsRepo) ListConfirmedByUser(_ context.Context, _ primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
 }
 func (r *adminTicketsRepo) ListConfirmedByShowtime(_ context.Context, _ primitive.ObjectID) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (r *adminTicketsRepo) CountConfirmedBetween(_ context.Context, _, _ time.Time) (int, error) {
+	return 0, nil
+}
+func (r *adminTicketsRepo) ListRecentConfirmed(_ context.Context, _ int) ([]booking.Booking, error) {
 	return nil, nil
 }
 

@@ -39,6 +39,11 @@ func (s stubShowtimes) ListShowtimesByScreens(context.Context, []primitive.Objec
 func (s stubShowtimes) ListShowtimesByCinemaMovie(context.Context, []primitive.ObjectID, primitive.ObjectID) ([]catalog.Showtime, error) {
 	return nil, nil
 }
+func (stubShowtimes) ListAdminShowtimes(context.Context, catalog.AdminShowtimeFilter) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (stubShowtimes) UpdateShowtime(context.Context, *catalog.Showtime) error { return nil }
+func (stubShowtimes) DeleteShowtime(context.Context, primitive.ObjectID) error { return nil }
 
 type stubScreens struct{ screen *catalog.Screen }
 
@@ -52,6 +57,11 @@ func (s stubScreens) FindScreenByID(_ context.Context, id primitive.ObjectID) (*
 func (s stubScreens) ListScreensByCinema(context.Context, primitive.ObjectID) ([]catalog.Screen, error) {
 	return nil, nil
 }
+func (stubScreens) ListScreens(context.Context, *primitive.ObjectID) ([]catalog.Screen, error) {
+	return nil, nil
+}
+func (stubScreens) UpdateScreen(context.Context, *catalog.Screen) error { return nil }
+func (stubScreens) DeleteScreen(context.Context, primitive.ObjectID) error { return nil }
 
 type stubCinemas struct{ cinema *catalog.Cinema }
 
@@ -63,6 +73,8 @@ func (s stubCinemas) FindCinemaByID(_ context.Context, id primitive.ObjectID) (*
 	return nil, nil
 }
 func (s stubCinemas) ListCinemas(context.Context) ([]catalog.Cinema, error) { return nil, nil }
+func (stubCinemas) UpdateCinema(context.Context, *catalog.Cinema) error      { return nil }
+func (stubCinemas) DeleteCinema(context.Context, primitive.ObjectID) error { return nil }
 
 type stubBookings struct{ bookings []booking.Booking }
 
@@ -73,7 +85,16 @@ func (s stubBookings) FindByID(context.Context, primitive.ObjectID) (*booking.Bo
 func (s stubBookings) FindByBookingRef(context.Context, string) (*booking.Booking, error) {
 	return nil, nil
 }
-func (s stubBookings) ListByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
+func (s stubBookings) ListByUser(ctx context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
+	return s.ListConfirmedByUser(ctx, userID)
+}
+func (s stubBookings) ListConfirmedByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (stubBookings) CountConfirmedBetween(context.Context, time.Time, time.Time) (int, error) {
+	return 0, nil
+}
+func (stubBookings) ListRecentConfirmed(context.Context, int) ([]booking.Booking, error) {
 	return nil, nil
 }
 func (s stubBookings) ListConfirmedByShowtime(_ context.Context, showtimeID primitive.ObjectID) ([]booking.Booking, error) {

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/admin"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/pkg/httputil"
@@ -52,13 +51,4 @@ func ListAdminUserBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 		}
 		httputil.OK(c, gin.H{"bookings": bookings})
 	}
-}
-
-func parseObjectID(c *gin.Context, param string) (primitive.ObjectID, bool) {
-	id, err := primitive.ObjectIDFromHex(c.Param(param))
-	if err != nil {
-		httputil.Error(c, http.StatusBadRequest, "INVALID_ID", "invalid id")
-		return primitive.NilObjectID, false
-	}
-	return id, true
 }

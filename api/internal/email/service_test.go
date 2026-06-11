@@ -66,7 +66,16 @@ func (f fakeBookings) FindByID(_ context.Context, id primitive.ObjectID) (*booki
 func (f fakeBookings) FindByBookingRef(context.Context, string) (*booking.Booking, error) {
 	return nil, nil
 }
-func (f fakeBookings) ListByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
+func (f fakeBookings) ListByUser(ctx context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
+	return f.ListConfirmedByUser(ctx, userID)
+}
+func (f fakeBookings) ListConfirmedByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (fakeBookings) CountConfirmedBetween(context.Context, time.Time, time.Time) (int, error) {
+	return 0, nil
+}
+func (fakeBookings) ListRecentConfirmed(context.Context, int) ([]booking.Booking, error) {
 	return nil, nil
 }
 func (f fakeBookings) ListConfirmedByShowtime(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
@@ -129,6 +138,11 @@ func (f fakeST) ListShowtimesByScreens(context.Context, []primitive.ObjectID) ([
 func (f fakeST) ListShowtimesByCinemaMovie(context.Context, []primitive.ObjectID, primitive.ObjectID) ([]catalog.Showtime, error) {
 	return nil, nil
 }
+func (fakeST) ListAdminShowtimes(context.Context, catalog.AdminShowtimeFilter) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (fakeST) UpdateShowtime(context.Context, *catalog.Showtime) error { return nil }
+func (fakeST) DeleteShowtime(context.Context, primitive.ObjectID) error { return nil }
 
 type fakeSC struct{ s *catalog.Screen }
 
@@ -139,6 +153,9 @@ func (f fakeSC) FindScreenByID(context.Context, primitive.ObjectID) (*catalog.Sc
 func (f fakeSC) ListScreensByCinema(context.Context, primitive.ObjectID) ([]catalog.Screen, error) {
 	return nil, nil
 }
+func (fakeSC) ListScreens(context.Context, *primitive.ObjectID) ([]catalog.Screen, error) { return nil, nil }
+func (fakeSC) UpdateScreen(context.Context, *catalog.Screen) error                         { return nil }
+func (fakeSC) DeleteScreen(context.Context, primitive.ObjectID) error                     { return nil }
 
 type fakeMV struct{ m *catalog.Movie }
 
@@ -149,6 +166,9 @@ func (f fakeMV) FindMovieByID(context.Context, primitive.ObjectID) (*catalog.Mov
 func (f fakeMV) ListMoviesByStatus(context.Context, string) ([]catalog.Movie, error) { return nil, nil }
 func (f fakeMV) ListComingSoonMovies(context.Context) ([]catalog.Movie, error)      { return nil, nil }
 func (f fakeMV) ListNonArchivedMovies(context.Context) ([]catalog.Movie, error)     { return nil, nil }
+func (fakeMV) ListMovies(context.Context) ([]catalog.Movie, error)                  { return nil, nil }
+func (fakeMV) UpdateMovie(context.Context, *catalog.Movie) error                    { return nil }
+func (fakeMV) DeleteMovie(context.Context, primitive.ObjectID) error                { return nil }
 
 type fakeCN struct{ c *catalog.Cinema }
 
@@ -157,3 +177,5 @@ func (f fakeCN) FindCinemaByID(context.Context, primitive.ObjectID) (*catalog.Ci
 	return f.c, nil
 }
 func (f fakeCN) ListCinemas(context.Context) ([]catalog.Cinema, error) { return nil, nil }
+func (fakeCN) UpdateCinema(context.Context, *catalog.Cinema) error      { return nil }
+func (fakeCN) DeleteCinema(context.Context, primitive.ObjectID) error   { return nil }

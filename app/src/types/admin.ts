@@ -29,3 +29,10 @@ export interface BookingSummary {
   total: number
   confirmedAt: string
 }
+
+export interface AdminDashboard {
+  bookingsToday: number
+  showtimesToday: number
+  avgOccupancyPct: number
+  recentBookings: BookingSummary[]
+}

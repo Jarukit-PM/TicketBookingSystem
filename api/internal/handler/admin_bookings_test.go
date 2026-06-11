@@ -42,6 +42,12 @@ func (r *adminBookingsRepo) ListConfirmedByUser(_ context.Context, _ primitive.O
 func (r *adminBookingsRepo) ListConfirmedByShowtime(_ context.Context, _ primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
 }
+func (r *adminBookingsRepo) CountConfirmedBetween(_ context.Context, _, _ time.Time) (int, error) {
+	return 0, nil
+}
+func (r *adminBookingsRepo) ListRecentConfirmed(_ context.Context, _ int) ([]booking.Booking, error) {
+	return nil, nil
+}
 
 type adminBookingsShowtimes struct{}
 
@@ -63,6 +69,11 @@ func (r *adminBookingsShowtimes) ListShowtimesByScreens(_ context.Context, _ []p
 func (r *adminBookingsShowtimes) ListShowtimesByCinemaMovie(_ context.Context, _ []primitive.ObjectID, _ primitive.ObjectID) ([]catalog.Showtime, error) {
 	return nil, nil
 }
+func (r *adminBookingsShowtimes) ListAdminShowtimes(_ context.Context, _ catalog.AdminShowtimeFilter) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (r *adminBookingsShowtimes) UpdateShowtime(_ context.Context, _ *catalog.Showtime) error { return nil }
+func (r *adminBookingsShowtimes) DeleteShowtime(_ context.Context, _ primitive.ObjectID) error { return nil }
 
 type adminBookingsMovies struct{}
 

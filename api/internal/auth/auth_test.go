@@ -47,7 +47,12 @@ func (r *memUserRepo) FindByEmail(_ context.Context, email string) (*user.User, 
 	return u, nil
 }
 
-func (r *memUserRepo) FindByGoogleID(_ context.Context, _ string) (*user.User, error) {
+func (r *memUserRepo) FindByGoogleID(_ context.Context, googleID string) (*user.User, error) {
+	for _, u := range r.byEmail {
+		if u.GoogleID == googleID {
+			return u, nil
+		}
+	}
 	return nil, nil
 }
 

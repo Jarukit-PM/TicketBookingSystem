@@ -38,6 +38,11 @@ func (s stubShowtimes) ListShowtimesByScreens(context.Context, []primitive.Objec
 func (s stubShowtimes) ListShowtimesByCinemaMovie(context.Context, []primitive.ObjectID, primitive.ObjectID) ([]catalog.Showtime, error) {
 	return nil, nil
 }
+func (stubShowtimes) ListAdminShowtimes(context.Context, catalog.AdminShowtimeFilter) ([]catalog.Showtime, error) {
+	return nil, nil
+}
+func (stubShowtimes) UpdateShowtime(context.Context, *catalog.Showtime) error { return nil }
+func (stubShowtimes) DeleteShowtime(context.Context, primitive.ObjectID) error { return nil }
 
 type stubScreens struct{ screen *catalog.Screen }
 
@@ -51,6 +56,11 @@ func (s stubScreens) FindScreenByID(_ context.Context, id primitive.ObjectID) (*
 func (s stubScreens) ListScreensByCinema(context.Context, primitive.ObjectID) ([]catalog.Screen, error) {
 	return nil, nil
 }
+func (stubScreens) ListScreens(context.Context, *primitive.ObjectID) ([]catalog.Screen, error) {
+	return nil, nil
+}
+func (stubScreens) UpdateScreen(context.Context, *catalog.Screen) error { return nil }
+func (stubScreens) DeleteScreen(context.Context, primitive.ObjectID) error { return nil }
 
 type stubCinemas struct{ cinema *catalog.Cinema }
 
@@ -62,6 +72,8 @@ func (s stubCinemas) FindCinemaByID(_ context.Context, id primitive.ObjectID) (*
 	return nil, nil
 }
 func (s stubCinemas) ListCinemas(context.Context) ([]catalog.Cinema, error) { return nil, nil }
+func (stubCinemas) UpdateCinema(context.Context, *catalog.Cinema) error      { return nil }
+func (stubCinemas) DeleteCinema(context.Context, primitive.ObjectID) error { return nil }
 
 type stubMovies struct{}
 
@@ -72,6 +84,9 @@ func (stubMovies) FindMovieByID(context.Context, primitive.ObjectID) (*catalog.M
 func (stubMovies) ListMoviesByStatus(context.Context, string) ([]catalog.Movie, error) { return nil, nil }
 func (stubMovies) ListComingSoonMovies(context.Context) ([]catalog.Movie, error)      { return nil, nil }
 func (stubMovies) ListNonArchivedMovies(context.Context) ([]catalog.Movie, error)     { return nil, nil }
+func (stubMovies) ListMovies(context.Context) ([]catalog.Movie, error)                { return nil, nil }
+func (stubMovies) UpdateMovie(context.Context, *catalog.Movie) error                  { return nil }
+func (stubMovies) DeleteMovie(context.Context, primitive.ObjectID) error              { return nil }
 
 type memBookings struct {
 	mu       sync.Mutex
@@ -105,8 +120,44 @@ func (m *memBookings) FindByBookingRef(context.Context, string) (*booking.Bookin
 	return nil, nil
 }
 
-func (m *memBookings) ListByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
-	return nil, nil
+func (m *memBookings) ListByUser(ctx context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
+	return m.ListConfirmedByUser(ctx, userID)
+}
+
+func (m *memBookings) ListConfirmedByUser(_ context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]booking.Booking, 0)
+	for _, b := range m.bookings {
+		if b.UserID == userID && b.Status == booking.StatusConfirmed {
+			out = append(out, b)
+		}
+	}
+	return out, nil
+}
+
+func (m *memBookings) CountConfirmedBetween(_ context.Context, from, to time.Time) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	count := 0
+	for _, b := range m.bookings {
+		if b.Status == booking.StatusConfirmed && !b.ConfirmedAt.Before(from) && b.ConfirmedAt.Before(to) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *memBookings) ListRecentConfirmed(_ context.Context, limit int) ([]booking.Booking, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]booking.Booking, 0, limit)
+	for i := len(m.bookings) - 1; i >= 0 && len(out) < limit; i-- {
+		if m.bookings[i].Status == booking.StatusConfirmed {
+			out = append(out, m.bookings[i])
+		}
+	}
+	return out, nil
 }
 
 func (m *memBookings) ListConfirmedByShowtime(_ context.Context, showtimeID primitive.ObjectID) ([]booking.Booking, error) {
