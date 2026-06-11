@@ -57,6 +57,27 @@ const router = createRouter({
       component: () => import('../views/MyBookingsPlaceholderView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin',
+      component: () => import('../views/admin/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: '',
+          redirect: { name: 'admin-bookings' },
+        },
+        {
+          path: 'bookings',
+          name: 'admin-bookings',
+          component: () => import('../views/admin/AdminBookingsView.vue'),
+        },
+        {
+          path: 'users/:userId/bookings',
+          name: 'admin-user-bookings',
+          component: () => import('../views/admin/AdminUserBookingsView.vue'),
+        },
+      ],
+    },
   ],
 })
 
@@ -66,6 +87,15 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin) {
+    if (!auth.isAuthenticated) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+    if (!auth.isAdmin) {
+      return { name: 'home' }
+    }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
