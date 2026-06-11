@@ -54,7 +54,19 @@ const router = createRouter({
     {
       path: '/my-bookings',
       name: 'my-bookings',
-      component: () => import('../views/MyBookingsPlaceholderView.vue'),
+      component: () => import('../views/MyBookingsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/my-bookings/:id',
+      name: 'booking-detail',
+      component: () => import('../views/BookingDetailView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/ticket/:bookingRef',
+      name: 'ticket',
+      component: () => import('../views/TicketPlaceholderView.vue'),
       meta: { requiresAuth: true },
     },
     {

@@ -37,7 +37,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None — ready for #23 (Admin audit + email logs).
+- None — ready for #24 (Admin QR scan).
 
 ## Next Up
 

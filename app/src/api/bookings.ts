@@ -1,5 +1,5 @@
 import { apiRequest } from '@/api/client'
-import type { ConfirmedBooking } from '@/types/bookings'
+import type { BookingListItem, ConfirmedBooking } from '@/types/bookings'
 
 export function confirmBooking(
   showtimeId: string,
@@ -13,4 +13,18 @@ export function confirmBooking(
     },
     body: JSON.stringify({ showtimeId }),
   })
+}
+
+type MyBookingsResponse = {
+  bookings: BookingListItem[]
+}
+
+export function fetchMyBookings(upcoming: boolean): Promise<BookingListItem[]> {
+  return apiRequest<MyBookingsResponse>(`/bookings/mine?upcoming=${upcoming}`).then(
+    (res) => res.bookings,
+  )
+}
+
+export function fetchBookingDetail(id: string): Promise<BookingListItem> {
+  return apiRequest<BookingListItem>(`/bookings/${id}`)
 }

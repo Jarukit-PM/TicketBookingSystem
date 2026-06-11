@@ -69,6 +69,9 @@ func (f fakeBookings) FindByBookingRef(context.Context, string) (*booking.Bookin
 func (f fakeBookings) ListByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
 }
+func (f fakeBookings) ListConfirmedByUser(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
+	return nil, nil
+}
 func (f fakeBookings) ListConfirmedByShowtime(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
 }

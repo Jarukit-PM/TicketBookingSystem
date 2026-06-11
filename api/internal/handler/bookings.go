@@ -69,6 +69,41 @@ func ConfirmBooking(deps BookingsDeps) gin.HandlerFunc {
 	}
 }
 
+// ListMyBookings handles GET /api/bookings/mine.
+func ListMyBookings(deps BookingsDeps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, ok := auth.UserFromContext(c)
+		if !ok {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		upcoming := c.DefaultQuery("upcoming", "true") == "true"
+		items, err := deps.Bookings.ListMine(c.Request.Context(), user.ID.Hex(), upcoming)
+		if err != nil {
+			writeBookingQueryError(c, err)
+			return
+		}
+		httputil.OK(c, gin.H{"bookings": items})
+	}
+}
+
+// GetBooking handles GET /api/bookings/:id.
+func GetBooking(deps BookingsDeps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, ok := auth.UserFromContext(c)
+		if !ok {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		item, err := deps.Bookings.GetDetail(c.Request.Context(), user.ID.Hex(), user.Role, c.Param("id"))
+		if err != nil {
+			writeBookingQueryError(c, err)
+			return
+		}
+		httputil.OK(c, item)
+	}
+}
+
 // GetBookingTicket handles GET /api/bookings/:id/ticket.
 func GetBookingTicket(deps BookingsDeps) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -135,5 +170,16 @@ func writeBookingError(c *gin.Context, err error) {
 		httputil.Error(c, http.StatusConflict, "SEAT_LIMIT_EXCEEDED", "maximum 10 seats per booking")
 	default:
 		httputil.Error(c, http.StatusInternalServerError, "CONFIRM_ERROR", "failed to confirm booking")
+	}
+}
+
+func writeBookingQueryError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, booking.ErrBookingNotFound):
+		httputil.Error(c, http.StatusNotFound, "BOOKING_NOT_FOUND", "booking not found")
+	case errors.Is(err, booking.ErrForbidden):
+		httputil.Error(c, http.StatusForbidden, "FORBIDDEN", "you do not have access to this booking")
+	default:
+		httputil.Error(c, http.StatusInternalServerError, "BOOKING_QUERY_ERROR", "failed to load booking")
 	}
 }

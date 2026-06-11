@@ -111,8 +111,11 @@ func NewRouter(deps Deps) *gin.Engine {
 		Tasks:     deps.TaskClient,
 		Publisher: deps.Hub,
 	}
-	api.POST("/bookings/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
-	api.GET("/bookings/:id/ticket", auth.RequireAuth(authMw), handler.GetBookingTicket(bookingsDeps))
+	bookingsRoutes := api.Group("/bookings")
+	bookingsRoutes.POST("/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
+	bookingsRoutes.GET("/mine", auth.RequireAuth(authMw), handler.ListMyBookings(bookingsDeps))
+	bookingsRoutes.GET("/:id/ticket", auth.RequireAuth(authMw), handler.GetBookingTicket(bookingsDeps))
+	bookingsRoutes.GET("/:id", auth.RequireAuth(authMw), handler.GetBooking(bookingsDeps))
 
 	adminGroup := api.Group("/admin")
 	adminGroup.Use(auth.RequireAuth(authMw), auth.RequireAdmin(authMw))
