@@ -33,7 +33,7 @@ func SearchAdminBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"bookings": bookings})
+		httputil.OK(c, gin.H{"bookings": httputil.JSONSlice(bookings)})
 	}
 }
 
@@ -49,6 +49,6 @@ func ListAdminUserBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"bookings": bookings})
+		httputil.OK(c, gin.H{"bookings": httputil.JSONSlice(bookings)})
 	}
 }

@@ -29,6 +29,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Implementation issues (2026-06-11):** Specs **05–10** broken into 14 vertical-slice GitHub issues **#11–#24** (`to-issues`); label `ready-for-human` added for HITL slices (#13 OAuth, #24 QR scan).
 - **MVP stack (2026-06-11):** Issues #11–#24 — auth (email + Google OAuth), public catalog browse, admin catalog CRUD + dashboard, seat map + Redis holds + WebSocket, booking confirm, my bookings, digital ticket + SendGrid email worker, admin booking search, audit/email logs, admin QR scan.
 - **Thai catalog seed (2026-06-11):** `cmd/seed` loads Bangkok Major/SF data — 7 cinemas, 17 screens, 14 movies (cinematic.asia posters), 30 days of showtimes; `-reset-catalog` replaces existing catalog. API embeds `time/tzdata` + Alpine `tzdata` for `Asia/Bangkok` browse cutoffs.
+- **Admin bootstrap on API start (2026-06-11):** `ADMIN_EMAIL` + `ADMIN_SEED_PASSWORD` create or promote admin on server boot; `docker-compose.yml` passes both vars and publishes API on `8080` for Vite dev.
+- **Customer home catalog (2026-06-11):** `HomeView.vue` live cinema picker + Now Showing / Coming Soon tabs via `/api/movies`.
+- **Admin sign-out redirect (2026-06-11):** `auth.logout()` clears local session on API failure and navigates home from protected routes.
 
 ## In Progress
 

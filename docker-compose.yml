@@ -27,9 +27,13 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       PORT: "8080"
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD}
     depends_on:
       - mongo
       - redis
+    ports:
+      - "8080:8080"
     restart: unless-stopped
 
   worker:

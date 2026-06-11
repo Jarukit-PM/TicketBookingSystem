@@ -26,7 +26,7 @@ async function loadCinemas() {
   errorMessage.value = ''
   try {
     const response = await api.get<{ cinemas: Cinema[] }>('/admin/cinemas')
-    cinemas.value = response.cinemas
+    cinemas.value = response.cinemas ?? []
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load cinemas'
   } finally {

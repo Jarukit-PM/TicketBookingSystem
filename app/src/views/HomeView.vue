@@ -1,19 +1,80 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from '@/components/ui'
+import { fetchCinemas, fetchMovies } from '@/api/catalog'
+import CinemaPicker from '@/components/CinemaPicker.vue'
+import MovieCard from '@/components/MovieCard.vue'
+import { Button } from '@/components/ui'
 import { useAuthStore } from '@/stores/auth'
+import { useCatalogStore } from '@/stores/catalog'
+import type { CatalogTab, Cinema, Movie } from '@/types/catalog'
 
 const auth = useAuthStore()
-const searchQuery = ref('')
+const catalog = useCatalogStore()
+
+const cinemas = ref<Cinema[]>([])
+const movies = ref<Movie[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+const selectedCinema = computed({
+  get: () => catalog.selectedCinemaId,
+  set: (id: string | null) => {
+    if (id) {
+      catalog.setCinema(id)
+    }
+  },
+})
+
+const emptyMessage = computed(() => {
+  if (!catalog.selectedCinemaId) {
+    return 'Select a cinema to browse movies.'
+  }
+  if (catalog.activeTab === 'now_showing') {
+    return 'No movies with upcoming showtimes at this cinema.'
+  }
+  return 'No coming soon titles at this cinema.'
+})
+
+async function loadMovies(): Promise<void> {
+  if (!catalog.selectedCinemaId) {
+    movies.value = []
+    return
+  }
+
+  loading.value = true
+  error.value = null
+  try {
+    movies.value = await fetchMovies(catalog.selectedCinemaId, catalog.activeTab)
+  } catch {
+    error.value = 'Could not load movies. Please try again.'
+    movies.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+function switchTab(tab: CatalogTab): void {
+  if (catalog.activeTab === tab) return
+  catalog.setTab(tab)
+}
+
+onMounted(async () => {
+  try {
+    cinemas.value = await fetchCinemas()
+    if (!catalog.selectedCinemaId && cinemas.value.length > 0) {
+      catalog.setCinema(cinemas.value[0]!.id)
+    }
+  } catch {
+    error.value = 'Could not load cinemas. Please try again.'
+  }
+})
+
+watch(
+  () => [catalog.selectedCinemaId, catalog.activeTab] as const,
+  () => void loadMovies(),
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -34,7 +95,14 @@ const searchQuery = ref('')
           >
             My Bookings
           </RouterLink>
-          <span class="hidden text-sm text-copy-muted sm:inline">{{ auth.user?.name }}</span>
+          <RouterLink
+            v-if="auth.isAdmin"
+            to="/admin"
+            class="text-sm text-copy-secondary transition-colors hover:text-copy-primary"
+          >
+            Admin
+          </RouterLink>
+          <span class="hidden text-sm text-copy-muted sm:inline">{{ auth.user?.email }}</span>
           <Button variant="secondary" @click="auth.logout()">Sign out</Button>
         </template>
         <template v-else>
@@ -52,52 +120,77 @@ const searchQuery = ref('')
     </header>
 
     <main class="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
-      <div class="mb-8">
-        <h1 class="text-3xl font-semibold tracking-tight text-copy-primary md:text-4xl">
-          Design System Preview
-        </h1>
-        <p class="mt-2 text-sm text-copy-secondary">
-          Dark cinema theme with gradient orange brand tokens.
+      <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 class="text-3xl font-semibold tracking-tight text-copy-primary md:text-4xl">
+            Browse movies
+          </h1>
+          <p class="mt-2 text-sm text-copy-secondary">
+            Pick a cinema and find showtimes near you.
+          </p>
+        </div>
+        <div class="w-full max-w-xs">
+          <CinemaPicker v-model="selectedCinema" :cinemas="cinemas" />
+        </div>
+      </div>
+
+      <div class="mb-8 flex gap-2 rounded-lg border border-surface-border bg-surface p-1 sm:max-w-md">
+        <button
+          type="button"
+          class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors"
+          :class="
+            catalog.activeTab === 'now_showing'
+              ? 'bg-gradient-brand text-white'
+              : 'text-copy-secondary hover:text-copy-primary'
+          "
+          @click="switchTab('now_showing')"
+        >
+          Now Showing
+        </button>
+        <button
+          type="button"
+          class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors"
+          :class="
+            catalog.activeTab === 'coming_soon'
+              ? 'bg-gradient-brand text-white'
+              : 'text-copy-secondary hover:text-copy-primary'
+          "
+          @click="switchTab('coming_soon')"
+        >
+          Coming Soon
+        </button>
+      </div>
+
+      <p
+        v-if="error"
+        class="mb-6 rounded-lg border border-state-error/30 bg-state-error-dim px-4 py-3 text-sm text-state-error"
+      >
+        {{ error }}
+      </p>
+
+      <p v-if="loading" class="py-16 text-center text-copy-secondary">Loading movies…</p>
+
+      <div
+        v-else-if="movies.length === 0"
+        class="rounded-xl border border-surface-border bg-surface px-6 py-16 text-center"
+      >
+        <p class="text-copy-primary">{{ emptyMessage }}</p>
+        <p
+          v-if="catalog.selectedCinemaId && catalog.activeTab === 'now_showing'"
+          class="mt-2 text-sm text-copy-secondary"
+        >
+          Add movies and showtimes in the admin console to list them here.
         </p>
       </div>
 
-      <section class="mb-8 flex flex-wrap gap-4">
-        <Button variant="primary">View showtimes</Button>
-        <Button variant="secondary">Browse movies</Button>
-      </section>
-
-      <section class="mb-8 grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Dune: Part Three</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p class="text-sm text-copy-secondary">
-              Sci-fi epic · 2h 46m · IMAX · Starts 7:30 PM
-            </p>
-          </CardContent>
-        </Card>
-
-        <div class="flex flex-col gap-4">
-          <label class="text-xs font-medium uppercase tracking-wide text-copy-muted" for="search">
-            Search movies
-          </label>
-          <Input
-            id="search"
-            v-model="searchQuery"
-            placeholder="Find a title..."
-          />
-        </div>
-      </section>
-
-      <section>
-        <h2 class="mb-4 text-lg font-medium text-copy-primary">Booking status badges</h2>
-        <div class="flex flex-wrap gap-3">
-          <Badge variant="confirmed">Confirmed</Badge>
-          <Badge variant="hold-active">Hold active</Badge>
-          <Badge variant="hold-expired">Hold expired</Badge>
-        </div>
-      </section>
+      <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <MovieCard
+          v-for="movie in movies"
+          :key="movie.id"
+          :movie="movie"
+          :tab="catalog.activeTab"
+        />
+      </div>
     </main>
   </div>
 </template>

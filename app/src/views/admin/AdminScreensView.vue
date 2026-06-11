@@ -60,8 +60,8 @@ async function loadData() {
       api.get<{ cinemas: Cinema[] }>('/admin/cinemas'),
       api.get<{ screens: Screen[] }>('/admin/screens'),
     ])
-    cinemas.value = cinemaRes.cinemas
-    screens.value = screenRes.screens
+    cinemas.value = cinemaRes.cinemas ?? []
+    screens.value = screenRes.screens ?? []
     if (!form.value.cinemaId && cinemas.value[0]) {
       form.value.cinemaId = cinemas.value[0].id
     }
@@ -75,7 +75,7 @@ async function loadData() {
 async function loadScreens() {
   const query = filterCinemaId.value ? `?cinemaId=${filterCinemaId.value}` : ''
   const response = await api.get<{ screens: Screen[] }>(`/admin/screens${query}`)
-  screens.value = response.screens
+  screens.value = response.screens ?? []
 }
 
 function startEdit(screen: Screen) {
@@ -167,8 +167,11 @@ onMounted(async () => {
               required
             />
           </div>
+          <p v-if="!loading && cinemas.length === 0" class="text-sm text-copy-muted">
+            Add a cinema first under Cinemas before creating a screen.
+          </p>
           <div class="flex gap-2">
-            <Button type="submit" :disabled="!cinemas.length">
+            <Button type="submit" :disabled="cinemas.length === 0">
               {{ editingId ? 'Update' : 'Create' }}
             </Button>
             <Button v-if="editingId" type="button" variant="secondary" @click="resetForm">

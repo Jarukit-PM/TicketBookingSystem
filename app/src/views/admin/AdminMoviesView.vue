@@ -38,7 +38,7 @@ async function loadMovies() {
   errorMessage.value = ''
   try {
     const response = await api.get<{ movies: Movie[] }>('/admin/movies')
-    movies.value = response.movies
+    movies.value = response.movies ?? []
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load movies'
   } finally {

@@ -30,7 +30,7 @@ async function loadLogs() {
       const data = await api.get<{ logs: AuditLogEntry[] }>(
         `/admin/audit-logs?page=${page.value}&limit=${limit}`,
       )
-      auditLogs.value = data.logs
+      auditLogs.value = data.logs ?? []
     } else {
       const params = new URLSearchParams({
         page: String(page.value),
@@ -38,7 +38,7 @@ async function loadLogs() {
       })
       if (bookingId.value.trim()) params.set('bookingId', bookingId.value.trim())
       const data = await api.get<{ logs: EmailLogEntry[] }>(`/admin/email-logs?${params}`)
-      emailLogs.value = data.logs
+      emailLogs.value = data.logs ?? []
     }
   } catch (error) {
     auditLogs.value = []

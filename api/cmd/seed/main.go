@@ -199,12 +199,6 @@ func seedDemoBookingIfEmpty(ctx context.Context, cfg config.Config, database *mo
 }
 
 func seedAdmin(ctx context.Context, cfg config.Config, database *mongo.Database) error {
-	if cfg.AdminEmail == "" || cfg.AdminSeedPassword == "" {
-		return nil
-	}
-
 	userRepo := user.NewMongoRepository(database)
-	tokenService := auth.NewTokenService(cfg.JWTSecret, cfg.JWTExpiryDuration())
-	authService := auth.NewService(userRepo, tokenService, auth.NewLoginRateLimiter(nil), cfg.AdminEmail)
-	return authService.BootstrapAdmin(ctx, cfg.AdminEmail, cfg.AdminSeedPassword)
+	return auth.BootstrapConfiguredAdmin(ctx, cfg, userRepo)
 }

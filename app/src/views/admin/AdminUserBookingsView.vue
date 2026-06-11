@@ -23,7 +23,7 @@ async function loadBookings() {
     const data = await api.get<{ bookings: BookingSummary[] }>(
       `/admin/users/${userId.value}/bookings`,
     )
-    bookings.value = data.bookings
+    bookings.value = data.bookings ?? []
   } catch (error) {
     bookings.value = []
     errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load bookings'

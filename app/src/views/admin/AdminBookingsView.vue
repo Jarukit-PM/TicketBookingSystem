@@ -28,7 +28,7 @@ async function search() {
     const query = params.toString()
     const path = query ? `/admin/bookings?${query}` : '/admin/bookings'
     const data = await api.get<{ bookings: BookingSummary[] }>(path)
-    bookings.value = data.bookings
+    bookings.value = data.bookings ?? []
   } catch (error) {
     bookings.value = []
     errorMessage.value = error instanceof ApiError ? error.message : 'Search failed'

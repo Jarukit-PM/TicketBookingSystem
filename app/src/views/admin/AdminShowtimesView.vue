@@ -78,9 +78,9 @@ async function loadReferenceData() {
     api.get<{ screens: Screen[] }>('/admin/screens'),
     api.get<{ cinemas: Cinema[] }>('/admin/cinemas'),
   ])
-  movies.value = movieRes.movies
-  screens.value = screenRes.screens
-  cinemas.value = cinemaRes.cinemas
+  movies.value = movieRes.movies ?? []
+  screens.value = screenRes.screens ?? []
+  cinemas.value = cinemaRes.cinemas ?? []
 }
 
 async function loadShowtimes() {
@@ -90,7 +90,7 @@ async function loadShowtimes() {
     const response = await api.get<{ showtimes: Showtime[] }>(
       `/admin/showtimes${buildQuery()}`,
     )
-    showtimes.value = response.showtimes
+    showtimes.value = response.showtimes ?? []
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Failed to load showtimes'
   } finally {
@@ -232,7 +232,7 @@ onMounted(loadAll)
             <Input id="wheelchair" :model-value="String(form.wheelchair)" @update:model-value="form.wheelchair = Number($event) || 0" type="number" min="0" required />
           </div>
           <div class="flex gap-2 md:col-span-2">
-            <Button type="submit" :disabled="!movies.length || !screens.length">
+            <Button type="submit" :disabled="movies.length === 0 || screens.length === 0">
               {{ editingId ? 'Update' : 'Create' }}
             </Button>
             <Button v-if="editingId" type="button" variant="secondary" @click="resetForm">

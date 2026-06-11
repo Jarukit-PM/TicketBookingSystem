@@ -25,7 +25,7 @@ func ListAdminAuditLogs(deps AdminLogsDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"logs": logs, "page": page, "limit": limit})
+		httputil.OK(c, gin.H{"logs": httputil.JSONSlice(logs), "page": page, "limit": limit})
 	}
 }
 
@@ -47,7 +47,7 @@ func ListAdminEmailLogs(deps AdminLogsDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"logs": logs, "page": page, "limit": limit})
+		httputil.OK(c, gin.H{"logs": httputil.JSONSlice(logs), "page": page, "limit": limit})
 	}
 }
 

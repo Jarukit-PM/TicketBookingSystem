@@ -12,9 +12,11 @@ import (
 
 	_ "time/tzdata" // embed IANA zones for Alpine/scratch images (Asia/Bangkok, etc.)
 
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/server"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/tasks"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/ws"
 )
@@ -24,8 +26,13 @@ func main() {
 
 	ctx := context.Background()
 	mongoClient := db.MustConnectMongo(ctx, cfg.MongoURI)
-	if err := db.EnsureIndexes(ctx, db.Database(mongoClient, cfg.MongoURI)); err != nil {
+	database := db.Database(mongoClient, cfg.MongoURI)
+	if err := db.EnsureIndexes(ctx, database); err != nil {
 		log.Fatalf("ensure indexes: %v", err)
+	}
+	userRepo := user.NewMongoRepository(database)
+	if err := auth.BootstrapConfiguredAdmin(ctx, cfg, userRepo); err != nil {
+		log.Fatalf("bootstrap admin: %v", err)
 	}
 	redisClient := db.MustConnectRedis(cfg.RedisURL)
 

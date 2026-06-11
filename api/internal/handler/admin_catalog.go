@@ -25,7 +25,7 @@ func ListAdminMovies(deps AdminCatalogDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"movies": movies})
+		httputil.OK(c, gin.H{"movies": httputil.JSONSlice(movies)})
 	}
 }
 
@@ -118,7 +118,7 @@ func ListAdminCinemas(deps AdminCatalogDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"cinemas": cinemas})
+		httputil.OK(c, gin.H{"cinemas": httputil.JSONSlice(cinemas)})
 	}
 }
 
@@ -220,7 +220,7 @@ func ListAdminScreens(deps AdminCatalogDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"screens": screens})
+		httputil.OK(c, gin.H{"screens": httputil.JSONSlice(screens)})
 	}
 }
 
@@ -317,7 +317,7 @@ func ListAdminShowtimes(deps AdminCatalogDeps) gin.HandlerFunc {
 			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			return
 		}
-		httputil.OK(c, gin.H{"showtimes": showtimes})
+		httputil.OK(c, gin.H{"showtimes": httputil.JSONSlice(showtimes)})
 	}
 }
 

@@ -61,9 +61,22 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       await api.post('/auth/logout')
-      user.value = null
+    } catch {
+      // Clear local session even when the API call fails.
     } finally {
+      user.value = null
       loading.value = false
+
+      const { default: router } = await import('@/router')
+      const route = router.currentRoute.value
+      const onProtectedRoute =
+        route.meta.requiresAuth === true ||
+        route.meta.requiresAdmin === true ||
+        route.path.startsWith('/admin')
+
+      if (onProtectedRoute) {
+        await router.push({ name: 'home' })
+      }
     }
   }
 
