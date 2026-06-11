@@ -90,6 +90,22 @@ async function onSubmit() {
             </Button>
           </form>
 
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t border-border" />
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="bg-surface px-2 text-copy-secondary">or</span>
+            </div>
+          </div>
+
+          <a
+            href="/api/auth/google"
+            class="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-copy-primary transition hover:bg-surface-elevated"
+          >
+            Sign in with Google
+          </a>
+
           <p class="mt-6 text-center text-sm text-copy-secondary">
             New here?
             <RouterLink
