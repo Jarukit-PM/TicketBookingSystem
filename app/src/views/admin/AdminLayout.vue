@@ -8,6 +8,7 @@ const auth = useAuthStore()
 
 const navItems = [
   { to: '/admin/bookings', label: 'Bookings' },
+  { to: '/admin/scan', label: 'Scan' },
   { to: '/admin/logs', label: 'Logs' },
 ]
 </script>
