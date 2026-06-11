@@ -97,7 +97,7 @@ Replace default `HomeView.vue` content with a minimal **design-system preview** 
 - App bar stub: `h-16`, blurred dark bar, gradient logo text sample
 - One **gradient primary** button, one **outlined** button
 - One **Card** with sample movie title + secondary text
-- One **Badge** row: Confirmed, Pending, Expired (MVP statuses — no Cancelled)
+- One **Badge** row: Confirmed, Hold active, Hold expired (per `CONTEXT.md` — no Cancelled)
 - Confirm no green Vite starter link styles remain
 
 Update `App.vue` to full-width dark shell (`min-h-screen bg-base`); remove Vite two-column demo layout from `main.css`.

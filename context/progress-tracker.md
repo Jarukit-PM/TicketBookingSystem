@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Implement feature spec 01 (design system), then scaffold Go API and vertical-slice features.
+- Implement feature spec 01 (design system), then follow specs 02–10 in order for infrastructure through admin.
 
 ## Completed
 
@@ -18,6 +18,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Decisions (2026-06-10):** Multi-cinema MVP; sold seats derived from confirmed `bookings`; admin QR scan → user booking history; feature spec 01 rewritten; NovelCraft specs 02–10 removed.
 - **Vue 3 starter:** Vite + TypeScript + Vue Router + Pinia in `app/` (default scaffold — not yet themed or wired to API).
 - **Agent skills:** Project skills installed (`.agents/skills/`, `skills-lock.json`); mapping in `AGENTS.md`.
+- **Feature specs (2026-06-11):** `context/CONTEXT.md` glossary + grill decisions; feature specs **02–10** authored (`spec-driven-development`).
 
 ## In Progress
 
@@ -25,20 +26,18 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-| Order | Feature | Notes |
-| ----- | ------- | ----- |
-| 1 | Design system + Tailwind | [`feature-specs/01-design-system.md`](feature-specs/01-design-system.md) — black + gradient orange tokens |
-| 2 | Docker + nginx + CI skeleton | `docker-compose.yml`, `.github/workflows/ci.yml` |
-| 3 | Go API scaffold | `api/cmd/server`, Viper config, health route |
-| 4 | MongoDB models + indexes | Users, movies, **cinemas**, screens, showtimes, bookings |
-| 5 | Authentication | Email/password + Google OAuth, JWT, Vue Router guards |
-| 6 | Catalog (movies + showtimes) | Multi-cinema browse + admin CRUD |
-| 7 | Seat map + Redis holds + WebSocket | 5-minute TTL, countdown, real-time sync |
-| 8 | Booking confirm + My Bookings | Idempotent confirm; sold seats from bookings query |
-| 9 | QR ticket + email | go-qrcode, SendGrid via asynq worker |
-| 10 | Admin dashboard + QR scan | Scan QR → navigate to user's booking history |
-
-Author new specs (02+) with `spec-driven-development` before coding each row.
+| Order | Feature | Spec |
+| ----- | ------- | ---- |
+| 1 | Design system + Tailwind | [`01-design-system.md`](feature-specs/01-design-system.md) |
+| 2 | Docker + nginx + CI | [`02-infrastructure.md`](feature-specs/02-infrastructure.md) |
+| 3 | Go API scaffold | [`03-api-scaffold.md`](feature-specs/03-api-scaffold.md) |
+| 4 | MongoDB models + indexes | [`04-data-model.md`](feature-specs/04-data-model.md) |
+| 5 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
+| 6 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
+| 7 | Seat map + holds + WebSocket | [`07-seat-map-and-holds.md`](feature-specs/07-seat-map-and-holds.md) |
+| 8 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
+| 9 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
+| 10 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
 
 ## Resolved Decisions
 
@@ -71,7 +70,7 @@ See `context/architecture-context.md`. Summary:
 - **Domain:** Cinema → Screen → Showtime → Booking; seat holds in **Redis** (5 min TTL, refresh on each new seat).
 - **Sold seats:** Computed from confirmed bookings (append-only in MVP — no cancellation).
 - **Stack:** Vue 3 SPA (`app/`), Go Gin API (`api/`), MongoDB durable data, Redis holds/locks/asynq, WebSocket per showtime.
-- **Auth:** JWT (httpOnly cookie or Bearer); roles Customer / Admin.
+- **Auth:** JWT httpOnly cookie only (MVP); roles Customer / Admin.
 - **Real-time:** WebSocket advisory; HTTP hold/confirm authoritative.
 - **Email:** SendGrid via asynq worker; failures do not roll back confirmed bookings.
 - **Payment:** out of scope for MVP — confirm-only bookings.
@@ -79,5 +78,6 @@ See `context/architecture-context.md`. Summary:
 
 ## Session Notes
 
+- **2026-06-11:** Grill-with-docs session — 19 domain decisions captured in `CONTEXT.md`; specs 02–10 written per `spec-driven-development`.
 - **2026-06-10:** Seat inventory option A confirmed; **no booking cancellation in MVP** (sold seats never released).
 - **2026-06-10:** User migrated product context from NovelCraft to Cinema Ticket Booking System. Codebase is still Vue Vite starter + no `api/` yet.
