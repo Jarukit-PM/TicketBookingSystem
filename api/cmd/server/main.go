@@ -1,27 +1,64 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/server"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	cfg := config.MustLoad()
+
+	ctx := context.Background()
+	mongoClient := db.MustConnectMongo(ctx, cfg.MongoURI)
+	redisClient := db.MustConnectRedis(cfg.RedisURL)
+
+	defer func() {
+		if err := db.DisconnectMongo(context.Background(), mongoClient); err != nil {
+			log.Printf("mongo disconnect: %v", err)
+		}
+		if err := redisClient.Close(); err != nil {
+			log.Printf("redis close: %v", err)
+		}
+	}()
+
+	router := server.NewRouter(server.Deps{
+		Mongo: mongoClient,
+		Redis: redisClient,
+	})
+
+	addr := "0.0.0.0:" + cfg.Port
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/health", healthHandler)
+	go func() {
+		log.Printf("api server listening on %s", addr)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("listen: %v", err)
+		}
+	}()
 
-	addr := "0.0.0.0:" + port
-	log.Printf("api server listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
-}
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	<-sig
 
-func healthHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	log.Println("api server shutting down")
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("shutdown: %v", err)
+	}
 }
