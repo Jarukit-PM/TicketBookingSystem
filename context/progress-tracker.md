@@ -25,21 +25,34 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Vue 3 starter:** Vite + TypeScript + Vue Router + Pinia in `app/` (default scaffold — not yet themed or wired to API).
 - **Agent skills:** Project skills installed (`.agents/skills/`, `skills-lock.json`); mapping in `AGENTS.md`.
 - **Feature specs (2026-06-11):** `context/CONTEXT.md` glossary + grill decisions; feature specs **02–10** authored (`spec-driven-development`).
+- **Implementation issues (2026-06-11):** Specs **05–10** broken into 14 vertical-slice GitHub issues **#11–#24** (`to-issues`); label `ready-for-human` added for HITL slices (#13 OAuth, #24 QR scan).
 
 ## In Progress
 
-- None — continue with authentication (spec 05).
+- None — pick next open issue from table below.
 
 ## Next Up
 
-| Order | Feature | Spec |
-| ----- | ------- | ---- |
-| 1 | Authentication | [`05-authentication.md`](feature-specs/05-authentication.md) |
-| 2 | Catalog (browse + admin CRUD) | [`06-catalog.md`](feature-specs/06-catalog.md) |
-| 3 | Seat map + holds + WebSocket | [`07-seat-map-and-holds.md`](feature-specs/07-seat-map-and-holds.md) |
-| 4 | Booking confirm + My Bookings | [`08-booking.md`](feature-specs/08-booking.md) |
-| 5 | QR ticket + email | [`09-ticket-and-email.md`](feature-specs/09-ticket-and-email.md) |
-| 6 | Admin dashboard + QR scan | [`10-admin.md`](feature-specs/10-admin.md) |
+Specs 05–10 broken into **14 vertical-slice issues** (GitHub #11–#24). HITL: #13 (Google OAuth), #24 (QR scan).
+
+| Order | Issue | Slice | Spec |
+| ----- | ----- | ----- | ---- |
+| 1 | [#11](https://github.com/Jarukit-PM/TicketBookingSystem/issues/11) | Email/password auth + middleware + route guards | 05 |
+| 2 | [#12](https://github.com/Jarukit-PM/TicketBookingSystem/issues/12) | Public catalog browse | 06 |
+| 3 | [#13](https://github.com/Jarukit-PM/TicketBookingSystem/issues/13) | Google OAuth (HITL) | 05 |
+| 4 | [#14](https://github.com/Jarukit-PM/TicketBookingSystem/issues/14) | Admin catalog CRUD | 06 |
+| 5 | [#15](https://github.com/Jarukit-PM/TicketBookingSystem/issues/15) | Read-only seat map | 07 |
+| 6 | [#16](https://github.com/Jarukit-PM/TicketBookingSystem/issues/16) | Redis seat holds API | 07 |
+| 7 | [#17](https://github.com/Jarukit-PM/TicketBookingSystem/issues/17) | Interactive seat map + WebSocket | 07 |
+| 8 | [#18](https://github.com/Jarukit-PM/TicketBookingSystem/issues/18) | Booking confirm | 08 |
+| 9 | [#19](https://github.com/Jarukit-PM/TicketBookingSystem/issues/19) | My Bookings | 08 |
+| 10 | [#20](https://github.com/Jarukit-PM/TicketBookingSystem/issues/20) | Digital ticket + confirmation email | 09 |
+| 11 | [#21](https://github.com/Jarukit-PM/TicketBookingSystem/issues/21) | Admin shell + dashboard | 10 |
+| 12 | [#22](https://github.com/Jarukit-PM/TicketBookingSystem/issues/22) | Admin booking search | 10 |
+| 13 | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs | 10 |
+| 14 | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) | 10 |
+
+**Start immediately (no blockers):** #11, #12.
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
