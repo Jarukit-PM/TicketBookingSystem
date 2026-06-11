@@ -11,15 +11,20 @@ import (
 
 // Config holds application settings loaded from config files and environment.
 type Config struct {
-	Port              string `mapstructure:"port"`
-	MongoURI          string `mapstructure:"mongo_uri"`
-	RedisURL          string `mapstructure:"redis_url"`
-	JWTSecret         string `mapstructure:"jwt_secret"`
-	JWTExpiry         string `mapstructure:"jwt_expiry"`
-	AdminEmail        string `mapstructure:"admin_email"`
-	AdminSeedPassword string `mapstructure:"admin_seed_password"`
-	AppURL            string `mapstructure:"app_url"`
-	GinMode           string `mapstructure:"gin_mode"`
+	Port               string `mapstructure:"port"`
+	MongoURI           string `mapstructure:"mongo_uri"`
+	RedisURL           string `mapstructure:"redis_url"`
+	JWTSecret          string `mapstructure:"jwt_secret"`
+	JWTExpiry          string `mapstructure:"jwt_expiry"`
+	AdminEmail         string `mapstructure:"admin_email"`
+	AdminSeedPassword  string `mapstructure:"admin_seed_password"`
+	AppURL             string `mapstructure:"app_url"`
+	TicketSecret       string `mapstructure:"ticket_secret"`
+	SendGridAPIKey     string `mapstructure:"sendgrid_api_key"`
+	EmailFrom          string `mapstructure:"email_from"`
+	GoogleClientID     string `mapstructure:"google_client_id"`
+	GoogleClientSecret string `mapstructure:"google_client_secret"`
+	GinMode            string `mapstructure:"gin_mode"`
 }
 
 // Load reads configuration from config.yaml (optional) and environment variables.
@@ -46,6 +51,11 @@ func Load() (Config, error) {
 	_ = v.BindEnv("admin_email", "ADMIN_EMAIL")
 	_ = v.BindEnv("admin_seed_password", "ADMIN_SEED_PASSWORD")
 	_ = v.BindEnv("app_url", "APP_URL")
+	_ = v.BindEnv("ticket_secret", "TICKET_SECRET")
+	_ = v.BindEnv("sendgrid_api_key", "SENDGRID_API_KEY")
+	_ = v.BindEnv("email_from", "EMAIL_FROM")
+	_ = v.BindEnv("google_client_id", "GOOGLE_CLIENT_ID")
+	_ = v.BindEnv("google_client_secret", "GOOGLE_CLIENT_SECRET")
 	_ = v.BindEnv("gin_mode", "GIN_MODE")
 
 	if err := v.ReadInConfig(); err != nil {
@@ -89,4 +99,18 @@ func (c Config) CookieSecure() bool {
 		return true
 	}
 	return strings.EqualFold(os.Getenv("COOKIE_SECURE"), "true")
+}
+
+// TicketHMACSecret returns the secret used to sign ticket tokens.
+func (c Config) TicketHMACSecret() string {
+	if c.TicketSecret != "" {
+		return c.TicketSecret
+	}
+	return c.JWTSecret
+}
+
+// GoogleRedirectURL is the OAuth callback URL registered with Google Cloud.
+func (c Config) GoogleRedirectURL() string {
+	base := strings.TrimRight(c.AppURL, "/")
+	return base + "/api/auth/google/callback"
 }
