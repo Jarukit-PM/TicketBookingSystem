@@ -8,7 +8,7 @@
 | Frontend        | Vue 3 + Vite + TypeScript                                  | Customer SPA and admin UI in `app/`                                             |
 | UI              | Tailwind CSS                                               | Layout, seat map, admin tables, responsive styling                              |
 | Routing / state | Vue Router + Pinia                                         | Pages, guards, booking session and seat-map client state                        |
-| HTTP client     | Fetch or Axios                                             | REST calls to Go API; credentials for session cookie or Bearer JWT              |
+| HTTP client     | Fetch or Axios                                             | REST calls to Go API; `credentials: 'include'` for httpOnly JWT cookie (MVP)  |
 | Backend         | Go + Gin                                                   | REST API, auth, booking logic, WebSocket hub                                    |
 | Config          | [Viper](https://github.com/spf13/viper)                    | Env + config files for API and worker (`config.yaml`, `MONGO_URI`, etc.)        |
 | Database        | MongoDB                                                    | Persistent domain data: users, movies, showtimes, bookings, logs                |
@@ -64,12 +64,15 @@ Supporting collections: `users`, `movies`, `audit_logs`, `email_logs`.
 
 | Term             | Meaning                                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Cinema**       | Venue (name, address, timezone). **Multi-cinema MVP** — many cinema documents; catalog and admin are cinema-scoped.                        |
-| **Screen**       | Physical hall with a **seat layout** (rows, seat labels, types: standard, VIP, wheelchair, blocked).                                       |
-| **Showtime**     | Movie + screen + `startsAt` + base price / tier pricing. Owns runtime seat status or references inventory keyed by `(showtimeId, seatId)`. |
-| **Seat**         | Identified by `seatId` within a screen layout (e.g. `A-12`). Status for a showtime: `AVAILABLE`, `HELD`, `SOLD`, `BLOCKED`.                |
-| **Seat hold**    | Short-lived reservation in **Redis** (5 min TTL), not a MongoDB booking until confirmed.                                                   |
-| **Booking**      | Confirmed order: user, showtime, seats, total, `bookingRef`, `ticketToken`, status.                                                        |
+| **Cinema**       | Venue (name, address, timezone). **Multi-cinema MVP** — many cinema documents; screens and showtimes are cinema-scoped.                   |
+| **Movie**        | **Global catalog** — one document per film, not tied to a cinema. Scheduling is per cinema via showtimes. See `CONTEXT.md`.                  |
+| **Screen**       | Physical hall with a **seat layout** (rows, seat labels, types: standard, VIP, wheelchair, blocked). Belongs to one cinema.                  |
+| **Showtime**     | Movie + screen + `startsAt` + `priceTiers` (map seat layout `type` → price in minor units). Cinema-scoped via screen. Runtime seat status keyed by `(showtimeId, seatId)`. |
+| **Price tier**   | Price for a seat `type` on a given showtime (e.g. `standard: 1200`, `vip: 1800`, `wheelchair: 1200`). Booking `total` = sum of tier prices for selected seats. See `CONTEXT.md`. |
+| **Seat**         | Identified by `seatId` within a screen layout (e.g. `A-12`). Runtime status per showtime: `AVAILABLE`, `HELD`, `SOLD`, `BLOCKED`. **Blocked** = layout `type: blocked` on the screen (all showtimes); no per-showtime block list in MVP. |
+| **Seat hold**    | Short-lived reservation in **Redis** (5 min TTL). Not a booking — invisible in My Bookings and admin search until confirm. See `CONTEXT.md`. |
+| **Booking**      | Durable confirmed purchase in MongoDB: user, showtime, seats, total, `bookingRef` (`TBS-` + short alphanumeric), `ticketToken` (opaque QR secret), status `CONFIRMED`. Created only on confirm. |
+| **Hold expiry**  | Hold TTL ended without confirm. Seats released; no `bookings` document. Not an "expired booking."                                            |
 | **Ticket token** | Opaque value encoded in QR; admin scan resolves booking → navigates to that user's booking history.                                        |
 | **Audit log**    | Append-only admin and system actions.                                                                                                      |
 | **Email log**    | Send attempts and provider status per booking event.                                                                                       |
@@ -81,11 +84,11 @@ Supporting collections: `users`, `movies`, `audit_logs`, `email_logs`.
 | Collection   | Key fields                                                                                       | Notes                                                |
 | ------------ | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
 | `users`      | `email`, `passwordHash?`, `googleId?`, `role`, `name`, `createdAt`                               | Unique index on `email`; sparse unique on `googleId` |
-| `movies`     | `title`, `posterUrl`, `durationMin`, `rating`, `synopsis`, `status`                              | `status`: `NOW_SHOWING` | `COMING_SOON` | `ARCHIVED` |
+| `movies`     | `title`, `posterUrl`, `durationMin`, `rating`, `synopsis`, `status`                              | **Global catalog** (no `cinemaId`). `status`: `NOW_SHOWING` \| `COMING_SOON` \| `ARCHIVED`. **Now Showing** tab: ≥1 future showtime at cinema. **Coming Soon** tab: `COMING_SOON` teasers without showtimes OK. Hide `ARCHIVED` |
 | `cinemas`    | `name`, `address`, `timezone`                                                                    |                                                      |
 | `screens`    | `cinemaId`, `name`, `layout`                                                                     | `layout.seats[]`: `{ seatId, row, col, type }`       |
-| `showtimes`  | `movieId`, `screenId`, `startsAt`, `priceTiers`, `status`                                        | Index `(screenId, startsAt)`                         |
-| `bookings`   | `userId`, `showtimeId`, `seats[]`, `total`, `bookingRef`, `ticketToken`, `status`, `confirmedAt` | Unique `bookingRef`; index `userId` + `showtimeId`   |
+| `showtimes`  | `movieId`, `screenId`, `startsAt`, `priceTiers`, `status`                                        | `priceTiers`: `{ standard, vip, wheelchair, ... }` in minor units (cents). Index `(screenId, startsAt)` |
+| `bookings`   | `userId`, `showtimeId`, `seats[]`, `total`, `bookingRef`, `ticketToken`, `status`, `confirmedAt` | Unique `bookingRef`; index `userId` + `showtimeId` (not unique — multiple bookings per user per showtime allowed) |
 | `audit_logs` | `actorId`, `action`, `entity`, `entityId`, `meta`, `createdAt`                                   | TTL optional for old logs (phase 2)                  |
 | `email_logs` | `bookingId`, `type`, `to`, `providerId`, `status`, `createdAt`                                   | MVP `type`: `CONFIRMATION` only                      |
 
@@ -105,7 +108,7 @@ AVAILABLE = layout seats − SOLD − BLOCKED − (others' Redis HOLDs)
 | `api` HTTP routes      | CRUD catalog, hold/confirm/release booking, My Bookings, admin APIs           |
 | `api/internal/ws`      | WebSocket upgrade, subscribe by `showtimeId`, broadcast seat events           |
 | `api/internal/hold`    | Redis SET with TTL, hold extension rules, release on abandon/timeout          |
-| `api/internal/booking` | Confirm with distributed lock; idempotency; persist booking + mark seats sold |
+| `api/internal/booking` | Confirm all holds for showtime; distributed lock; idempotency; persist booking + mark seats sold |
 | `api/internal/email`   | Build SendGrid payloads; enqueue asynq tasks; write `email_logs`              |
 | `api/cmd/worker`       | asynq consumer: send email, optional hold-expiry notifications                |
 | `api/internal/auth`    | Register/login, Google OAuth callback, JWT issue/validate, role checks        |
@@ -118,11 +121,11 @@ AVAILABLE = layout seats − SOLD − BLOCKED − (others' Redis HOLDs)
 ### Sign-in methods
 
 1. **Email/password** — register with email + bcrypt hash; login returns session.
-2. **Google OAuth** — authorization code flow; link or create user by `googleId` / verified email.
+2. **Google OAuth** — authorization code flow; create user by `googleId`, or **auto-link** to existing user when Google email matches a registered email (verified). One account per email.
 
 ### Session
 
-- **JWT** in `httpOnly` cookie (preferred for SPA) or `Authorization: Bearer` header.
+- **JWT** in `httpOnly` cookie only for MVP (`Secure`, `SameSite=Lax`, path `/api`). SPA uses `credentials: 'include'`. No Bearer token in client JS.
 - Claims: `sub` (user id), `role` (`customer`  `admin`), `exp`.
 - Vue Router `beforeEach`: require auth for `/book/`*, `/my-bookings`, `/admin/*`.
 - Gin middleware: validate JWT on protected routes; `RequireAdmin` for `/api/admin/*`.
@@ -133,7 +136,7 @@ AVAILABLE = layout seats − SOLD − BLOCKED − (others' Redis HOLDs)
 | Role         | Access                                                                                          |
 | ------------ | ----------------------------------------------------------------------------------------------- |
 | **Customer** | Browse, book, My Bookings, own ticket QR                                                        |
-| **Admin**    | Dashboard, catalog CRUD, booking search (read-only), audit logs, QR scan → user booking history |
+| **Admin**    | **Global (MVP):** all cinemas — dashboard, catalog CRUD, booking search (read-only), audit logs, QR scan → user booking history. No `cinemaId` on user. |
 
 
 First admin: seed via env `ADMIN_EMAIL` on bootstrap or manual DB role update.
@@ -150,11 +153,16 @@ user_holds:{userId}:{showtimeId}  →  SET of seatIds   TTL 5 minutes
 ### Rules
 
 - User may hold multiple seats on one showtime on the same showtime session.
-- **TTL refresh:** each time the user adds a seat (`POST .../holds`), reset **5-minute TTL** on **all** seats that user holds for that showtime (`EXPIRE` on every `hold:{showtimeId}:{seatId}` and `user_holds:{userId}:{showtimeId}`). Response and WebSocket `seat_held` include `expiresAt` for the countdown UI.
+- **Concurrent showtimes:** user may hold seats on **multiple showtimes** simultaneously (separate Redis keys per `showtimeId`). Confirming one showtime does not release holds on others.
+- **TTL refresh (add only):** each time the user adds a seat (`POST .../holds`), reset **5-minute TTL** on **all** seats that user holds for that showtime (`EXPIRE` on every `hold:{showtimeId}:{seatId}` and `user_holds:{userId}:{showtimeId}`). Response and WebSocket `seat_held` include `expiresAt` for the countdown UI.
+- **Deselect:** removing a seat (`DELETE .../holds` with `seatIds`, or per-seat delete) releases that seat immediately (`DEL` hold key, `SREM` from `user_holds`). Remaining held seats **keep** their current TTL — no refresh on remove. Broadcast `seat_released` for the deselected seat.
 - Cannot hold `SOLD` or `BLOCKED` seats; reject if another user's hold exists (Redis `SET NX`).
+- **Showtime cutoff:** reject hold and confirm if `startsAt <= now` (cinema timezone from `cinemas.timezone`). Browse lists only future showtimes.
+- **Seat limit:** max **10 seats** per user per showtime per hold/booking; reject `POST .../holds` and confirm if exceeded.
 - On TTL expiry: Redis keys vanish; keyspace notification or asynq scheduled sweep triggers WebSocket `seat_released`.
 - On confirm: delete hold keys and write `SOLD` in MongoDB inside a lock.
-- On abandon / navigate away: client calls `DELETE /api/holds` or WebSocket disconnect triggers best-effort release (server-authoritative release on explicit API preferred).
+- On **abandon:** client calls `DELETE /api/showtimes/:id/holds` (all or selected seats). Releases immediately.
+- On **navigate away** (close tab, route change without abandon): holds remain until **TTL expiry** — no release on WebSocket disconnect alone. Redis TTL is authoritative; worst case seats are unavailable until the hold expires.
 
 ### Distributed lock (confirm booking)
 
@@ -168,7 +176,7 @@ Acquire all seat locks in sorted `seatId` order to avoid deadlock, then transact
 
 ### Connection
 
-- Endpoint: `GET /ws/showtimes/:showtimeId` (auth optional for browse; auth required to hold).
+- Endpoint: `GET /ws/showtimes/:showtimeId` (anonymous OK for live map; auth required for `POST .../holds` and confirm).
 - Client joins room `showtime:{showtimeId}`.
 
 ### Server → client events
@@ -179,7 +187,7 @@ Acquire all seat locks in sorted `seatId` order to avoid deadlock, then transact
 | `seat_held`     | `{ seatId, expiresAt }` (no other user's userId) |
 | `seat_released` | `{ seatId }`                                     |
 | `seat_sold`     | `{ seatId }`                                     |
-| `seat_blocked`  | `{ seatId }` (admin)                             |
+| `seat_blocked`  | `{ seatId }` (layout change — rare; blocked seats are static in layout for MVP) |
 | `snapshot`      | Full map state on connect                        |
 
 
@@ -190,28 +198,31 @@ Use **Redis pub/sub**: API instance publishes seat events; all instances forward
 ## Booking Lifecycle
 
 ```
-select seats → Redis HOLD (5 min) → PENDING (client state)
-     → POST /api/bookings/confirm (idempotency-key header)
-     → CONFIRMED in MongoDB, holds cleared, seats SOLD
+select seats → Redis seat hold (5 min TTL)
+     → POST /api/bookings/confirm (showtimeId; idempotency-key header)
+     → Books ALL seats in user_holds for that showtime (no seatIds body)
+     → Booking CONFIRMED in MongoDB, holds cleared, seats SOLD
      → enqueue asynq task → SendGrid CONFIRMATION + email_log
 ```
 
-**MVP:** no cancel flow — once **CONFIRMED**, a booking and its seats stay sold.
+**MVP:** no cancel flow — once **CONFIRMED**, a booking and its seats stay sold. Holds that time out are **hold expiries** — not bookings.
 
 
-| Status      | Meaning                                                            | MVP                      |
-| ----------- | ------------------------------------------------------------------ | ------------------------ |
-| `PENDING`   | Client-side / hold active; not yet in `bookings` collection        | Yes                      |
-| `CONFIRMED` | Persisted booking; ticket valid; seats count as SOLD               | Yes                      |
-| `EXPIRED`   | Hold timed out without confirm (client/Redis only; optional audit) | Yes                      |
-| `CANCELLED` | Voided; seats released                                             | **Phase 2** — not in MVP |
+| Status / event | Meaning                                                            | In `bookings` collection? |
+| -------------- | ------------------------------------------------------------------ | ------------------------- |
+| Seat hold      | Active Redis reservation during checkout                           | No                        |
+| `CONFIRMED`    | Persisted booking; ticket valid; seats count as SOLD                 | Yes                       |
+| Hold expiry    | Hold timed out without confirm (optional audit log only)           | No                        |
+| `CANCELLED`    | Voided; seats released                                             | **Phase 2** — not in MVP  |
 
 
-**Idempotency:** client sends `Idempotency-Key` (UUID); server stores result in Redis 24h to safely retry confirm.
+**Idempotency:** client sends `Idempotency-Key` (UUID). Server stores successful confirm result in Redis (~24h).
+- **Retry after success:** same key → `200` with original booking (no duplicate).
+- **Retry after failure / no prior success:** requires active holds; if holds expired → `409` — client re-selects seats and uses a **new** key.
 
 ## QR / Digital Ticket
 
-- On confirm: generate `bookingRef` (human-readable) and `ticketToken` (signed or HMAC payload).
+- On confirm: generate `bookingRef` (`TBS-` + 6–8 unambiguous alphanumeric) and `ticketToken` (opaque signed/HMAC secret — not the same as `bookingRef`).
 - QR encodes URL `https://{app}/ticket/{bookingRef}?t={ticketToken}` or compact JWT.
 - `GET /api/bookings/:id/ticket` — returns QR image or payload for authenticated owner.
 - **Admin scan (MVP):** no door check-in or pass/fail validation screen. Admin opens scan UI → camera reads QR → `GET /api/admin/tickets/resolve?ref={bookingRef}&t={ticketToken}` returns `{ userId, bookingId }` → client navigates to `**/admin/users/:userId/bookings`** (that customer's full booking history). Invalid or unknown QR shows an error toast; no alternate flow.

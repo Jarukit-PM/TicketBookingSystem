@@ -19,10 +19,10 @@ The customer app is a **Vue 3 + Vite** SPA (`app/`). The **Go (Gin)** API, **Mon
 ### Customer (booking)
 
 1. User signs up or signs in.
-2. User browses **Now Showing** / **Coming Soon** movies and filters by **cinema**, date, or genre.
+2. User picks a **cinema**, then browses **Now Showing** (movies with future showtimes) or **Coming Soon** (`COMING_SOON` teasers even without showtimes — see `CONTEXT.md`).
 3. User selects a movie → picks a **showtime** (date, time, screen, format).
-4. User opens the **seat map** for that showtime; taken seats are disabled; available seats can be selected. Other users’ selections and bookings appear in near real time.
-5. User selects one or more seats → system places a **temporary hold** with a visible **5-minute countdown** (timer resets when they add another seat) while they review the order.
+4. User opens the **seat map** for that showtime (no sign-in required to view); taken seats are disabled; available seats can be selected. Other users’ selections and bookings appear in near real time.
+5. User **signs in** if needed, then selects one or more seats → system places a **temporary hold** with a visible **5-minute countdown** (timer resets when they add another seat) while they review the order.
 6. User confirms booking → booking is **confirmed**, holds convert to sold seats, confirmation email is sent with ticket details and **QR code**.
 7. User opens **My Bookings** to view upcoming and past tickets, re-open digital tickets, and download or print as needed.
 
@@ -52,16 +52,16 @@ The customer app is a **Vue 3 + Vite** SPA (`app/`). The **Go (Gin)** API, **Mon
 ### Seat Hold TTL + Countdown
 
 - Selected seats reserved for the current user with a **5-minute TTL**.
-- **TTL refreshes** each time the user adds another seat on the same showtime (all held seats get a new 5-minute window).
+- **TTL refreshes** each time the user adds another seat on the same showtime (all held seats get a new 5-minute window). Deselecting a seat releases it immediately; remaining holds keep their current expiry.
 - Visible **countdown timer** in the booking UI, driven by server `expiresAt`.
-- Auto-release seats on timeout, explicit abandon, or navigation away (server-authoritative).
+- Auto-release seats on hold timeout or explicit abandon. Navigating away without abandon leaves holds in place until TTL expires (no disconnect-based release in MVP).
 - Held seats shown as unavailable to other users on the real-time seat map.
 
 ### Booking Flow
 
 - Showtime selection → seat selection → order summary (seats, price breakdown) → confirm.
 - Idempotent **confirm booking** so retries do not create duplicate orders.
-- Booking states (MVP): `PENDING` (hold), `CONFIRMED`, `EXPIRED` (hold timeout). No cancellation.
+- **Seat holds** live in Redis only (not bookings). Persisted **booking** status (MVP): `CONFIRMED` only. Hold timeout is a **hold expiry** — no row in `bookings`. No cancellation.
 
 ### My Bookings + Booking History
 
@@ -81,7 +81,7 @@ The customer app is a **Vue 3 + Vite** SPA (`app/`). The **Go (Gin)** API, **Mon
 
 - **Dashboard**: booking counts, today’s showtimes, occupancy %, recent activity.
 - **Catalog**: movies (title, poster, duration, rating, synopsis), showtimes, pricing tiers.
-- **Venue**: screens, seat maps (template + per-screen overrides), blocked seats.
+- **Venue**: screens, seat maps (layout template per screen); blocked seats set in layout (`type: blocked`) — applies to all showtimes on that screen.
 - **Bookings**: search by user, email, booking ID, showtime (read-only in MVP).
 - **Logs**: structured audit log (admin actions, booking lifecycle, integration errors) and email delivery log.
 
@@ -96,7 +96,7 @@ The customer app is a **Vue 3 + Vite** SPA (`app/`). The **Go (Gin)** API, **Mon
 
 - User authentication with customer vs admin roles.
 - **Multi-cinema** catalog: multiple venues; browse and filter by cinema.
-- Movie and showtime catalog (admin-managed per cinema).
+- Global movie catalog (admin-managed); showtimes scheduled per cinema/screen.
 - Per-showtime seat map with real-time availability.
 - 5-minute seat hold TTL (refreshed on each new seat) with visible countdown and auto-release.
 - End-to-end booking: select seats → hold → confirm → persist booking.
