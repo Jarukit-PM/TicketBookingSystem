@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	adminpkg "github.com/Jarukit-PM/TicketBookingSystem/api/internal/admin"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/audit"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/auth"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/catalog"
@@ -124,6 +125,15 @@ func NewRouter(deps Deps) *gin.Engine {
 	adminBookingsDeps := handler.AdminBookingsDeps{Service: bookingsAdminSvc}
 	adminGroup.GET("/bookings", handler.SearchAdminBookings(adminBookingsDeps))
 	adminGroup.GET("/users/:userId/bookings", handler.ListAdminUserBookings(adminBookingsDeps))
+
+	auditRepos := audit.NewMongoRepositories(database)
+	logsSvc := &adminpkg.LogsService{
+		AuditLogs: auditRepos.AuditLogs,
+		EmailLogs: auditRepos.EmailLogs,
+	}
+	logsDeps := handler.AdminLogsDeps{Service: logsSvc}
+	adminGroup.GET("/audit-logs", handler.ListAdminAuditLogs(logsDeps))
+	adminGroup.GET("/email-logs", handler.ListAdminEmailLogs(logsDeps))
 
 	wsDeps := ws.HandlerDeps{Hub: deps.Hub, Inventory: inventorySvc}
 	r.GET("/ws/showtimes/:id", ws.Showtime(wsDeps))

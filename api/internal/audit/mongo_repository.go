@@ -43,10 +43,13 @@ func (r *mongoAuditRepo) InsertAuditLog(ctx context.Context, log *AuditLog) erro
 	return nil
 }
 
-func (r *mongoAuditRepo) ListAuditLogs(ctx context.Context, limit int64) ([]AuditLog, error) {
+func (r *mongoAuditRepo) ListAuditLogs(ctx context.Context, page LogPage) ([]AuditLog, error) {
 	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
-	if limit > 0 {
-		opts.SetLimit(limit)
+	if page.Limit > 0 {
+		opts.SetLimit(page.Limit)
+	}
+	if page.Skip > 0 {
+		opts.SetSkip(page.Skip)
 	}
 	cur, err := r.coll.Find(ctx, bson.M{}, opts)
 	if err != nil {
@@ -80,7 +83,22 @@ func (r *mongoEmailLogRepo) InsertEmailLog(ctx context.Context, log *EmailLog) e
 }
 
 func (r *mongoEmailLogRepo) ListByBooking(ctx context.Context, bookingID primitive.ObjectID) ([]EmailLog, error) {
-	cur, err := r.coll.Find(ctx, bson.M{"bookingId": bookingID}, options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}}))
+	return r.ListEmailLogs(ctx, LogPage{}, &bookingID)
+}
+
+func (r *mongoEmailLogRepo) ListEmailLogs(ctx context.Context, page LogPage, bookingID *primitive.ObjectID) ([]EmailLog, error) {
+	filter := bson.M{}
+	if bookingID != nil && !bookingID.IsZero() {
+		filter["bookingId"] = *bookingID
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}})
+	if page.Limit > 0 {
+		opts.SetLimit(page.Limit)
+	}
+	if page.Skip > 0 {
+		opts.SetSkip(page.Skip)
+	}
+	cur, err := r.coll.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("list email logs: %w", err)
 	}
