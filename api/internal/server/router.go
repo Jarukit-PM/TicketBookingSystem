@@ -15,15 +15,17 @@ import (
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/inventory"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/middleware"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/user"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/tasks"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/ws"
 )
 
 // Deps holds shared dependencies for HTTP routes.
 type Deps struct {
-	Config config.Config
-	Mongo  *mongo.Client
-	Redis  *redis.Client
-	Hub    *ws.Hub
+	Config      config.Config
+	Mongo       *mongo.Client
+	Redis       *redis.Client
+	Hub         *ws.Hub
+	TaskClient  *tasks.Client
 }
 
 // NewRouter builds the Gin engine with middleware and routes.
@@ -89,6 +91,23 @@ func NewRouter(deps Deps) *gin.Engine {
 	showtimeHolds := api.Group("/showtimes/:id/holds")
 	showtimeHolds.POST("", auth.RequireAuth(authMw), handler.AddShowtimeHolds(holdsDeps))
 	showtimeHolds.DELETE("", auth.RequireAuth(authMw), handler.RemoveShowtimeHolds(holdsDeps))
+
+	idempotency := booking.NewIdempotencyStore(deps.Redis, 0)
+	bookingSvc := booking.NewService(
+		catalogRepos.Showtimes,
+		catalogRepos.Screens,
+		catalogRepos.Cinemas,
+		bookingRepo,
+		holdSvc,
+		deps.Redis,
+		idempotency,
+	)
+	bookingsDeps := handler.BookingsDeps{
+		Bookings:  bookingSvc,
+		Tasks:     deps.TaskClient,
+		Publisher: deps.Hub,
+	}
+	api.POST("/bookings/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
 
 	wsDeps := ws.HandlerDeps{Hub: deps.Hub, Inventory: inventorySvc}
 	r.GET("/ws/showtimes/:id", ws.Showtime(wsDeps))

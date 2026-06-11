@@ -177,3 +177,11 @@ func (h *Hub) PublishSeatReleased(ctx context.Context, showtimeID, seatID string
 		Payload: SeatReleasedPayload{SeatID: seatID},
 	})
 }
+
+// PublishSeatSold broadcasts a seat_sold event after a successful confirm.
+func (h *Hub) PublishSeatSold(ctx context.Context, showtimeID, seatID string) error {
+	return h.Publish(ctx, showtimeID, Message{
+		Type:    EventSeatSold,
+		Payload: SeatSoldPayload{SeatID: seatID},
+	})
+}

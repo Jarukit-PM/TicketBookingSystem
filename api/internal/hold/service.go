@@ -217,6 +217,17 @@ func (s *Service) RemoveSeats(ctx context.Context, userID, showtimeID string, se
 	return Result{Holds: remaining, ExpiresAt: expiresAt, Released: toRemove}, nil
 }
 
+// UserHolds returns the sorted seat IDs held by a user on a showtime.
+func (s *Service) UserHolds(ctx context.Context, userID, showtimeID string) ([]string, error) {
+	return s.listUserHolds(ctx, userID, showtimeID)
+}
+
+// ClearUserHolds releases all holds for a user on a showtime.
+func (s *Service) ClearUserHolds(ctx context.Context, userID, showtimeID string) error {
+	_, err := s.RemoveSeats(ctx, userID, showtimeID, nil)
+	return err
+}
+
 func (s *Service) currentResult(ctx context.Context, userID, showtimeID string) (Result, error) {
 	holds, err := s.listUserHolds(ctx, userID, showtimeID)
 	if err != nil {

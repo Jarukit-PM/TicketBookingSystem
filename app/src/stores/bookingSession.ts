@@ -6,6 +6,8 @@ export const useBookingSessionStore = defineStore('bookingSession', () => {
   const holds = ref<string[]>([])
   const expiresAt = ref<string | null>(null)
   const pendingSeatIds = ref<Set<string>>(new Set())
+  const idempotencyKey = ref<string | null>(null)
+  const confirmedBooking = ref<import('@/types/bookings').ConfirmedBooking | null>(null)
 
   const hasHolds = computed(() => holds.value.length > 0)
   const holdSet = computed(() => new Set(holds.value))
@@ -48,11 +50,31 @@ export const useBookingSessionStore = defineStore('bookingSession', () => {
     return holdSet.value.has(seatId)
   }
 
+  function ensureIdempotencyKey(): string {
+    if (!idempotencyKey.value) {
+      idempotencyKey.value = crypto.randomUUID()
+    }
+    return idempotencyKey.value
+  }
+
+  function resetCheckoutAttempt(): void {
+    idempotencyKey.value = crypto.randomUUID()
+  }
+
+  function setConfirmedBooking(booking: import('@/types/bookings').ConfirmedBooking): void {
+    confirmedBooking.value = booking
+    holds.value = []
+    expiresAt.value = null
+    idempotencyKey.value = null
+  }
+
   function clear() {
     showtimeId.value = null
     holds.value = []
     expiresAt.value = null
     pendingSeatIds.value = new Set()
+    idempotencyKey.value = null
+    confirmedBooking.value = null
   }
 
   return {
@@ -60,6 +82,8 @@ export const useBookingSessionStore = defineStore('bookingSession', () => {
     holds,
     expiresAt,
     pendingSeatIds,
+    idempotencyKey,
+    confirmedBooking,
     hasHolds,
     holdSet,
     setShowtime,
@@ -68,6 +92,9 @@ export const useBookingSessionStore = defineStore('bookingSession', () => {
     clearPending,
     isPending,
     isSelfHeld,
+    ensureIdempotencyKey,
+    resetCheckoutAttempt,
+    setConfirmedBooking,
     clear,
   }
 })

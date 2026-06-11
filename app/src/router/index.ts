@@ -28,6 +28,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/book/:showtimeId/confirmation/:bookingId',
+      name: 'booking-confirmation',
+      component: () => import('../views/BookingConfirmationView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/auth/LoginView.vue'),

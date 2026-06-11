@@ -13,6 +13,7 @@ import (
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/server"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/tasks"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/ws"
 )
 
@@ -40,11 +41,22 @@ func main() {
 	defer hubCancel()
 	go hub.Run(hubCtx)
 
+	taskClient, err := tasks.NewClient(cfg.RedisURL)
+	if err != nil {
+		log.Fatalf("task client: %v", err)
+	}
+	defer func() {
+		if err := taskClient.Close(); err != nil {
+			log.Printf("task client close: %v", err)
+		}
+	}()
+
 	router := server.NewRouter(server.Deps{
-		Config: cfg,
-		Mongo:  mongoClient,
-		Redis:  redisClient,
-		Hub:    hub,
+		Config:     cfg,
+		Mongo:      mongoClient,
+		Redis:      redisClient,
+		Hub:        hub,
+		TaskClient: taskClient,
 	})
 
 	addr := "0.0.0.0:" + cfg.Port

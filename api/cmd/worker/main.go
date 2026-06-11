@@ -12,6 +12,7 @@ import (
 
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/config"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/db"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/tasks"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 
 	srv := asynq.NewServer(asynqRedisOpt, asynq.Config{})
 	mux := asynq.NewServeMux()
+	mux.HandleFunc(tasks.TypeEmailSend, handleEmailSend)
 
 	go func() {
 		log.Println("worker ready")
@@ -51,6 +53,11 @@ func main() {
 
 	log.Println("worker shutting down")
 	srv.Shutdown()
+}
+
+func handleEmailSend(ctx context.Context, t *asynq.Task) error {
+	log.Printf("email:send stub: %s", string(t.Payload()))
+	return nil
 }
 
 func asynqRedisOptFromURL(redisURL string) (asynq.RedisClientOpt, error) {
