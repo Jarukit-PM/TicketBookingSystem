@@ -107,6 +107,9 @@ func (f *fakeLogs) InsertEmailLog(_ context.Context, l *audit.EmailLog) error {
 func (f *fakeLogs) ListByBooking(context.Context, primitive.ObjectID) ([]audit.EmailLog, error) {
 	return f.rows, nil
 }
+func (f *fakeLogs) ListEmailLogs(_ context.Context, _ audit.LogPage, _ *primitive.ObjectID) ([]audit.EmailLog, error) {
+	return f.rows, nil
+}
 
 type fakeST struct{ s *catalog.Showtime }
 
