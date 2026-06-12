@@ -14,12 +14,41 @@ import type { AuditLogEntry, EmailLogEntry } from '@/types/admin'
 
 type LogTab = 'audit' | 'email'
 
+const AUDIT_ACTIONS = [
+  'booking_success',
+  'booking_timeout',
+  'seat_released',
+  'booking_failed',
+  'system_error',
+  'create',
+  'update',
+  'delete',
+] as const
+
+const AUDIT_ENTITIES = ['booking', 'showtime', 'movie', 'cinema', 'screen'] as const
+
+const EMAIL_TYPES = ['CONFIRMATION'] as const
+const EMAIL_STATUSES = ['SENT', 'FAILED'] as const
+
+const selectClass =
+  'w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-copy-primary focus:outline-none focus:ring-2 focus:ring-accent-glow focus:border-brand/50'
+
 const { t, te } = useI18n()
 const { formatDateTime } = useLocaleFormat()
 const { formatAuditSummary } = useAuditMeta()
 
 const activeTab = ref<LogTab>('audit')
 const bookingId = ref('')
+const emailTo = ref('')
+const emailType = ref('')
+const emailStatus = ref('')
+const emailSentFrom = ref('')
+const emailSentTo = ref('')
+const auditAction = ref('')
+const auditEntity = ref('')
+const auditEntityId = ref('')
+const auditActorId = ref('')
+const auditBookingRef = ref('')
 const auditLogs = ref<AuditLogEntry[]>([])
 const emailLogs = ref<EmailLogEntry[]>([])
 const loading = ref(false)
@@ -54,9 +83,33 @@ const showPagination = computed(
   () => !loading.value && currentLogs.value.length > 0 && (canGoPrev.value || canGoNext.value),
 )
 
-const emptyMessage = computed(() =>
-  activeTab.value === 'audit' ? t('admin.logs.emptyAudit') : t('admin.logs.emptyEmail'),
+const hasAuditFilters = computed(() =>
+  Boolean(
+    auditAction.value ||
+      auditEntity.value ||
+      auditEntityId.value.trim() ||
+      auditActorId.value.trim() ||
+      auditBookingRef.value.trim(),
+  ),
 )
+
+const hasEmailFilters = computed(() =>
+  Boolean(
+    bookingId.value.trim() ||
+      emailTo.value.trim() ||
+      emailType.value ||
+      emailStatus.value ||
+      emailSentFrom.value.trim() ||
+      emailSentTo.value.trim(),
+  ),
+)
+
+const emptyMessage = computed(() => {
+  if (activeTab.value === 'email') {
+    return hasEmailFilters.value ? t('admin.logs.emptyEmailFiltered') : t('admin.logs.emptyEmail')
+  }
+  return hasAuditFilters.value ? t('admin.logs.emptyAuditFiltered') : t('admin.logs.emptyAudit')
+})
 
 function formatAuditAction(action: string) {
   const key = `admin.logs.auditActions.${action}`
@@ -91,9 +144,16 @@ async function loadLogs() {
   errorMessage.value = ''
   try {
     if (activeTab.value === 'audit') {
-      const data = await api.get<{ logs: AuditLogEntry[] }>(
-        `/admin/audit-logs?page=${page.value}&limit=${limit}`,
-      )
+      const params = new URLSearchParams({
+        page: String(page.value),
+        limit: String(limit),
+      })
+      if (auditAction.value) params.set('action', auditAction.value)
+      if (auditEntity.value) params.set('entity', auditEntity.value)
+      if (auditEntityId.value.trim()) params.set('entityId', auditEntityId.value.trim())
+      if (auditActorId.value.trim()) params.set('actorId', auditActorId.value.trim())
+      if (auditBookingRef.value.trim()) params.set('bookingRef', auditBookingRef.value.trim())
+      const data = await api.get<{ logs: AuditLogEntry[] }>(`/admin/audit-logs?${params}`)
       auditLogs.value = data.logs ?? []
     } else {
       const params = new URLSearchParams({
@@ -101,6 +161,11 @@ async function loadLogs() {
         limit: String(limit),
       })
       if (bookingId.value.trim()) params.set('bookingId', bookingId.value.trim())
+      if (emailTo.value.trim()) params.set('to', emailTo.value.trim())
+      if (emailType.value) params.set('type', emailType.value)
+      if (emailStatus.value) params.set('status', emailStatus.value)
+      if (emailSentFrom.value.trim()) params.set('sentFrom', emailSentFrom.value.trim())
+      if (emailSentTo.value.trim()) params.set('sentTo', emailSentTo.value.trim())
       const data = await api.get<{ logs: EmailLogEntry[] }>(`/admin/email-logs?${params}`)
       emailLogs.value = data.logs ?? []
     }
@@ -124,6 +189,32 @@ function setTab(tab: LogTab) {
 }
 
 function applyEmailFilter() {
+  page.value = 1
+  void loadLogs()
+}
+
+function clearEmailFilters() {
+  bookingId.value = ''
+  emailTo.value = ''
+  emailType.value = ''
+  emailStatus.value = ''
+  emailSentFrom.value = ''
+  emailSentTo.value = ''
+  page.value = 1
+  void loadLogs()
+}
+
+function applyAuditFilter() {
+  page.value = 1
+  void loadLogs()
+}
+
+function clearAuditFilters() {
+  auditAction.value = ''
+  auditEntity.value = ''
+  auditEntityId.value = ''
+  auditActorId.value = ''
+  auditBookingRef.value = ''
   page.value = 1
   void loadLogs()
 }
@@ -159,16 +250,116 @@ watch(activeTab, loadLogs, { immediate: true })
       </Button>
     </div>
 
+    <Card v-if="activeTab === 'audit'">
+      <CardHeader>
+        <CardTitle>{{ t('admin.logs.auditFilterTitle') }}</CardTitle>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.auditAction') }}</span>
+            <select v-model="auditAction" :class="selectClass">
+              <option value="">{{ t('admin.logs.auditActionAll') }}</option>
+              <option v-for="action in AUDIT_ACTIONS" :key="action" :value="action">
+                {{ formatAuditAction(action) }}
+              </option>
+            </select>
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.auditEntity') }}</span>
+            <select v-model="auditEntity" :class="selectClass">
+              <option value="">{{ t('admin.logs.auditEntityAll') }}</option>
+              <option v-for="entity in AUDIT_ENTITIES" :key="entity" :value="entity">
+                {{ entity }}
+              </option>
+            </select>
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.entityId') }}</span>
+            <Input
+              v-model="auditEntityId"
+              :placeholder="t('admin.logs.bookingIdPlaceholder')"
+              autocomplete="off"
+            />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.auditBookingRef') }}</span>
+            <Input
+              v-model="auditBookingRef"
+              :placeholder="t('admin.logs.auditBookingRefPlaceholder')"
+              autocomplete="off"
+            />
+          </label>
+          <label class="block space-y-1.5 sm:col-span-2">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.auditActorId') }}</span>
+            <Input
+              v-model="auditActorId"
+              :placeholder="t('admin.logs.auditActorIdPlaceholder')"
+              autocomplete="off"
+            />
+          </label>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <Button :disabled="loading" @click="applyAuditFilter">{{ t('common.apply') }}</Button>
+          <Button variant="secondary" :disabled="loading" @click="clearAuditFilters">
+            {{ t('common.clear') }}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
     <Card v-if="activeTab === 'email'">
       <CardHeader>
-        <CardTitle>{{ t('admin.logs.filterTitle') }}</CardTitle>
+        <CardTitle>{{ t('admin.logs.emailFilterTitle') }}</CardTitle>
       </CardHeader>
-      <CardContent class="flex flex-wrap items-end gap-3">
-        <label class="block min-w-[16rem] flex-1 space-y-1.5">
-          <span class="text-sm text-copy-secondary">{{ t('admin.logs.bookingId') }}</span>
-          <Input v-model="bookingId" :placeholder="t('admin.logs.bookingIdPlaceholder')" autocomplete="off" />
-        </label>
-        <Button :disabled="loading" @click="applyEmailFilter">{{ t('common.apply') }}</Button>
+      <CardContent class="space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.bookingId') }}</span>
+            <Input v-model="bookingId" :placeholder="t('admin.logs.bookingIdPlaceholder')" autocomplete="off" />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.emailTo') }}</span>
+            <Input
+              v-model="emailTo"
+              type="email"
+              :placeholder="t('admin.logs.emailToPlaceholder')"
+              autocomplete="off"
+            />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.type') }}</span>
+            <select v-model="emailType" :class="selectClass">
+              <option value="">{{ t('admin.logs.emailTypeAll') }}</option>
+              <option v-for="type in EMAIL_TYPES" :key="type" :value="type">
+                {{ type }}
+              </option>
+            </select>
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('common.status') }}</span>
+            <select v-model="emailStatus" :class="selectClass">
+              <option value="">{{ t('admin.logs.emailStatusAll') }}</option>
+              <option v-for="status in EMAIL_STATUSES" :key="status" :value="status">
+                {{ status }}
+              </option>
+            </select>
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.sentFrom') }}</span>
+            <Input v-model="emailSentFrom" type="date" autocomplete="off" />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.logs.sentTo') }}</span>
+            <Input v-model="emailSentTo" type="date" autocomplete="off" />
+          </label>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <Button :disabled="loading" @click="applyEmailFilter">{{ t('common.apply') }}</Button>
+          <Button variant="secondary" :disabled="loading" @click="clearEmailFilters">
+            {{ t('common.clear') }}
+          </Button>
+        </div>
       </CardContent>
     </Card>
 

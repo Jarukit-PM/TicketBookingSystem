@@ -26,16 +26,22 @@ func (r *memAuditLogs) InsertAuditLog(_ context.Context, log *audit.AuditLog) er
 	r.logs = append(r.logs, *log)
 	return nil
 }
-func (r *memAuditLogs) ListAuditLogs(_ context.Context, page audit.LogPage) ([]audit.AuditLog, error) {
+func (r *memAuditLogs) ListAuditLogs(_ context.Context, page audit.LogPage, filter audit.AuditLogFilter) ([]audit.AuditLog, error) {
+	var filtered []audit.AuditLog
+	for _, log := range r.logs {
+		if filter.Matches(log) {
+			filtered = append(filtered, log)
+		}
+	}
 	start := int(page.Skip)
 	end := start + int(page.Limit)
-	if start > len(r.logs) {
+	if start > len(filtered) {
 		return []audit.AuditLog{}, nil
 	}
-	if end > len(r.logs) {
-		end = len(r.logs)
+	if end > len(filtered) {
+		end = len(filtered)
 	}
-	return r.logs[start:end], nil
+	return filtered[start:end], nil
 }
 
 type memEmailLogs struct {
@@ -55,14 +61,11 @@ func (r *memEmailLogs) ListByBooking(_ context.Context, bookingID primitive.Obje
 	}
 	return out, nil
 }
-func (r *memEmailLogs) ListEmailLogs(_ context.Context, page audit.LogPage, bookingID *primitive.ObjectID) ([]audit.EmailLog, error) {
-	filtered := r.logs
-	if bookingID != nil {
-		filtered = nil
-		for _, l := range r.logs {
-			if l.BookingID == *bookingID {
-				filtered = append(filtered, l)
-			}
+func (r *memEmailLogs) ListEmailLogs(_ context.Context, page audit.LogPage, filter audit.EmailLogFilter) ([]audit.EmailLog, error) {
+	var filtered []audit.EmailLog
+	for _, log := range r.logs {
+		if filter.Matches(log) {
+			filtered = append(filtered, log)
 		}
 	}
 	start := int(page.Skip)
@@ -137,6 +140,57 @@ func TestAdminAuditLogsListsNewestFirst(t *testing.T) {
 	body := w.Body.String()
 	if !strings.Contains(body, "UPDATE") {
 		t.Fatalf("body = %s, want newest audit action", body)
+	}
+}
+
+func TestAdminAuditLogsFilterByAction(t *testing.T) {
+	auditRepo := &memAuditLogs{
+		logs: []audit.AuditLog{
+			{Action: audit.ActionBookingSuccess, Entity: "booking"},
+			{Action: audit.ActionCreate, Entity: "movie"},
+		},
+	}
+	r := setupAdminLogsRouter(t, user.RoleAdmin, auditRepo, &memEmailLogs{})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/audit-logs?action="+audit.ActionBookingSuccess, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body %s", w.Code, w.Body.String())
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, `"action":"`+audit.ActionBookingSuccess+`"`) {
+		t.Fatalf("body = %s, want booking_success audit log", body)
+	}
+	if strings.Contains(body, `"action":"`+audit.ActionCreate+`"`) {
+		t.Fatalf("body = %s, want create action filtered out", body)
+	}
+}
+
+func TestAdminEmailLogsFilterByStatus(t *testing.T) {
+	bookingID := primitive.NewObjectID()
+	emailRepo := &memEmailLogs{
+		logs: []audit.EmailLog{
+			{BookingID: bookingID, Type: audit.EmailTypeConfirmation, Status: "SENT", To: "a@example.com"},
+			{BookingID: bookingID, Type: audit.EmailTypeConfirmation, Status: "FAILED", To: "a@example.com"},
+		},
+	}
+	r := setupAdminLogsRouter(t, user.RoleAdmin, &memAuditLogs{}, emailRepo)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/email-logs?status=FAILED", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body %s", w.Code, w.Body.String())
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, `"status":"FAILED"`) {
+		t.Fatalf("body = %s, want failed email log", body)
+	}
+	if strings.Contains(body, `"status":"SENT"`) {
+		t.Fatalf("body = %s, want sent status filtered out", body)
 	}
 }
 

@@ -21,7 +21,7 @@ func (r *memAuditRepo) InsertAuditLog(_ context.Context, log *audit.AuditLog) er
 	return nil
 }
 
-func (r *memAuditRepo) ListAuditLogs(_ context.Context, _ audit.LogPage) ([]audit.AuditLog, error) {
+func (r *memAuditRepo) ListAuditLogs(_ context.Context, _ audit.LogPage, _ audit.AuditLogFilter) ([]audit.AuditLog, error) {
 	return r.logs, nil
 }
 
