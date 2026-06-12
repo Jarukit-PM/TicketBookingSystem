@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 
 import { resolveAdminTicket } from '@/api/admin'
 import { translateApiError } from '@/api/errors'
 import { ApiError } from '@/api/client'
+import AdminBookingDetailModal from '@/components/admin/AdminBookingDetailModal.vue'
 import QrScanner from '@/components/admin/QrScanner.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { parseTicketScanUrl } from '@/lib/parseTicketScanUrl'
 
 const { t } = useI18n()
-const router = useRouter()
 const resolving = ref(false)
+const detailOpen = ref(false)
+const resolvedBookingId = ref<string | null>(null)
 const toastMessage = ref('')
 const toastVariant = ref<'error' | 'info'>('error')
 
@@ -29,6 +30,13 @@ function showToast(message: string, variant: 'error' | 'info' = 'error'): void {
   }, 5000)
 }
 
+function onDetailOpenChange(open: boolean): void {
+  detailOpen.value = open
+  if (!open) {
+    resolvedBookingId.value = null
+  }
+}
+
 async function handleScan(raw: string): Promise<void> {
   if (resolving.value) {
     return
@@ -43,7 +51,8 @@ async function handleScan(raw: string): Promise<void> {
   resolving.value = true
   try {
     const result = await resolveAdminTicket(parsed.bookingRef, parsed.token)
-    await router.push({ name: 'admin-user-bookings', params: { userId: result.userId } })
+    resolvedBookingId.value = result.bookingId
+    detailOpen.value = true
   } catch (error) {
     const message =
       error instanceof ApiError
@@ -102,5 +111,11 @@ async function handleScan(raw: string): Promise<void> {
         </ol>
       </CardContent>
     </Card>
+
+    <AdminBookingDetailModal
+      :open="detailOpen"
+      :booking-id="resolvedBookingId"
+      @update:open="onDetailOpenChange"
+    />
   </div>
 </template>

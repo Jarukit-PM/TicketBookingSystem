@@ -398,7 +398,7 @@
     },
     "scan": {
       "title": "Scan ticket",
-      "subtitle": "Scan a customer's digital ticket QR to open their booking history for support lookup.",
+      "subtitle": "Scan a customer's digital ticket QR to open that booking for support lookup.",
       "qrScanner": "QR scanner",
       "scannerHint": "Point the camera at the ticket QR code, or upload a screenshot if the camera is blocked.",
       "resolving": "Resolving ticket…",
@@ -407,7 +407,7 @@
       "step1": "On a second phone or laptop, sign in as a customer and complete a booking.",
       "step2": "Open the digital ticket (QR on white pad) from My Bookings or the confirmation email.",
       "step3": "On this admin device, allow camera access when prompted.",
-      "step4": "Scan the customer ticket QR — you should land on that user's booking history.",
+      "step4": "Scan the customer ticket QR — a booking detail modal should open for that ticket.",
       "step5": "Try an edited QR or random image to confirm you stay on this page with an error message.",
       "invalidQr": "QR code is not a valid ticket link.",
       "resolveFailed": "Could not resolve ticket. Try again."

@@ -53,6 +53,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Ticket QR routing fix (2026-06-12):** My Bookings detail links to authenticated `TicketView`; public `/ticket/:bookingRef?t=` loads QR via `GET /api/tickets/:ref` (token-validated); removed placeholder view.
 - **Email ticket link fix (2026-06-12):** Ticket token signed after Mongo insert (persisted ID); validation accepts stored `ticketToken` from email; worker backfills missing tokens before send; `PublicTicketView` falls back to owner session when link token fails.
 - **Admin seat layout editor (2026-06-12):** `SeatLayoutEditor` visual grid replaces JSON textarea on Admin Screens; paint brush for standard/VIP/wheelchair/blocked/aisle; row/col sizing + drag-to-paint; `seatLayoutEditor` lib with Vitest round-trip tests; EN/TH i18n.
+- **Admin QR scan modal (2026-06-12):** Scan resolves ticket and opens `AdminBookingDetailModal` on the scan page (no redirect to full user booking history); **View customer history** in modal still links to `/admin/users/:userId/bookings`.
 
 ## In Progress
 
