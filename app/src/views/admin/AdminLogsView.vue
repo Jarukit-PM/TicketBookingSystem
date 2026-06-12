@@ -7,7 +7,7 @@ import { ApiError, api } from '@/api/client'
 import AuditLogDetailModal from '@/components/admin/AuditLogDetailModal.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
-import { FileText } from 'lucide-vue-next'
+import { FileText, Loader2 } from 'lucide-vue-next'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry, EmailLogEntry } from '@/types/admin'
 
@@ -221,9 +221,16 @@ watch(activeTab, loadLogs, { immediate: true })
                   <td class="py-3">
                     <Button
                       variant="secondary"
-                      :disabled="resendingBookingId === log.bookingId"
+                      class="gap-1.5"
+                      :disabled="!!resendingBookingId"
+                      :aria-busy="resendingBookingId === log.bookingId"
                       @click="resendEmail(log.bookingId)"
                     >
+                      <Loader2
+                        v-if="resendingBookingId === log.bookingId"
+                        class="h-4 w-4 shrink-0 animate-spin"
+                        aria-hidden="true"
+                      />
                       {{
                         resendingBookingId === log.bookingId
                           ? t('admin.logs.resending')
