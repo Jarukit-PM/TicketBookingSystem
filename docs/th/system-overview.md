@@ -4,45 +4,14 @@
 
 **ไฟล์ที่เกี่ยวข้อง**
 
-- แผนภาพสถาปัตยกรรม (Excalidraw): [`../architecture.excalidraw`](../architecture.excalidraw) — เปิดได้ที่ [excalidraw.com](https://excalidraw.com) หรือใน VS Code ที่ติดตั้ง Excalidraw extension
+- แผนภาพสถาปัตยกรรม: [`../System_architecture.png`](../System_architecture.png)
 - ฉบับภาษาอังกฤษ: [`../../README.md`](../../README.md)
 
 ---
 
 ## 1. แผนภาพสถาปัตยกรรมระบบ
 
-เปิดไฟล์ `docs/architecture.excalidraw` ใน Excalidraw เพื่อดูและแก้ไขแผนภาพ
-
-### โครงสร้างระดับสูง
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  เบราว์เซอร์ (Vue 3 SPA)                      │
-│     หน้าจองของลูกค้า + คอนโซลแอดมิน + WebSocket              │
-└────────────────────────────┬────────────────────────────────┘
-                             │ HTTP / WS
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      nginx (:80)                             │
-│   /          → ไฟล์ static ของ Vue (app/dist)                │
-│   /api/*     → Go API (Gin :8080)                            │
-│   /ws/*      → WebSocket upgrade → API hub                   │
-└──────┬──────────────────┬──────────────────┬────────────────┘
-       │                  │                  │
-       ▼                  ▼                  ▼
-   Vue SPA           Go API (Gin)      WebSocket Hub
-                         │                  │
-            ┌────────────┼────────────┐     │
-            ▼            ▼            ▼     │
-        MongoDB       Redis ◄───────────────┘
-    (ข้อมูลถาวร)  (hold, lock,
-                   asynq, pub/sub)
-            │            │
-            │            ▼
-            │       Worker (asynq)
-            │            │
-            └────────────┼──────────► Brevo (อีเมล)
-```
+![แผนภาพสถาปัตยกรรมระบบ](../System_architecture.png)
 
 ### หน้าที่ของแต่ละส่วน
 

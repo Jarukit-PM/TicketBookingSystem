@@ -7,11 +7,11 @@
 
 ## Architecture diagram
 
-Open [architecture.excalidraw](architecture.excalidraw) in [Excalidraw](https://excalidraw.com) or a VS Code Excalidraw extension.
+[System_architecture.png](System_architecture.png)
 
 ## Contents
 
-1. System architecture diagram (Excalidraw)
+1. System architecture diagram
 2. Tech stack overview
 3. Booking flow — Mermaid sequence diagram + step-by-step tables
 4. Redis lock strategy
