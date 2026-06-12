@@ -35,8 +35,8 @@ func (l *Logger) BookingSuccess(
 }
 
 // BookingTimeout records a hold that expired without confirm.
-func (l *Logger) BookingTimeout(ctx context.Context, showtimeID, seatID string) {
-	l.insert(ctx, primitive.NilObjectID, ActionBookingTimeout, "showtime", showtimeID, map[string]any{
+func (l *Logger) BookingTimeout(ctx context.Context, userID primitive.ObjectID, showtimeID, seatID string) {
+	l.insert(ctx, userID, ActionBookingTimeout, "showtime", showtimeID, map[string]any{
 		"seatId": seatID,
 		"reason": "hold_ttl_expired",
 	})
@@ -89,7 +89,7 @@ func (l *Logger) insert(
 		return
 	}
 	if err := l.repo.InsertAuditLog(ctx, &AuditLog{
-		ActorID:   actorID,
+		ActorID:   ActorIDPtr(actorID),
 		Action:    action,
 		Entity:    entity,
 		EntityID:  entityID,

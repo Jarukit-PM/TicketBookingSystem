@@ -24,9 +24,32 @@ func SeatKey(showtimeID, seatID string) string {
 	return fmt.Sprintf("%s%s:%s", keyPrefix, showtimeID, seatID)
 }
 
+// ParseUserHoldsKey parses user_holds:{userId}:{showtimeId}.
+func ParseUserHoldsKey(key string) (userID, showtimeID string, ok bool) {
+	if !strings.HasPrefix(key, userHoldsPrefix) {
+		return "", "", false
+	}
+	rest := strings.TrimPrefix(key, userHoldsPrefix)
+	i := strings.LastIndex(rest, ":")
+	if i <= 0 || i >= len(rest)-1 {
+		return "", "", false
+	}
+	userID = rest[:i]
+	showtimeID = rest[i+1:]
+	if userID == "" || showtimeID == "" {
+		return "", "", false
+	}
+	return userID, showtimeID, true
+}
+
 // UserHoldsKey returns the Redis set key tracking a user's held seats on a showtime.
 func UserHoldsKey(userID, showtimeID string) string {
 	return fmt.Sprintf("%s%s:%s", userHoldsPrefix, userID, showtimeID)
+}
+
+// UserHoldsKeyPattern returns a SCAN pattern for all user hold sets on a showtime.
+func UserHoldsKeyPattern(showtimeID string) string {
+	return fmt.Sprintf("%s*:%s", userHoldsPrefix, showtimeID)
 }
 
 // SeatKeyPattern returns a SCAN pattern for all holds on a showtime.

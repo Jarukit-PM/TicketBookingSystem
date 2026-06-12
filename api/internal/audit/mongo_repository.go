@@ -34,6 +34,7 @@ func (r *mongoAuditRepo) InsertAuditLog(ctx context.Context, log *AuditLog) erro
 	if log.CreatedAt.IsZero() {
 		log.CreatedAt = time.Now().UTC()
 	}
+	normalizeAuditLogActorID(log)
 	res, err := r.coll.InsertOne(ctx, log)
 	if err != nil {
 		return fmt.Errorf("insert audit log: %w", err)
@@ -79,7 +80,16 @@ func (r *mongoAuditRepo) ListAuditLogs(ctx context.Context, page LogPage, filter
 	if err := cur.All(ctx, &out); err != nil {
 		return nil, fmt.Errorf("decode audit logs: %w", err)
 	}
+	for i := range out {
+		normalizeAuditLogActorID(&out[i])
+	}
 	return out, nil
+}
+
+func normalizeAuditLogActorID(log *AuditLog) {
+	if log.ActorID != nil && log.ActorID.IsZero() {
+		log.ActorID = nil
+	}
 }
 
 type mongoEmailLogRepo struct {

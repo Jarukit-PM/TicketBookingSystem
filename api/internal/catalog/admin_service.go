@@ -286,7 +286,7 @@ func (s *AdminService) logAudit(
 	meta map[string]any,
 ) error {
 	return s.audit.InsertAuditLog(ctx, &audit.AuditLog{
-		ActorID:   actorID,
+		ActorID:   audit.ActorIDPtr(actorID),
 		Action:    action,
 		Entity:    entity,
 		EntityID:  entityID,

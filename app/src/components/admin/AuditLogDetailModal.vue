@@ -7,6 +7,7 @@ import { Button, Modal } from '@/components/ui'
 import { useAuditMeta } from '@/composables/useAuditMeta'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry } from '@/types/admin'
+import { isValidObjectId } from '@/utils/objectId'
 
 const props = defineProps<{
   open: boolean
@@ -34,7 +35,13 @@ const bookingRef = computed(() => {
   return typeof ref === 'string' ? ref : null
 })
 
-const canViewCustomerHistory = computed(() => Boolean(props.log?.actorId && (bookingId.value || bookingRef.value)))
+const actorUserId = computed(() =>
+  isValidObjectId(props.log?.actorId) ? props.log!.actorId! : null,
+)
+
+const canViewCustomerHistory = computed(() =>
+  Boolean(actorUserId.value && (bookingId.value || bookingRef.value)),
+)
 
 function formatAuditAction(action: string) {
   const key = `admin.logs.auditActions.${action}`
@@ -42,7 +49,7 @@ function formatAuditAction(action: string) {
 }
 
 function viewCustomerHistory() {
-  if (!props.log?.actorId) return
+  if (!actorUserId.value) return
 
   const query: Record<string, string> = {}
   if (bookingId.value) query.bookingId = bookingId.value
@@ -51,7 +58,7 @@ function viewCustomerHistory() {
   emit('update:open', false)
   router.push({
     name: 'admin-user-bookings',
-    params: { userId: props.log.actorId },
+    params: { userId: actorUserId.value },
     query,
   })
 }
@@ -78,9 +85,9 @@ function viewCustomerHistory() {
           <dt class="text-copy-secondary">{{ t('admin.logs.entityId') }}</dt>
           <dd class="break-all font-mono text-xs text-copy-muted">{{ log.entityId }}</dd>
         </div>
-        <div v-if="log.actorId" class="space-y-1 sm:col-span-2">
+        <div v-if="actorUserId" class="space-y-1 sm:col-span-2">
           <dt class="text-copy-secondary">{{ t('admin.logs.actorId') }}</dt>
-          <dd class="break-all font-mono text-xs text-copy-muted">{{ log.actorId }}</dd>
+          <dd class="break-all font-mono text-xs text-copy-muted">{{ actorUserId }}</dd>
         </div>
       </dl>
 

@@ -22,8 +22,10 @@ func (f AuditLogFilter) Matches(log AuditLog) bool {
 	if f.EntityID != "" && log.EntityID != f.EntityID {
 		return false
 	}
-	if f.ActorID != nil && !f.ActorID.IsZero() && log.ActorID != *f.ActorID {
-		return false
+	if f.ActorID != nil && !f.ActorID.IsZero() {
+		if log.ActorID == nil || *log.ActorID != *f.ActorID {
+			return false
+		}
 	}
 	if f.BookingRef != "" {
 		ref, _ := log.Meta["bookingRef"].(string)

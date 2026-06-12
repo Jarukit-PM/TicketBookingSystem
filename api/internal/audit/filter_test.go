@@ -12,7 +12,7 @@ func TestAuditLogFilterMatches(t *testing.T) {
 		Action:   ActionBookingSuccess,
 		Entity:   "booking",
 		EntityID: "booking-1",
-		ActorID:  actorID,
+		ActorID:  ActorIDPtr(actorID),
 		Meta:     map[string]any{"bookingRef": "TBS-123"},
 	}
 

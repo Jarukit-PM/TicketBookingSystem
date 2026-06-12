@@ -43,13 +43,14 @@ func RunExpiryListener(
 			if !ok {
 				return
 			}
-			handleExpiredHoldKey(ctx, msg.Payload, publisher, auditLog)
+			handleExpiredHoldKey(ctx, rdb, msg.Payload, publisher, auditLog)
 		}
 	}
 }
 
 func handleExpiredHoldKey(
 	ctx context.Context,
+	rdb *redis.Client,
 	key string,
 	publisher SeatReleasedPublisher,
 	auditLog *audit.Logger,
@@ -63,8 +64,9 @@ func handleExpiredHoldKey(
 		return
 	}
 
+	userID := FindUserIDForExpiredSeat(ctx, rdb, showtimeID, seatID)
 	if auditLog != nil {
-		auditLog.BookingTimeout(ctx, showtimeID, seatID)
+		auditLog.BookingTimeout(ctx, userID, showtimeID, seatID)
 	}
 	if publisher != nil {
 		if err := publisher.PublishSeatReleased(ctx, showtimeID, seatID); err != nil {

@@ -16,7 +16,7 @@ const EmailTypeConfirmation = "CONFIRMATION"
 // AuditLog is an append-only admin or system action record.
 type AuditLog struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ActorID   primitive.ObjectID `bson:"actorId,omitempty" json:"actorId"`
+	ActorID   *primitive.ObjectID `bson:"actorId,omitempty" json:"actorId,omitempty"`
 	Action    string             `bson:"action" json:"action"`
 	Entity    string             `bson:"entity" json:"entity"`
 	EntityID  string             `bson:"entityId" json:"entityId"`
