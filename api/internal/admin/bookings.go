@@ -53,10 +53,24 @@ type BookingSummary struct {
 	ConfirmedAt time.Time `json:"confirmedAt"`
 }
 
+// BookingDetail is a full confirmed booking for admin support lookup.
+type BookingDetail struct {
+	BookingSummary
+	StartsAt    time.Time `json:"startsAt"`
+	CinemaID    string    `json:"cinemaId"`
+	CinemaName  string    `json:"cinemaName"`
+	ScreenID    string    `json:"screenId"`
+	ScreenName  string    `json:"screenName"`
+	PosterURL   string    `json:"posterUrl"`
+	Status      string    `json:"status"`
+}
+
 // BookingsService provides read-only admin booking lookup.
 type BookingsService struct {
 	Bookings  booking.Repository
 	Showtimes catalog.ShowtimeRepository
+	Screens   catalog.ScreenRepository
+	Cinemas   catalog.CinemaRepository
 	Movies    catalog.MovieRepository
 	Users     user.Repository
 }
@@ -82,6 +96,70 @@ func (s *BookingsService) Search(ctx context.Context, q BookingSearchQuery, page
 		Total:    total,
 		Page:     page,
 		Limit:    limit,
+	}, nil
+}
+
+// GetByID returns a confirmed booking with venue and showtime context for admin detail views.
+func (s *BookingsService) GetByID(ctx context.Context, bookingID primitive.ObjectID) (*BookingDetail, error) {
+	b, err := s.Bookings.FindByID(ctx, bookingID)
+	if err != nil {
+		return nil, fmt.Errorf("find booking: %w", err)
+	}
+	if b == nil || b.Status != booking.StatusConfirmed {
+		return nil, booking.ErrBookingNotFound
+	}
+
+	summaries, err := s.summarizeBookings(ctx, []booking.Booking{*b})
+	if err != nil {
+		return nil, err
+	}
+	if len(summaries) == 0 {
+		return nil, booking.ErrBookingNotFound
+	}
+
+	showtime, err := s.Showtimes.FindShowtimeByID(ctx, b.ShowtimeID)
+	if err != nil {
+		return nil, fmt.Errorf("find showtime: %w", err)
+	}
+	if showtime == nil {
+		return nil, booking.ErrBookingNotFound
+	}
+
+	screen, err := s.Screens.FindScreenByID(ctx, showtime.ScreenID)
+	if err != nil {
+		return nil, fmt.Errorf("find screen: %w", err)
+	}
+	if screen == nil {
+		return nil, booking.ErrBookingNotFound
+	}
+
+	cinema, err := s.Cinemas.FindCinemaByID(ctx, screen.CinemaID)
+	if err != nil {
+		return nil, fmt.Errorf("find cinema: %w", err)
+	}
+	if cinema == nil {
+		return nil, booking.ErrBookingNotFound
+	}
+
+	movie, err := s.Movies.FindMovieByID(ctx, showtime.MovieID)
+	if err != nil {
+		return nil, fmt.Errorf("find movie: %w", err)
+	}
+
+	posterURL := ""
+	if movie != nil {
+		posterURL = movie.PosterURL
+	}
+
+	return &BookingDetail{
+		BookingSummary: summaries[0],
+		StartsAt:       showtime.StartsAt,
+		CinemaID:       cinema.ID.Hex(),
+		CinemaName:     cinema.Name,
+		ScreenID:       screen.ID.Hex(),
+		ScreenName:     screen.Name,
+		PosterURL:      posterURL,
+		Status:         b.Status,
 	}, nil
 }
 

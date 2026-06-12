@@ -1,28 +1,58 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
+import AdminBookingDetailModal from '@/components/admin/AdminBookingDetailModal.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
 import { EmptyState } from '@/components/ui'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { BookingSummary } from '@/types/admin'
 import { Inbox } from 'lucide-vue-next'
 
-const { t } = useI18n()
-const { formatDateTime, formatTHB } = useLocaleFormat()
-
-withDefaults(
+const props = withDefaults(
   defineProps<{
     bookings: BookingSummary[]
     loading?: boolean
     showCustomer?: boolean
     emptyMessage?: string
+    focusBookingId?: string
+    focusBookingRef?: string
   }>(),
   {
     loading: false,
     showCustomer: false,
     emptyMessage: undefined,
+    focusBookingId: undefined,
+    focusBookingRef: undefined,
   },
+)
+
+const { t } = useI18n()
+const { formatDateTime, formatTHB } = useLocaleFormat()
+
+const detailOpen = ref(false)
+const selectedBooking = ref<BookingSummary | null>(null)
+
+function openBookingDetail(booking: BookingSummary) {
+  selectedBooking.value = booking
+  detailOpen.value = true
+}
+
+function tryFocusBooking() {
+  if (props.loading || !props.bookings.length) return
+  const match = props.bookings.find((booking) => {
+    if (props.focusBookingId && booking.id === props.focusBookingId) return true
+    if (props.focusBookingRef && booking.bookingRef === props.focusBookingRef) return true
+    return false
+  })
+  if (match) openBookingDetail(match)
+}
+
+watch(
+  () => [props.bookings, props.loading, props.focusBookingId, props.focusBookingRef] as const,
+  tryFocusBooking,
+  { immediate: true },
 )
 </script>
 
@@ -57,7 +87,15 @@ withDefaults(
           :key="booking.id"
           class="border-t border-surface-border"
         >
-          <td class="py-3 pr-4 font-medium text-brand">{{ booking.bookingRef }}</td>
+          <td class="py-3 pr-4 font-medium">
+            <button
+              type="button"
+              class="rounded-sm text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-glow"
+              @click="openBookingDetail(booking)"
+            >
+              {{ booking.bookingRef }}
+            </button>
+          </td>
           <td v-if="showCustomer" class="py-3 pr-4 text-copy-secondary">
             <RouterLink
               v-if="booking.userId"
@@ -77,4 +115,10 @@ withDefaults(
       </tbody>
     </table>
   </div>
+
+  <AdminBookingDetailModal
+    v-model:open="detailOpen"
+    :booking-id="selectedBooking?.id ?? null"
+    :summary="selectedBooking"
+  />
 </template>

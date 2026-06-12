@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/admin"
+	"github.com/Jarukit-PM/TicketBookingSystem/api/internal/booking"
 	"github.com/Jarukit-PM/TicketBookingSystem/api/pkg/httputil"
 )
 
@@ -58,6 +59,26 @@ func parseBookingPagination(c *gin.Context) (page int, limit int) {
 		}
 	}
 	return page, limit
+}
+
+// GetAdminBooking handles GET /api/admin/bookings/:id.
+func GetAdminBooking(deps AdminBookingsDeps) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bookingID, ok := parseObjectID(c, "id")
+		if !ok {
+			return
+		}
+		detail, err := deps.Service.GetByID(c.Request.Context(), bookingID)
+		if err != nil {
+			if errors.Is(err, booking.ErrBookingNotFound) {
+				httputil.Error(c, http.StatusNotFound, "BOOKING_NOT_FOUND", "booking not found")
+				return
+			}
+			httputil.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
+			return
+		}
+		httputil.OK(c, detail)
+	}
 }
 
 // ListAdminUserBookings handles GET /api/admin/users/:userId/bookings.

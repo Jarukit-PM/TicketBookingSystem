@@ -40,7 +40,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Feature spec 11 — i18n (2026-06-12):** `vue-i18n@10`, `en.json` / `th.json`, browser-detect + `LocaleSwitcher` (customer header + admin sidebar), `useLocaleFormat`, `translateApiError`; `bookings.locale` at confirm via `X-Locale`; EN/TH SendGrid templates; Noto Sans Thai + Inter fonts; admin bookings table locale column; Vitest + Go tests pass.
 - **UI polish — icons + skeleton loading (2026-06-12):** Lucide icons across customer + admin pages; reusable `Skeleton`, `EmptyState`, `ErrorAlert`; feature skeletons (movie grid/detail, bookings, seat map, checkout, ticket, stats, table); shared `AppHeader`; shimmer animation with `prefers-reduced-motion`; `vue-tsc` + production build pass.
 - **THB currency display (2026-06-12):** Admin showtime pricing inputs/labels use baht (THB); API still stores satang; `formatTHB` and confirmation emails convert minor units to THB for display.
-- **Admin detail modals (2026-06-12):** Reusable `Modal` primitive; booking ref and email-log booking IDs open `AdminBookingDetailModal` (`GET /api/admin/bookings/:id`); audit log **View details** opens `AuditLogDetailModal` with full metadata and link to booking.
+- **Admin detail modals (2026-06-12):** Reusable `Modal` primitive; booking ref opens `AdminBookingDetailModal` from list data (enriches via `GET /api/admin/bookings/:id` when available); audit **View details** → **View customer booking history** navigates to `/admin/users/:userId/bookings` and auto-opens the booking detail modal.
 
 ## In Progress
 

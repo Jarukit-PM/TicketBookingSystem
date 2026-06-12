@@ -18,6 +18,14 @@ const errorMessage = ref('')
 
 const userId = computed(() => String(route.params.userId ?? ''))
 const customerEmail = computed(() => bookings.value[0]?.userEmail ?? '')
+const focusBookingId = computed(() => {
+  const raw = route.query.bookingId
+  return typeof raw === 'string' ? raw : undefined
+})
+const focusBookingRef = computed(() => {
+  const raw = route.query.bookingRef
+  return typeof raw === 'string' ? raw : undefined
+})
 
 async function loadBookings() {
   if (!userId.value) return
@@ -67,6 +75,8 @@ watch(userId, loadBookings)
           :loading="loading"
           show-customer
           :empty-message="t('admin.userBookings.empty')"
+          :focus-booking-id="focusBookingId"
+          :focus-booking-ref="focusBookingRef"
         />
       </CardContent>
     </Card>

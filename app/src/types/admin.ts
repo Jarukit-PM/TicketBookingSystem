@@ -31,6 +31,16 @@ export interface BookingSummary {
   confirmedAt: string
 }
 
+export interface AdminBookingDetail extends BookingSummary {
+  startsAt: string
+  cinemaId: string
+  cinemaName: string
+  screenId: string
+  screenName: string
+  posterUrl?: string
+  status: string
+}
+
 export interface AdminDashboard {
   bookingsToday: number
   showtimesToday: number

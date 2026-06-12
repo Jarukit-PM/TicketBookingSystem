@@ -179,11 +179,14 @@ func NewRouter(deps Deps) *gin.Engine {
 	bookingsAdminSvc := &adminpkg.BookingsService{
 		Bookings:  bookingRepo,
 		Showtimes: catalogRepos.Showtimes,
+		Screens:   catalogRepos.Screens,
+		Cinemas:   catalogRepos.Cinemas,
 		Movies:    catalogRepos.Movies,
 		Users:     userRepo,
 	}
 	adminBookingsDeps := handler.AdminBookingsDeps{Service: bookingsAdminSvc}
 	adminGroup.GET("/bookings", handler.SearchAdminBookings(adminBookingsDeps))
+	adminGroup.GET("/bookings/:id", handler.GetAdminBooking(adminBookingsDeps))
 	adminGroup.GET("/users/:userId/bookings", handler.ListAdminUserBookings(adminBookingsDeps))
 
 	logsSvc := &adminpkg.LogsService{

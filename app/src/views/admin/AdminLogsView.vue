@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
+import AuditLogDetailModal from '@/components/admin/AuditLogDetailModal.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
 import { FileText } from 'lucide-vue-next'
@@ -25,6 +26,8 @@ const successMessage = ref('')
 const resendingBookingId = ref('')
 const page = ref(1)
 const limit = 50
+const auditDetailOpen = ref(false)
+const selectedAuditLog = ref<AuditLogEntry | null>(null)
 
 const emptyMessage = computed(() =>
   activeTab.value === 'audit' ? t('admin.logs.emptyAudit') : t('admin.logs.emptyEmail'),
@@ -48,6 +51,11 @@ function formatAuditDetails(meta?: Record<string, unknown>) {
   if (typeof meta.reason === 'string') parts.push(meta.reason)
   if (typeof meta.message === 'string') parts.push(meta.message)
   return parts.length ? parts.join(' · ') : JSON.stringify(meta)
+}
+
+function showAuditDetail(log: AuditLogEntry) {
+  selectedAuditLog.value = log
+  auditDetailOpen.value = true
 }
 
 async function resendEmail(bookingId: string) {
@@ -103,6 +111,8 @@ async function loadLogs() {
 function setTab(tab: LogTab) {
   activeTab.value = tab
   page.value = 1
+  auditDetailOpen.value = false
+  selectedAuditLog.value = null
 }
 
 watch(activeTab, loadLogs, { immediate: true })
@@ -145,7 +155,7 @@ watch(activeTab, loadLogs, { immediate: true })
         <CardTitle>{{ activeTab === 'audit' ? t('admin.logs.auditEntries') : t('admin.logs.emailDeliveries') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <TableSkeleton v-if="loading" :columns="activeTab === 'email' ? 6 : 5" :rows="6" />
+        <TableSkeleton v-if="loading" :columns="activeTab === 'email' ? 6 : 6" :rows="6" />
         <EmptyState
           v-else-if="(activeTab === 'audit' && !auditLogs.length) || (activeTab === 'email' && !emailLogs.length)"
           :icon="FileText"
@@ -160,7 +170,8 @@ watch(activeTab, loadLogs, { immediate: true })
                 <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.action') }}</th>
                 <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.entity') }}</th>
                 <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.entityId') }}</th>
-                <th class="pb-3 font-medium">{{ t('admin.logs.details') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.details') }}</th>
+                <th class="pb-3 font-medium">{{ t('admin.logs.actions') }}</th>
               </tr>
               <tr v-else>
                 <th class="pb-3 pr-4 font-medium">{{ t('common.when') }}</th>
@@ -186,7 +197,12 @@ watch(activeTab, loadLogs, { immediate: true })
                   </td>
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.entity }}</td>
                   <td class="py-3 pr-4 font-mono text-xs text-copy-muted">{{ log.entityId }}</td>
-                  <td class="py-3 text-xs text-copy-secondary">{{ formatAuditDetails(log.meta) }}</td>
+                  <td class="py-3 pr-4 text-xs text-copy-secondary">{{ formatAuditDetails(log.meta) }}</td>
+                  <td class="py-3">
+                    <Button variant="secondary" @click="showAuditDetail(log)">
+                      {{ t('admin.logs.viewDetail') }}
+                    </Button>
+                  </td>
                 </tr>
               </template>
               <template v-else>
@@ -222,5 +238,7 @@ watch(activeTab, loadLogs, { immediate: true })
         </div>
       </CardContent>
     </Card>
+
+    <AuditLogDetailModal v-model:open="auditDetailOpen" :log="selectedAuditLog" />
   </div>
 </template>
