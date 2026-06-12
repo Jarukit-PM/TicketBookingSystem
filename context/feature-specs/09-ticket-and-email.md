@@ -2,7 +2,7 @@
 
 Read `context/CONTEXT.md`, `context/architecture-context.md`, and `context/ui-context.md`.
 
-Generate **QR digital tickets** per booking, in-app ticket view, and **SendGrid** confirmation email via **asynq** worker. Email failure does not roll back booking.
+Generate **QR digital tickets** per booking, in-app ticket view, and **Brevo** confirmation email via **asynq** worker. Email failure does not roll back booking.
 
 **Depends on:** Features 03 (worker), 04 (`email_logs`), 08 (confirmed bookings).
 
@@ -30,7 +30,7 @@ Customer receives scannable ticket in app and email. Admin QR resolves to user b
 
 Use `github.com/skip2/go-qrcode` server-side.
 
-## Email (SendGrid + asynq)
+## Email (Brevo + asynq)
 
 | Item | Detail |
 | ---- | ------ |
@@ -38,10 +38,10 @@ Use `github.com/skip2/go-qrcode` server-side.
 | Worker | `cmd/worker` registers handler; retries with asynq backoff |
 | Templates | Go `html/template` + plain text |
 | Content | Movie, cinema, screen, showtime, seats, total, `bookingRef`, ticket URL, inline QR optional |
-| Log | `email_logs`: `bookingId`, `type: CONFIRMATION`, `status`, SendGrid message id |
+| Log | `email_logs`: `bookingId`, `type: CONFIRMATION`, `status`, Brevo message id |
 | Failure | Log + retry; **do not** delete booking |
 
-Env: `SENDGRID_API_KEY`, `EMAIL_FROM`.
+Env: `BREVO_API_KEY`, `EMAIL_FROM`.
 
 ## Vue Structure
 
@@ -64,7 +64,7 @@ Task handler:
 func HandleEmailSend(ctx context.Context, t *asynq.Task) error {
     var p EmailPayload
     if err := json.Unmarshal(t.Payload(), &p); err != nil { return err }
-    // load booking, render templates, SendGrid API, upsert email_log
+    // load booking, render templates, Brevo API, upsert email_log
 }
 ```
 
@@ -77,13 +77,13 @@ func ValidateTicketToken(ref, token string, booking *Booking) bool
 ## Testing Strategy
 
 - Go: QR generation smoke test; token validate/reject tampered token.
-- Go: email handler with mocked SendGrid client.
+- Go: email handler with mocked Brevo client.
 - Go: confirm still succeeds if enqueue fails (log error) — email is async.
-- Manual: Mailtrap or SendGrid sandbox for HTML preview.
+- Manual: Brevo test mode or sandbox recipient for HTML preview.
 
 ## Boundaries
 
-- **Always:** Enqueue email in confirm path, not inline HTTP to SendGrid.
+- **Always:** Enqueue email in confirm path, not inline HTTP to Brevo.
 - **Ask first:** PDF attachment, SMS.
 - **Never:** Roll back booking on email failure; log full API keys.
 

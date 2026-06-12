@@ -65,7 +65,7 @@ Progress state must reflect the **actual** state of the implementation, not the 
 - **Holds before confirm:** implement and test Redis hold TTL + extension before building the full Vue seat map.
 - **Authority:** HTTP responses win over WebSocket events when they disagree.
 - **Idempotency:** confirm booking must be safe to retry — test with duplicate `Idempotency-Key`.
-- **Email:** enqueue via asynq; never block confirm response on SendGrid.
+- **Email:** enqueue via asynq; never block confirm response on Brevo.
 - **Admin vs customer:** keep `/api/admin/*` behind `RequireAdmin`; do not leak admin fields in public catalog DTOs.
 
 ## Before Moving To The Next Unit

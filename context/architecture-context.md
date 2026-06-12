@@ -16,7 +16,7 @@
 | Background jobs | [hibiken/asynq](https://github.com/hibiken/asynq)          | Async email send with retries (Redis-backed worker)                             |
 | Real-time       | WebSocket (Gin + gorilla/websocket or nhooyr.io/websocket) | Per-showtime seat map updates                                                   |
 | Auth            | Google OAuth 2.0 + email/password                          | Sign-in; JWT session; roles Customer / Admin                                    |
-| Email           | SendGrid                                                   | Booking confirmation email only in MVP (HTML + plain-text)                      |
+| Email           | Brevo                                                      | Booking confirmation email only in MVP (HTML + plain-text)                      |
 | QR              | `github.com/skip2/go-qrcode`                               | Ticket QR generation server-side                                                |
 | Reverse proxy   | nginx                                                      | Single origin: SPA static, `/api` → Gin, `/ws` upgrade                          |
 | Deployment      | Docker + `docker-compose.yml`                              | `nginx`, `app`, `api`, `worker`, `mongo`, `redis`                               |
@@ -35,7 +35,7 @@ TicketBookingSystem/
 │   │   ├── auth/
 │   │   ├── booking/
 │   │   ├── catalog/     # movies, cinemas, screens, showtimes
-│   │   ├── email/       # SendGrid client + templates; enqueue via asynq
+│   │   ├── email/       # Brevo client + templates; enqueue via asynq
 │   │   ├── tasks/       # asynq task handlers
 │   │   ├── hold/        # Redis seat holds
 │   │   ├── ws/          # WebSocket hub
@@ -109,7 +109,7 @@ AVAILABLE = layout seats − SOLD − BLOCKED − (others' Redis HOLDs)
 | `api/internal/ws`      | WebSocket upgrade, subscribe by `showtimeId`, broadcast seat events           |
 | `api/internal/hold`    | Redis SET with TTL, hold extension rules, release on abandon/timeout          |
 | `api/internal/booking` | Confirm all holds for showtime; distributed lock; idempotency; persist booking + mark seats sold |
-| `api/internal/email`   | Build SendGrid payloads; enqueue asynq tasks; write `email_logs`              |
+| `api/internal/email`   | Build Brevo payloads; enqueue asynq tasks; write `email_logs`                   |
 | `api/cmd/worker`       | asynq consumer: send email, optional hold-expiry notifications                |
 | `api/internal/auth`    | Register/login, Google OAuth callback, JWT issue/validate, role checks        |
 | `mongo`                | Source of truth for all durable entities                                      |
@@ -203,7 +203,7 @@ select seats → Redis seat hold (5 min TTL)
      → POST /api/bookings/confirm (showtimeId; idempotency-key header)
      → Books ALL seats in user_holds for that showtime (no seatIds body)
      → Booking CONFIRMED in MongoDB, holds cleared, seats SOLD
-     → enqueue asynq task → SendGrid CONFIRMATION + email_log
+     → enqueue asynq task → Brevo CONFIRMATION + email_log
 ```
 
 **MVP:** no cancel flow — once **CONFIRMED**, a booking and its seats stay sold. Holds that time out are **hold expiries** — not bookings.
@@ -228,12 +228,12 @@ select seats → Redis seat hold (5 min TTL)
 - `GET /api/bookings/:id/ticket` — returns QR image or payload for authenticated owner.
 - **Admin scan (MVP):** no door check-in or pass/fail validation screen. Admin opens scan UI → camera reads QR → `GET /api/admin/tickets/resolve?ref={bookingRef}&t={ticketToken}` returns `{ userId, bookingId }` → client navigates to `**/admin/users/:userId/bookings`** (that customer's full booking history). Invalid or unknown QR shows an error toast; no alternate flow.
 
-## Email (SendGrid + asynq)
+## Email (Brevo + asynq)
 
-- Provider: **SendGrid** (`SENDGRID_API_KEY`, `EMAIL_FROM`).
+- Provider: **Brevo** (`BREVO_API_KEY`, `EMAIL_FROM`).
 - Templates: Go `html/template` + plain-text fallback; fields per `project-overview.md` (movie, cinema, screen, showtime, seats, total, booking ref, ticket link/QR).
-- **Flow:** confirm handler enqueues asynq task (`email:send`); **worker** calls SendGrid API with retries (asynq default backoff). No cancellation email in MVP.
-- Worker updates `email_logs` with SendGrid message id and delivery status; failures remain retryable without rolling back booking.
+- **Flow:** confirm handler enqueues asynq task (`email:send`); **worker** calls Brevo API with retries (asynq default backoff). No cancellation email in MVP.
+- Worker updates `email_logs` with Brevo message id and delivery status; failures remain retryable without rolling back booking.
 - QR image for email: generate via `go-qrcode`, attach inline or link to ticket URL.
 
 ## Docker Compose (target)
@@ -250,7 +250,7 @@ services:
 
 - API binds `0.0.0.0:8080` (internal); public traffic via **nginx** on `:80`.
 - WebSocket: nginx proxies `Upgrade` on `/ws` → `api`.
-- Config via **Viper**: `config.yaml` + env overrides (`MONGO_URI`, `REDIS_URL`, `JWT_SECRET`, `GOOGLE_`*, `SENDGRID_*`, `APP_URL`).
+- Config via **Viper**: `config.yaml` + env overrides (`MONGO_URI`, `REDIS_URL`, `JWT_SECRET`, `GOOGLE_*`, `BREVO_*`, `APP_URL`).
 
 ## CI (GitHub Actions)
 

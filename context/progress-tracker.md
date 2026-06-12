@@ -8,10 +8,12 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- **MVP on `main`** (merged at `e0c2d67` via PR #39) — remaining **HITL** before production: manual Google OAuth sign-in test, SendGrid env (`SENDGRID_API_KEY` / `EMAIL_FROM`), two-browser WebSocket seat-map smoke test.
+- **MVP on `main`** (merged at `e0c2d67` via PR #39) — remaining **HITL** before production: manual Google OAuth sign-in test, Brevo env (`BREVO_API_KEY` / `EMAIL_FROM`), two-browser WebSocket seat-map smoke test.
 
 ## Completed
 
+- **Admin resend email (2026-06-12):** `POST /api/admin/bookings/:id/resend-email` re-queues confirmation email; Resend button on admin email log tab.
+- **Email provider — Brevo (2026-06-12):** Replaced Resend with Brevo transactional API (`BREVO_API_KEY`, `EMAIL_FROM`); worker `docker-compose` env wired; Go tests for Brevo client.
 - **MVP merge to main (2026-06-11):** PR #39 (`integrate-mvp`) at `e0c2d67` — full stack on `main`; GitHub issues **#11–#24** complete.
 - **GitHub Actions CI (2026-06-11):** Issue #2 — `.github/workflows/ci.yml` (Go `vet`/`test` in `api/`, Vue `lint`/`type-check`/`build` in `app/`); minimal `api/go.mod` + stub test; ESLint override for UI primitive names.
 - **MongoDB data model (2026-06-11):** Issue #5 — domain models (users, movies, cinemas, screens, showtimes, bookings, audit_logs, email_logs), `db.EnsureIndexes` on server boot, repository interfaces + mongo implementations, `booking.GenerateBookingRef` (`TBS-` format) with table-driven tests, `catalog.TotalForSeats` pricing helper, `cmd/seed` (1 cinema, 2 screens, 2 movies, 5 showtimes); `go test ./...` passes.
@@ -38,6 +40,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Feature spec 11 — i18n (2026-06-12):** `vue-i18n@10`, `en.json` / `th.json`, browser-detect + `LocaleSwitcher` (customer header + admin sidebar), `useLocaleFormat`, `translateApiError`; `bookings.locale` at confirm via `X-Locale`; EN/TH SendGrid templates; Noto Sans Thai + Inter fonts; admin bookings table locale column; Vitest + Go tests pass.
 - **UI polish — icons + skeleton loading (2026-06-12):** Lucide icons across customer + admin pages; reusable `Skeleton`, `EmptyState`, `ErrorAlert`; feature skeletons (movie grid/detail, bookings, seat map, checkout, ticket, stats, table); shared `AppHeader`; shimmer animation with `prefers-reduced-motion`; `vue-tsc` + production build pass.
 - **THB currency display (2026-06-12):** Admin showtime pricing inputs/labels use baht (THB); API still stores satang; `formatTHB` and confirmation emails convert minor units to THB for display.
+- **Admin detail modals (2026-06-12):** Reusable `Modal` primitive; booking ref and email-log booking IDs open `AdminBookingDetailModal` (`GET /api/admin/bookings/:id`); audit log **View details** opens `AuditLogDetailModal` with full metadata and link to booking.
 
 ## In Progress
 
@@ -45,7 +48,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Production readiness: complete HITL checks (OAuth, SendGrid, two-browser WS smoke).
+- Production readiness: complete HITL checks (OAuth, Brevo, two-browser WS smoke).
 - Post-MVP features TBD (payment, cancellation, etc.).
 
 | Order | Issue | Slice | Spec |
@@ -65,7 +68,7 @@ Update this file whenever the current phase, active feature, or implementation s
 | ~~13~~ | [#23](https://github.com/Jarukit-PM/TicketBookingSystem/issues/23) | Admin audit + email logs ✅ | 10 |
 | ~~14~~ | [#24](https://github.com/Jarukit-PM/TicketBookingSystem/issues/24) | Admin QR scan (HITL) ✅ | 10 |
 
-**HITL before production:** manual Google OAuth sign-in test; set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and `SENDGRID_API_KEY` / `EMAIL_FROM` in `.env`; two-browser WebSocket seat-map smoke test.
+**HITL before production:** manual Google OAuth sign-in test; set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and `BREVO_API_KEY` / `EMAIL_FROM` in `.env`; two-browser WebSocket seat-map smoke test.
 
 **Local stack:** `cp .env.example .env && docker compose up --build` → SPA at `http://localhost`, `/api/health` via nginx proxy.
 
@@ -104,7 +107,7 @@ See `context/architecture-context.md`. Summary:
 - **Stack:** Vue 3 SPA (`app/`), Go Gin API (`api/`), MongoDB durable data, Redis holds/locks/asynq, WebSocket per showtime.
 - **Auth:** JWT httpOnly cookie only (MVP); roles Customer / Admin.
 - **Real-time:** WebSocket advisory; HTTP hold/confirm authoritative.
-- **Email:** SendGrid via asynq worker; failures do not roll back confirmed bookings.
+- **Email:** Brevo via asynq worker; failures do not roll back confirmed bookings.
 - **Payment:** out of scope for MVP — confirm-only bookings.
 - **Invariant:** No double booking — Redis locks + single MongoDB write on confirm.
 

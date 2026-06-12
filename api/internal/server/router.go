@@ -194,6 +194,12 @@ func NewRouter(deps Deps) *gin.Engine {
 	adminGroup.GET("/audit-logs", handler.ListAdminAuditLogs(logsDeps))
 	adminGroup.GET("/email-logs", handler.ListAdminEmailLogs(logsDeps))
 
+	adminEmailDeps := handler.AdminEmailDeps{
+		Bookings: bookingRepo,
+		Tasks:    deps.TaskClient,
+	}
+	adminGroup.POST("/bookings/:id/resend-email", handler.ResendBookingEmail(adminEmailDeps))
+
 	ticketsAdminSvc := &adminpkg.TicketsService{
 		Bookings:     bookingRepo,
 		TicketSecret: deps.Config.TicketHMACSecret(),

@@ -24,7 +24,7 @@ type AuditLog struct {
 	CreatedAt time.Time          `bson:"createdAt" json:"createdAt"`
 }
 
-// EmailLog records a SendGrid send attempt for a booking event.
+// EmailLog records an email provider send attempt for a booking event.
 type EmailLog struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	BookingID  primitive.ObjectID `bson:"bookingId" json:"bookingId"`

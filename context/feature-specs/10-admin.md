@@ -28,6 +28,7 @@ Global admins operate all cinemas from one console. Scanning a ticket QR quickly
 | GET | `/api/admin/tickets/resolve` | From spec 09 — `ref` + `t` |
 | GET | `/api/admin/audit-logs` | Paginated, newest first |
 | GET | `/api/admin/email-logs` | Filter by `bookingId` |
+| POST | `/api/admin/bookings/:id/resend-email` | Re-queue confirmation email for a confirmed booking |
 
 Occupancy %: for today's showtimes, `sold seats / (layout capacity - blocked)` aggregated — approximate OK for MVP.
 

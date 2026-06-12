@@ -49,7 +49,7 @@ Customer completes checkout without duplicate bookings under retry or concurrenc
 }
 ```
 
-Enqueue email task (spec 09) — do not block HTTP on SendGrid.
+Enqueue email task (spec 09) — do not block HTTP on Brevo.
 
 ## Vue Structure
 

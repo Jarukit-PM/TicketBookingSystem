@@ -20,7 +20,7 @@ type Config struct {
 	AdminSeedPassword  string `mapstructure:"admin_seed_password"`
 	AppURL             string `mapstructure:"app_url"`
 	TicketSecret       string `mapstructure:"ticket_secret"`
-	SendGridAPIKey     string `mapstructure:"sendgrid_api_key"`
+	BrevoAPIKey        string `mapstructure:"brevo_api_key"`
 	EmailFrom          string `mapstructure:"email_from"`
 	GoogleClientID     string `mapstructure:"google_client_id"`
 	GoogleClientSecret string `mapstructure:"google_client_secret"`
@@ -52,7 +52,7 @@ func Load() (Config, error) {
 	_ = v.BindEnv("admin_seed_password", "ADMIN_SEED_PASSWORD")
 	_ = v.BindEnv("app_url", "APP_URL")
 	_ = v.BindEnv("ticket_secret", "TICKET_SECRET")
-	_ = v.BindEnv("sendgrid_api_key", "SENDGRID_API_KEY")
+	_ = v.BindEnv("brevo_api_key", "BREVO_API_KEY")
 	_ = v.BindEnv("email_from", "EMAIL_FROM")
 	_ = v.BindEnv("google_client_id", "GOOGLE_CLIENT_ID")
 	_ = v.BindEnv("google_client_secret", "GOOGLE_CLIENT_SECRET")

@@ -53,7 +53,7 @@
 - **MongoDB:** durable entities (users, movies, cinemas, screens, showtimes, bookings, audit_logs, email_logs). Holds are **not** stored in MongoDB.
 - **Redis:** seat holds (TTL 5 minutes), confirm locks, idempotency cache, rate limits, asynq queue, WebSocket pub/sub across API instances.
 - Do not store passwords in plain text — bcrypt for email/password auth.
-- Do not store SendGrid API payloads with secrets in logs — log booking id and provider message id only.
+- Do not store email API payloads with secrets in logs — log booking id and provider message id only.
 
 ## Real-time
 

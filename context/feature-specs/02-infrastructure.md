@@ -76,7 +76,7 @@ location /ws/ {
 
 - **Always:** API binds `0.0.0.0:8080`; nginx is the only public entry on `:80`.
 - **Ask first:** Adding new compose services, changing CI triggers, publishing images to a registry.
-- **Never:** Commit `.env` with secrets; store real `JWT_SECRET` / `SENDGRID_API_KEY` in compose env files gitignored.
+- **Never:** Commit `.env` with secrets; store real `JWT_SECRET` / `BREVO_API_KEY` in compose env files gitignored.
 
 ## docker-compose.yml
 
@@ -129,7 +129,7 @@ Optional: cache npm and go modules.
 
 - Production TLS, Render/Fly deploy manifests
 - Playwright E2E in CI (phase 2)
-- SendGrid, Google OAuth secrets in compose (placeholders only)
+- Brevo, Google OAuth secrets in compose (placeholders only)
 
 ## Check when done
 

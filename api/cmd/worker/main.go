@@ -48,7 +48,7 @@ func main() {
 			Cinemas:   catalogRepos.Cinemas,
 		},
 		auditRepos.EmailLogs,
-		email.NewSendGridClient(cfg.SendGridAPIKey, cfg.EmailFrom),
+		email.NewBrevoClient(cfg.BrevoAPIKey, cfg.EmailFrom),
 		cfg.AppURL,
 	)
 

@@ -21,6 +21,8 @@ const auditLogs = ref<AuditLogEntry[]>([])
 const emailLogs = ref<EmailLogEntry[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
+const successMessage = ref('')
+const resendingBookingId = ref('')
 const page = ref(1)
 const limit = 50
 
@@ -48,9 +50,29 @@ function formatAuditDetails(meta?: Record<string, unknown>) {
   return parts.length ? parts.join(' · ') : JSON.stringify(meta)
 }
 
+async function resendEmail(bookingId: string) {
+  if (resendingBookingId.value) return
+  resendingBookingId.value = bookingId
+  errorMessage.value = ''
+  successMessage.value = ''
+  try {
+    await api.post(`/admin/bookings/${bookingId}/resend-email`, {})
+    successMessage.value = t('admin.logs.resendQueued')
+    await loadLogs()
+  } catch (error) {
+    errorMessage.value =
+      error instanceof ApiError
+        ? translateApiError(error.code, error.message)
+        : t('admin.logs.resendFailed')
+  } finally {
+    resendingBookingId.value = ''
+  }
+}
+
 async function loadLogs() {
   loading.value = true
   errorMessage.value = ''
+  successMessage.value = ''
   try {
     if (activeTab.value === 'audit') {
       const data = await api.get<{ logs: AuditLogEntry[] }>(
@@ -116,13 +138,14 @@ watch(activeTab, loadLogs, { immediate: true })
     </Card>
 
     <ErrorAlert v-if="errorMessage" :message="errorMessage" />
+    <p v-if="successMessage" class="text-sm text-state-success">{{ successMessage }}</p>
 
     <Card>
       <CardHeader>
         <CardTitle>{{ activeTab === 'audit' ? t('admin.logs.auditEntries') : t('admin.logs.emailDeliveries') }}</CardTitle>
       </CardHeader>
       <CardContent>
-        <TableSkeleton v-if="loading" :columns="5" :rows="6" />
+        <TableSkeleton v-if="loading" :columns="activeTab === 'email' ? 6 : 5" :rows="6" />
         <EmptyState
           v-else-if="(activeTab === 'audit' && !auditLogs.length) || (activeTab === 'email' && !emailLogs.length)"
           :icon="FileText"
@@ -144,7 +167,8 @@ watch(activeTab, loadLogs, { immediate: true })
                 <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.to') }}</th>
                 <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.type') }}</th>
                 <th class="pb-3 pr-4 font-medium">{{ t('common.status') }}</th>
-                <th class="pb-3 font-medium">{{ t('admin.logs.booking') }}</th>
+                <th class="pb-3 pr-4 font-medium">{{ t('admin.logs.booking') }}</th>
+                <th class="pb-3 font-medium">{{ t('admin.logs.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +201,20 @@ watch(activeTab, loadLogs, { immediate: true })
                   <td class="py-3 pr-4 text-copy-primary">{{ log.to }}</td>
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.type }}</td>
                   <td class="py-3 pr-4 text-copy-primary">{{ log.status }}</td>
-                  <td class="py-3 font-mono text-xs text-copy-muted">{{ log.bookingId }}</td>
+                  <td class="py-3 pr-4 font-mono text-xs text-copy-muted">{{ log.bookingId }}</td>
+                  <td class="py-3">
+                    <Button
+                      variant="secondary"
+                      :disabled="resendingBookingId === log.bookingId"
+                      @click="resendEmail(log.bookingId)"
+                    >
+                      {{
+                        resendingBookingId === log.bookingId
+                          ? t('admin.logs.resending')
+                          : t('admin.logs.resend')
+                      }}
+                    </Button>
+                  </td>
                 </tr>
               </template>
             </tbody>
