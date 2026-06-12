@@ -163,6 +163,8 @@ AVAILABLE = layout seats − SOLD − BLOCKED − (other users' Redis holds)
 
 ## 4. Redis Lock Strategy
 
+![Redis lock strategy](docs/redis-lock-strategy.png)
+
 Redis serves two distinct locking patterns in this system.
 
 ### A. Seat holds (reservation during checkout)
@@ -229,28 +231,7 @@ Booking confirm must be **fast and reliable**. Email delivery is slow and can fa
 
 ### Flow
 
-```
-POST /api/bookings/confirm
-        │
-        ▼
-  Booking saved (MongoDB)
-        │
-        ▼
-  tasks.NewEmailSendTask(bookingId)
-        │
-        ▼
-  asynq.Client.Enqueue()  ──►  Redis queue
-                                    │
-                                    ▼
-                            Worker (cmd/worker)
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-              Load booking    Render template   Brevo API
-              + catalog       (EN or TH)        send email
-                    │                               │
-                    └──────────► email_logs ◄───────┘
-```
+![asynq message queue flow](docs/asynq-message-queue.png)
 
 ### Task types (MVP)
 

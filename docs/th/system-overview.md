@@ -163,6 +163,8 @@ AVAILABLE = ที่นั่งใน layout − SOLD − BLOCKED − (Redis h
 
 ## 4. กลยุทธ์ Redis Lock
 
+![กลยุทธ์ Redis Lock](../redis-lock-strategy.png)
+
 Redis ใช้ล็อกสองรูปแบบหลักในระบบนี้
 
 ### A. Seat hold (จองชั่วคราวระหว่างเช็คเอาต์)
@@ -229,28 +231,7 @@ Docker Compose เริ่ม Redis ด้วย `--notify-keyspace-events Ex` 
 
 ### ลำดับการทำงาน
 
-```
-POST /api/bookings/confirm
-        │
-        ▼
-  บันทึก booking (MongoDB)
-        │
-        ▼
-  tasks.NewEmailSendTask(bookingId)
-        │
-        ▼
-  asynq.Client.Enqueue()  ──►  คิว Redis
-                                    │
-                                    ▼
-                            Worker (cmd/worker)
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-              โหลด booking    render template   Brevo API
-              + แคตตาล็อก     (ไทยหรืออังกฤษ)    ส่งอีเมล
-                    │                               │
-                    └──────────► email_logs ◄───────┘
-```
+![ลำดับการทำงาน asynq message queue](../asynq-message-queue.png)
 
 ### ประเภทงาน (MVP)
 
