@@ -435,7 +435,7 @@
       "auditEntityAll": "ทุกเอนทิตี",
       "auditBookingRef": "เลขที่การจอง",
       "auditBookingRefPlaceholder": "เช่น TBS-PV6779",
-      "auditActorId": "รหัสผู้ดำเนินการ",
+      "auditActorId": "รหัสผู้ใช้",
       "auditActorIdPlaceholder": "MongoDB ObjectId (ไม่บังคับ)",
       "emptyAuditFiltered": "ไม่มีรายการตรวจสอบที่ตรงกับตัวกรอง",
       "emailFilterTitle": "กรองการส่งอีเมล",
@@ -498,7 +498,7 @@
       },
       "viewDetail": "ดูรายละเอียด",
       "detailTitle": "รายละเอียดบันทึก",
-      "actorId": "รหัสผู้ดำเนินการ",
+      "actorId": "รหัสผู้ใช้",
       "meta": "ข้อมูลเมตา",
       "viewCustomerHistory": "ดูประวัติการจองของลูกค้า",
       "closeDetail": "ปิด"

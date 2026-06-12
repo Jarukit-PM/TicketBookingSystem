@@ -153,6 +153,10 @@ watch(
           <dt class="text-copy-secondary">{{ t('admin.bookings.table.confirmed') }}</dt>
           <dd>{{ formatDateTime(display.confirmedAt) }}</dd>
         </div>
+        <div v-if="display.userId" class="space-y-1 sm:col-span-2">
+          <dt class="text-copy-secondary">{{ t('admin.bookings.userId') }}</dt>
+          <dd class="font-mono text-xs text-copy-muted">{{ display.userId }}</dd>
+        </div>
         <div class="space-y-1 sm:col-span-2">
           <dt class="text-copy-secondary">{{ t('admin.bookings.showtimeId') }}</dt>
           <dd class="font-mono text-xs text-copy-muted">{{ display.showtimeId }}</dd>

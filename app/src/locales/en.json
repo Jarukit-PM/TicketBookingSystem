@@ -435,7 +435,7 @@
       "auditEntityAll": "All entities",
       "auditBookingRef": "Booking reference",
       "auditBookingRefPlaceholder": "e.g. TBS-PV6779",
-      "auditActorId": "Actor ID",
+      "auditActorId": "User ID",
       "auditActorIdPlaceholder": "MongoDB ObjectId (optional)",
       "emptyAuditFiltered": "No audit entries match your filters.",
       "emailFilterTitle": "Filter email deliveries",
@@ -498,7 +498,7 @@
       },
       "viewDetail": "View details",
       "detailTitle": "Log entry details",
-      "actorId": "Actor ID",
+      "actorId": "User ID",
       "meta": "Metadata",
       "viewCustomerHistory": "View customer booking history",
       "closeDetail": "Close"
