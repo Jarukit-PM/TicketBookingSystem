@@ -92,11 +92,18 @@
     "continueCheckout": "Continue to checkout",
     "holdExpiresIn": "Hold expires in",
     "legend": {
+      "statusHeading": "Seat status",
+      "typesHeading": "Seat types",
       "available": "Available",
       "yourSeats": "Your seats",
       "held": "Held",
       "sold": "Sold",
       "blocked": "Blocked"
+    },
+    "types": {
+      "standard": "Standard",
+      "vip": "VIP",
+      "wheelchair": "Wheelchair"
     },
     "status": {
       "available": "available",
@@ -105,7 +112,8 @@
       "sold": "sold",
       "blocked": "blocked"
     },
-    "seatAria": "{seatId}, {status}"
+    "seatAria": "{seatId}, {status}",
+    "seatAriaWithType": "{seatId}, {type}, {status}"
   },
   "booking": {
     "checkout": {
@@ -115,8 +123,6 @@
       "selectedSeats": "Selected seats:",
       "noSeats": "No seats selected.",
       "backToSeatMap": "Back to seat map",
-      "emailLanguage": "Confirmation email language",
-      "emailLanguageHint": "Choose the language for your confirmation email. This is saved with your booking.",
       "confirm": "Confirm booking",
       "confirming": "Confirming…",
       "confirmError": "Failed to confirm booking"

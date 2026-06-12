@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import SeatCell from '@/components/seat-map/SeatCell.vue'
+import { rowLabel } from '@/lib/seatLayoutEditor'
 import type { Seat } from '@/types/seats'
 
 const props = defineProps<{
@@ -51,13 +52,38 @@ const grid = computed(() => {
 <template>
   <div class="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0">
     <div
-      class="inline-grid min-w-full gap-1.5 p-2 sm:gap-2 sm:p-4"
-      :style="{ gridTemplateColumns: `repeat(${grid.cols}, minmax(2.5rem, 1fr))` }"
+      class="inline-block min-w-full p-2 sm:p-4"
       role="grid"
-      :aria-rowcount="grid.rows"
-      :aria-colcount="grid.cols"
+      :aria-rowcount="grid.rows + 1"
+      :aria-colcount="grid.cols + 1"
     >
-      <template v-for="(row, rowIdx) in grid.cells" :key="rowIdx">
+      <div
+        class="mb-1.5 grid gap-1.5 sm:gap-2"
+        :style="{ gridTemplateColumns: `2rem repeat(${grid.cols}, minmax(2.5rem, 1fr))` }"
+      >
+        <div aria-hidden="true" />
+        <div
+          v-for="col in grid.cols"
+          :key="`col-${col}`"
+          class="flex h-6 items-center justify-center text-[10px] font-medium text-copy-muted"
+        >
+          {{ col }}
+        </div>
+      </div>
+
+      <div
+        v-for="(row, rowIdx) in grid.cells"
+        :key="rowIdx"
+        class="mb-1.5 grid gap-1.5 sm:mb-2 sm:gap-2"
+        :style="{ gridTemplateColumns: `2rem repeat(${grid.cols}, minmax(2.5rem, 1fr))` }"
+        role="row"
+      >
+        <div
+          class="flex h-10 items-center justify-center text-xs font-medium text-copy-muted"
+          aria-hidden="true"
+        >
+          {{ rowLabel(rowIdx + 1) }}
+        </div>
         <template v-for="(seat, colIdx) in row" :key="`${rowIdx}-${colIdx}`">
           <div v-if="seat" role="gridcell">
             <SeatCell
@@ -70,7 +96,7 @@ const grid = computed(() => {
           </div>
           <div v-else class="h-10 w-10" aria-hidden="true" />
         </template>
-      </template>
+      </div>
     </div>
   </div>
 </template>

@@ -183,7 +183,7 @@ watch(
               :interactive="true"
               @select="toggleSeat"
             />
-            <SeatLegend />
+            <SeatLegend :price-tiers="snapshot.priceTiers" />
           </CardContent>
         </Card>
 

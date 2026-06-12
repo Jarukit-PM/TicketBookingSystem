@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { Accessibility, Crown } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cn } from '@/lib/cn'
-import type { Seat, SeatStatus } from '@/types/seats'
+import { rowLabel } from '@/lib/seatLayoutEditor'
+import type { Seat, SeatStatus, SeatType } from '@/types/seats'
 
 const props = defineProps<{
   seat: Seat
@@ -24,6 +26,13 @@ const displayStatus = computed<SeatStatus | 'SELECTED'>(() => {
   return props.seat.status
 })
 
+const typeLabel = computed(() => {
+  if (props.seat.type === 'blocked') {
+    return ''
+  }
+  return t(`seatMap.types.${props.seat.type}`)
+})
+
 const statusLabel = computed(() => {
   const keyMap: Record<SeatStatus | 'SELECTED', string> = {
     AVAILABLE: 'seatMap.status.available',
@@ -36,12 +45,24 @@ const statusLabel = computed(() => {
 })
 
 const ariaLabel = computed(() =>
-  t('seatMap.seatAria', { seatId: props.seat.seatId, status: statusLabel.value }),
+  typeLabel.value
+    ? t('seatMap.seatAriaWithType', {
+        seatId: props.seat.seatId,
+        type: typeLabel.value,
+        status: statusLabel.value,
+      })
+    : t('seatMap.seatAria', { seatId: props.seat.seatId, status: statusLabel.value }),
 )
 
-const statusClasses: Record<SeatStatus | 'SELECTED', string> = {
-  AVAILABLE:
+const availableTypeClasses: Record<Exclude<SeatType, 'blocked'>, string> = {
+  standard:
     'bg-subtle border-surface-border text-copy-secondary hover:border-brand/40 cursor-pointer',
+  vip: 'bg-accent-dim border-brand/60 text-copy-primary hover:border-brand cursor-pointer',
+  wheelchair:
+    'bg-state-success-dim border-state-success/50 text-copy-primary hover:border-state-success cursor-pointer',
+}
+
+const statusClasses: Record<Exclude<SeatStatus, 'AVAILABLE'> | 'SELECTED', string> = {
   HELD: 'bg-state-warning-dim border-state-warning text-copy-muted cursor-not-allowed',
   SOLD: 'bg-elevated border-surface-border-subtle text-copy-faint cursor-not-allowed',
   BLOCKED:
@@ -49,14 +70,25 @@ const statusClasses: Record<SeatStatus | 'SELECTED', string> = {
   SELECTED: 'bg-accent-dim border-transparent text-copy-primary seat-self-held cursor-pointer',
 }
 
-const classes = computed(() =>
-  cn(
-    'flex h-10 w-10 items-center justify-center rounded-md border text-[10px] font-medium transition-colors',
+const classes = computed(() => {
+  const status = displayStatus.value
+  const statusClass =
+    status === 'AVAILABLE'
+      ? availableTypeClasses[props.seat.type === 'blocked' ? 'standard' : props.seat.type]
+      : statusClasses[status]
+
+  return cn(
+    'relative flex h-10 w-10 items-center justify-center rounded-md border text-[9px] font-medium leading-none transition-colors',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-glow',
-    statusClasses[displayStatus.value],
+    statusClass,
     props.pending && 'opacity-70',
-  ),
-)
+  )
+})
+
+const showVipBadge = computed(() => props.seat.type === 'vip')
+const showWheelchairBadge = computed(() => props.seat.type === 'wheelchair')
+
+const seatLabel = computed(() => `${rowLabel(props.seat.row)}${props.seat.col}`)
 
 const isClickable = computed(() => {
   if (!props.interactive) {
@@ -96,7 +128,17 @@ function onKeydown(event: KeyboardEvent) {
     @click="onClick"
     @keydown="onKeydown"
   >
-    {{ seat.seatId.split('-')[1] }}
+    <Crown
+      v-if="showVipBadge"
+      class="pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 text-brand"
+      aria-hidden="true"
+    />
+    <Accessibility
+      v-if="showWheelchairBadge"
+      class="pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 text-state-success"
+      aria-hidden="true"
+    />
+    {{ seatLabel }}
   </button>
 </template>
 

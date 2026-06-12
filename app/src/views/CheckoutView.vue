@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { CheckCircle2, CreditCard } from 'lucide-vue-next'
 import AppHeader from '@/components/AppHeader.vue'
-import BookingEmailLocaleField from '@/components/booking/BookingEmailLocaleField.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -137,8 +136,6 @@ watch(
             <p class="text-lg font-semibold text-brand">
               {{ formatTHB(totalPrice) }}
             </p>
-
-            <BookingEmailLocaleField />
 
             <ErrorAlert v-if="error" :message="error" />
 

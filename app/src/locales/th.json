@@ -92,11 +92,18 @@
     "continueCheckout": "ดำเนินการชำระเงิน",
     "holdExpiresIn": "การจองที่นั่งหมดเวลาใน",
     "legend": {
+      "statusHeading": "สถานะที่นั่ง",
+      "typesHeading": "ประเภทที่นั่ง",
       "available": "ว่าง",
       "yourSeats": "ที่นั่งของคุณ",
       "held": "ถูกจองชั่วคราว",
       "sold": "ขายแล้ว",
       "blocked": "ปิดใช้งาน"
+    },
+    "types": {
+      "standard": "มาตรฐาน",
+      "vip": "VIP",
+      "wheelchair": "รถเข็น"
     },
     "status": {
       "available": "ว่าง",
@@ -105,7 +112,8 @@
       "sold": "ขายแล้ว",
       "blocked": "ปิดใช้งาน"
     },
-    "seatAria": "{seatId}, {status}"
+    "seatAria": "{seatId}, {status}",
+    "seatAriaWithType": "{seatId}, {type}, {status}"
   },
   "booking": {
     "checkout": {
@@ -115,8 +123,6 @@
       "selectedSeats": "ที่นั่งที่เลือก:",
       "noSeats": "ยังไม่ได้เลือกที่นั่ง",
       "backToSeatMap": "กลับไปแผนที่ที่นั่ง",
-      "emailLanguage": "ภาษาอีเมลยืนยันการจอง",
-      "emailLanguageHint": "เลือกภาษาสำหรับอีเมลยืนยันการจอง ระบบจะบันทึกภาษานี้ไว้กับการจองของคุณ",
       "confirm": "ยืนยันการจอง",
       "confirming": "กำลังยืนยัน…",
       "confirmError": "ยืนยันการจองไม่สำเร็จ"
