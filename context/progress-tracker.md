@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Recent
 
+- **Docker build — low-RAM EC2 (2026-06-12):** Single `ticketbookingsystem-backend` image for api+worker (one build, sequential compiles); `GOMAXPROCS=1` / `-p 1` / `GOMEMLIMIT` in `api/Dockerfile`; `api/.dockerignore` excludes tests.
 - **Seat map type indicators (2026-06-12):** Customer seat map shows VIP (crown + orange tint) and wheelchair (accessibility icon + green tint) on cells; legend split into status + seat types with THB prices.
 - **Feature 12 — public ticket access (2026-06-12):** `GET /api/tickets/:ref?t=` (no auth); token persisted after confirm + worker backfill; `ValidateTicketToken` accepts stored email token; `PublicTicketView` with owner fallback; handler/email/filter tests; spec 12 complete (HITL: incognito email-link smoke).
 - **Responsive mobile UI (2026-06-12):** Admin slide-over nav + mobile header; seat-map fixed checkout bar with safe-area; full-width CTAs on checkout/confirmation; movie showtime cards stack on small screens; admin bookings card list on mobile; viewport-fit + `100dvh` base styles.

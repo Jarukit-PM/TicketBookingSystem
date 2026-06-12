@@ -19,6 +19,8 @@ services:
   api:
     build:
       context: ./api
+      target: release
+    image: ticketbookingsystem-backend:latest
     command: ["/server"]
     environment:
       MONGO_URI: ${MONGO_URI}
@@ -38,8 +40,7 @@ services:
     restart: unless-stopped
 
   worker:
-    build:
-      context: ./api
+    image: ticketbookingsystem-backend:latest
     command: ["/worker"]
     environment:
       MONGO_URI: ${MONGO_URI}

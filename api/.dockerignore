@@ -1,0 +1,7 @@
+*.md
+.git
+.gitignore
+**/*_test.go
+**/*.test
+coverage.out
+tmp/
