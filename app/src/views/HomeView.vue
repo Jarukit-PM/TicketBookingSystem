@@ -8,7 +8,6 @@ import CinemaPicker from '@/components/CinemaPicker.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import MovieGridSkeleton from '@/components/skeletons/MovieGridSkeleton.vue'
 import { EmptyState, ErrorAlert } from '@/components/ui'
-import { useAuthStore } from '@/stores/auth'
 import { useCatalogStore } from '@/stores/catalog'
 import type { CatalogTab, Cinema, Movie } from '@/types/catalog'
 
