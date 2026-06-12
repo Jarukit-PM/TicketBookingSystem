@@ -60,7 +60,7 @@ TicketBookingSystem/
 │   └── internal/        # auth, booking, hold, ws, email, tasks, …
 ├── nginx/               # การตั้งค่า reverse proxy
 ├── docker-compose.yml
-└── docs/                # เอกสารนี้
+└── docs/                # เอกสารไทย + แผนภาพสถาปัตยกรรม
 ```
 
 ---
@@ -391,4 +391,4 @@ cd app && npm run lint && npm run type-check && npm run test:unit && npm run bui
 
 ---
 
-*อัปเดตล่าสุด: 2026-06-12 สถานะการพัฒนาดูที่ `context/progress-tracker.md`*
+*อัปเดตล่าสุด: 2026-06-12 สถานะการพัฒนาดูที่ [`context/progress-tracker.md`](../../context/progress-tracker.md)*
