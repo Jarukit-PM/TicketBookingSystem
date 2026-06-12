@@ -69,11 +69,11 @@ onMounted(async () => {
   <div class="min-h-screen bg-base px-4 py-8 md:px-6">
     <div class="mx-auto max-w-lg space-y-6">
       <RouterLink
-        to="/my-bookings"
+        :to="auth.isAuthenticated ? '/my-bookings' : '/'"
         class="inline-flex items-center gap-1.5 text-sm text-copy-secondary transition-colors hover:text-copy-primary"
       >
         <ArrowLeft class="h-4 w-4" aria-hidden="true" />
-        {{ t('nav.backToMyBookings') }}
+        {{ auth.isAuthenticated ? t('nav.backToMyBookings') : t('nav.backToHome') }}
       </RouterLink>
 
       <Card>

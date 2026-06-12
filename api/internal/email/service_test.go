@@ -3,6 +3,7 @@ package email_test
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -52,6 +53,52 @@ func TestHandleEmailSend(t *testing.T) {
 	}
 	if !sender.ok || logs.rows[0].Status != email.StatusSent {
 		t.Fatal("expected sent email log")
+	}
+}
+
+func TestHandleEmailSendBackfillsMissingToken(t *testing.T) {
+	t.Parallel()
+
+	bid := primitive.NewObjectID()
+	uid := primitive.NewObjectID()
+	sid := primitive.NewObjectID()
+	scid := primitive.NewObjectID()
+	mid := primitive.NewObjectID()
+	cid := primitive.NewObjectID()
+	const secret = "test-ticket-secret"
+	b := &booking.Booking{
+		ID: bid, UserID: uid, ShowtimeID: sid, Seats: []string{"A-1"}, Total: 1000,
+		BookingRef: "TBS-T1", Status: booking.StatusConfirmed,
+	}
+	sender := &captureSender{}
+	logs := &fakeLogs{}
+	svc := email.NewService(
+		fakeBookings{b},
+		fakeUsers{&user.User{ID: uid, Email: "a@b.com"}},
+		email.CatalogReader{
+			Showtimes: fakeST{&catalog.Showtime{ID: sid, ScreenID: scid, MovieID: mid, StartsAt: time.Now()}},
+			Screens:   fakeSC{&catalog.Screen{ID: scid, CinemaID: cid, Name: "Hall"}},
+			Movies:    fakeMV{&catalog.Movie{ID: mid, Title: "Film"}},
+			Cinemas:   fakeCN{&catalog.Cinema{ID: cid, Name: "Cinema"}},
+		},
+		logs,
+		sender,
+		"http://localhost:5173",
+		secret,
+	)
+	payload, _ := json.Marshal(tasks.EmailSendPayload{BookingID: bid.Hex()})
+	if err := svc.HandleEmailSend(context.Background(), asynq.NewTask(tasks.TypeEmailSend, payload)); err != nil {
+		t.Fatal(err)
+	}
+	if b.TicketToken == "" {
+		t.Fatal("expected worker to backfill ticket token before send")
+	}
+	if !booking.ValidateTicketToken(b.BookingRef, b.TicketToken, b, secret) {
+		t.Fatal("expected backfilled token to validate")
+	}
+	wantURL := booking.TicketURL("http://localhost:5173", b.BookingRef, b.TicketToken)
+	if !strings.Contains(sender.msg.TextBody, wantURL) {
+		t.Fatalf("text body = %q, want ticket url %q", sender.msg.TextBody, wantURL)
 	}
 }
 
@@ -122,6 +169,15 @@ type fakeSender struct {
 func (f *fakeSender) Send(context.Context, email.Message) (string, error) {
 	f.ok = true
 	return f.id, nil
+}
+
+type captureSender struct {
+	msg email.Message
+}
+
+func (c *captureSender) Send(_ context.Context, msg email.Message) (string, error) {
+	c.msg = msg
+	return "sg-1", nil
 }
 
 type fakeLogs struct{ rows []audit.EmailLog }

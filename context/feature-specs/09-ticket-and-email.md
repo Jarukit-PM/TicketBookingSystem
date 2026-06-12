@@ -26,6 +26,7 @@ Customer receives scannable ticket in app and email. Admin QR resolves to user b
 | Method | Path | Auth | Response |
 | ------ | ---- | ---- | -------- |
 | GET | `/api/bookings/:id/ticket` | Owner | `{ bookingRef, qrPngBase64?, ticketUrl, seats, showtime... }` |
+| GET | `/api/tickets/:ref` | None | `?t=` token — same `TicketDetail` as owner route (see spec 12) |
 | GET | `/api/admin/tickets/resolve` | Admin | `?ref=&t=` → `{ userId, bookingId }` |
 
 Use `github.com/skip2/go-qrcode` server-side.

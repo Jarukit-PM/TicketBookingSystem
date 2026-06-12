@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Recent
 
+- **Feature 12 — public ticket access (2026-06-12):** `GET /api/tickets/:ref?t=` (no auth); token persisted after confirm + worker backfill; `ValidateTicketToken` accepts stored email token; `PublicTicketView` with owner fallback; handler/email/filter tests; spec 12 complete (HITL: incognito email-link smoke).
 - **Responsive mobile UI (2026-06-12):** Admin slide-over nav + mobile header; seat-map fixed checkout bar with safe-area; full-width CTAs on checkout/confirmation; movie showtime cards stack on small screens; admin bookings card list on mobile; viewport-fit + `100dvh` base styles.
 
 ## Completed
@@ -47,6 +48,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Admin detail modals (2026-06-12):** Reusable `Modal` primitive; booking ref opens `AdminBookingDetailModal` from list data (enriches via `GET /api/admin/bookings/:id` when available); audit **View details** → **View customer booking history** navigates to `/admin/users/:userId/bookings` and auto-opens the booking detail modal.
 - **Admin bookings filters (2026-06-12):** `GET /api/admin/bookings` supports combined filters (`movieId`, `locale`, `confirmedFrom`, `confirmedTo` plus existing ref/email/user/showtime); Admin Bookings search panel adds movie, language, and confirmed-date range controls.
 - **Booking email locale UX (2026-06-12):** `AppHeader` + language switcher on seat map, checkout, and My Bookings; checkout shows explicit confirmation-email language picker (`BookingEmailLocaleField`); admin/customer labels clarify stored locale is email language at confirm time.
+- **Feature spec 12 — public ticket access (2026-06-12):** Spec + implementation — public ticket API, email-link token lifecycle, `PublicTicketView`, unit tests (`tickets_test`, email backfill, `ConfirmedFilter`); spec 09 amended with public route.
 - **Ticket QR routing fix (2026-06-12):** My Bookings detail links to authenticated `TicketView`; public `/ticket/:bookingRef?t=` loads QR via `GET /api/tickets/:ref` (token-validated); removed placeholder view.
 - **Email ticket link fix (2026-06-12):** Ticket token signed after Mongo insert (persisted ID); validation accepts stored `ticketToken` from email; worker backfills missing tokens before send; `PublicTicketView` falls back to owner session when link token fails.
 - **Admin seat layout editor (2026-06-12):** `SeatLayoutEditor` visual grid replaces JSON textarea on Admin Screens; paint brush for standard/VIP/wheelchair/blocked/aisle; row/col sizing + drag-to-paint; `seatLayoutEditor` lib with Vitest round-trip tests; EN/TH i18n.
@@ -57,7 +59,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Production readiness: complete HITL checks (OAuth, Brevo, two-browser WS smoke).
+- Production readiness: complete HITL checks (OAuth, Brevo, two-browser WS smoke, incognito email ticket link).
 - Post-MVP features TBD (payment, cancellation, etc.).
 
 | Order | Issue | Slice | Spec |
