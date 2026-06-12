@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/skip2/go-qrcode"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
 )
 
-// TicketDetail is returned by GET /api/bookings/:id/ticket.
+// TicketDetail is returned by ticket endpoints.
 type TicketDetail struct {
 	BookingRef  string   `json:"bookingRef"`
 	TicketURL   string   `json:"ticketUrl"`
@@ -45,6 +45,29 @@ func (s *Service) GetTicket(ctx context.Context, userID, bookingID string) (*Tic
 		return nil, ErrForbidden
 	}
 
+	return s.buildTicketDetail(ctx, b)
+}
+
+// GetTicketByRef returns ticket metadata when ref and token match a confirmed booking.
+func (s *Service) GetTicketByRef(ctx context.Context, ref, token string) (*TicketDetail, error) {
+	ref = strings.TrimSpace(ref)
+	token = strings.TrimSpace(token)
+	if ref == "" || token == "" {
+		return nil, ErrInvalidTicket
+	}
+
+	b, err := s.bookings.FindByBookingRef(ctx, ref)
+	if err != nil {
+		return nil, err
+	}
+	if b == nil || !ValidateTicketToken(ref, token, b, s.ticketSecret) {
+		return nil, ErrInvalidTicket
+	}
+
+	return s.buildTicketDetail(ctx, b)
+}
+
+func (s *Service) buildTicketDetail(ctx context.Context, b *Booking) (*TicketDetail, error) {
 	showtime, err := s.showtimes.FindShowtimeByID(ctx, b.ShowtimeID)
 	if err != nil || showtime == nil {
 		return nil, fmt.Errorf("showtime not found")

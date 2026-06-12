@@ -34,7 +34,9 @@
     "previous": "ก่อนหน้า",
     "next": "ถัดไป",
     "dash": "—",
-    "closeDialog": "ปิดหน้าต่าง"
+    "closeDialog": "ปิดหน้าต่าง",
+    "openMenu": "เปิดเมนู",
+    "closeMenu": "ปิดเมนู"
   },
   "nav": {
     "myBookings": "การจองของฉัน",
@@ -113,6 +115,8 @@
       "selectedSeats": "ที่นั่งที่เลือก:",
       "noSeats": "ยังไม่ได้เลือกที่นั่ง",
       "backToSeatMap": "กลับไปแผนที่ที่นั่ง",
+      "emailLanguage": "ภาษาอีเมลยืนยันการจอง",
+      "emailLanguageHint": "เลือกภาษาสำหรับอีเมลยืนยันการจอง ระบบจะบันทึกภาษานี้ไว้กับการจองของคุณ",
       "confirm": "ยืนยันการจอง",
       "confirming": "กำลังยืนยัน…",
       "confirmError": "ยืนยันการจองไม่สำเร็จ"
@@ -145,7 +149,8 @@
       "seats": "ที่นั่ง",
       "total": "ยอดรวม",
       "reference": "หมายเลขอ้างอิง",
-      "locale": "ภาษา",
+      "emailLocale": "ภาษาอีเมลยืนยันการจอง",
+      "emailLocaleHint": "เลือกตอนชำระเงินด้วยตัวสลับภาษาด้านบน",
       "viewTicket": "ดูตั๋ว"
     },
     "status": {
@@ -156,6 +161,7 @@
       "subtitle": "แสดง QR code นี้ที่ทางเข้าโรงภาพยนตร์",
       "loading": "กำลังโหลดตั๋ว…",
       "loadError": "โหลดตั๋วไม่สำเร็จ",
+      "missingToken": "ลิงก์ตั๋วไม่สมบูรณ์ เปิดจากอีเมลยืนยันหรือหน้าการจองของฉัน",
       "reference": "หมายเลขการจอง",
       "qrAlt": "QR code ตั๋ว",
       "movie": "หนัง",
@@ -282,18 +288,36 @@
     },
     "screens": {
       "title": "โรงฉาย",
-      "subtitle": "ห้องฉายพร้อมผังที่นั่ง แก้ไขผังเป็น JSON ({ seatId, row, col, type })",
+      "subtitle": "ห้องฉายพร้อมผังที่นั่ง วาดที่นั่งบนตาราง — ไม่ต้องใส่ JSON",
       "addTitle": "เพิ่มโรงฉาย",
       "editTitle": "แก้ไขโรงฉาย",
       "allTitle": "โรงฉายทั้งหมด",
-      "layoutJson": "JSON ผังที่นั่ง",
+      "layoutEditor": "ผังที่นั่ง",
       "addCinemaFirst": "เพิ่มโรงภาพยนตร์ก่อนในหน้าโรงภาพยนตร์ ก่อนสร้างโรงฉาย",
       "empty": "ยังไม่มีโรงฉาย",
-      "layoutMustIncludeSeats": "ผังต้องมีอาร์เรย์ seats",
+      "layoutMustIncludeSeats": "ผังต้องมีที่นั่งอย่างน้อย 1 ที่",
       "confirmDelete": "ลบโรงฉายนี้?",
       "loadFailed": "โหลดโรงฉายไม่สำเร็จ",
       "saveFailed": "บันทึกไม่สำเร็จ",
-      "deleteFailed": "ลบไม่สำเร็จ"
+      "deleteFailed": "ลบไม่สำเร็จ",
+      "editor": {
+        "rows": "แถว",
+        "cols": "คอลัมน์",
+        "brush": "เครื่องมือวาด",
+        "fillStandard": "เติมมาตรฐานทั้งหมด",
+        "seatCount": "{count} ที่นั่ง",
+        "screenLabel": "จอภาพ",
+        "hint": "คลิกหรือลากบนช่องเพื่อวาด ใช้ทางเดินสำหรับช่องว่างและทางเดิน",
+        "seatAria": "{seatId}, {type}",
+        "aisleAria": "ทางเดิน แถว {row} คอลัมน์ {col}",
+        "types": {
+          "standard": "มาตรฐาน",
+          "vip": "VIP",
+          "wheelchair": "รถเข็นนั่ง",
+          "blocked": "ปิดใช้งาน",
+          "aisle": "ทางเดิน"
+        }
+      }
     },
     "showtimes": {
       "title": "รอบฉาย",
@@ -304,7 +328,7 @@
       "startsAt": "เริ่มเวลา",
       "standardTHB": "มาตรฐาน (บาท)",
       "vipTHB": "VIP (บาท)",
-      "wheelchairTHB": "รถเข็น (บาท)",
+      "wheelchairTHB": "รถเข็นนั่ง (บาท)",
       "empty": "ยังไม่มีรอบฉาย",
       "confirmDelete": "ลบรอบฉายนี้?",
       "loadFailed": "โหลดรอบฉายไม่สำเร็จ",
@@ -327,6 +351,12 @@
       "userId": "รหัสผู้ใช้",
       "objectIdPlaceholder": "MongoDB ObjectId",
       "showtimeId": "รหัสรอบฉาย",
+      "movie": "ภาพยนตร์",
+      "movieAll": "ภาพยนตร์ทั้งหมด",
+      "locale": "ภาษาอีเมล",
+      "localeAll": "ทุกภาษาอีเมล",
+      "confirmedFrom": "ยืนยันตั้งแต่",
+      "confirmedTo": "ยืนยันถึง",
       "searchFailed": "ค้นหาไม่สำเร็จ",
       "noMatch": "ไม่พบการจองที่ตรงกับการค้นหา",
       "empty": "ยังไม่มีการจองที่ยืนยันแล้ว",
@@ -338,7 +368,7 @@
         "movie": "ภาพยนตร์",
         "seats": "ที่นั่ง",
         "total": "รวม",
-        "locale": "ภาษา",
+        "locale": "อีเมล",
         "confirmed": "ยืนยันเมื่อ",
         "loading": "กำลังโหลดการจอง…",
         "empty": "ยังไม่มีการจองที่ยืนยันแล้ว"

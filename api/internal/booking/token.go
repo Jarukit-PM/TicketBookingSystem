@@ -32,7 +32,14 @@ func ValidateTicketToken(ref, token string, b *Booking, secret string) bool {
 		return false
 	}
 	expected := SignTicketToken(secret, ref, b.ID.Hex())
-	return subtle.ConstantTimeCompare([]byte(token), []byte(expected)) == 1
+	if subtle.ConstantTimeCompare([]byte(token), []byte(expected)) == 1 {
+		return true
+	}
+	// Accept the persisted token (email links use this value).
+	if b.TicketToken != "" {
+		return subtle.ConstantTimeCompare([]byte(token), []byte(b.TicketToken)) == 1
+	}
+	return false
 }
 
 // TicketURL builds the public ticket link encoded in QR codes.

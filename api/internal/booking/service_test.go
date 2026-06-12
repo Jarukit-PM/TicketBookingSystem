@@ -120,6 +120,18 @@ func (m *memBookings) FindByBookingRef(context.Context, string) (*booking.Bookin
 	return nil, nil
 }
 
+func (m *memBookings) UpdateTicketToken(_ context.Context, id primitive.ObjectID, token string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i := range m.bookings {
+		if m.bookings[i].ID == id {
+			m.bookings[i].TicketToken = token
+			return nil
+		}
+	}
+	return nil
+}
+
 func (m *memBookings) ListByUser(ctx context.Context, userID primitive.ObjectID) ([]booking.Booking, error) {
 	return m.ListConfirmedByUser(ctx, userID)
 }
@@ -182,6 +194,41 @@ func (m *memBookings) CountConfirmed(_ context.Context) (int64, error) {
 		}
 	}
 	return count, nil
+}
+
+func (m *memBookings) CountConfirmedFiltered(_ context.Context, filter booking.ConfirmedFilter) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var count int64
+	for _, b := range m.bookings {
+		if filter.Matches(b) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (m *memBookings) ListConfirmedFiltered(
+	_ context.Context,
+	filter booking.ConfirmedFilter,
+	skip, limit int,
+) ([]booking.Booking, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	matched := make([]booking.Booking, 0)
+	for _, b := range m.bookings {
+		if filter.Matches(b) {
+			matched = append(matched, b)
+		}
+	}
+	if skip >= len(matched) {
+		return []booking.Booking{}, nil
+	}
+	end := skip + limit
+	if end > len(matched) {
+		end = len(matched)
+	}
+	return matched[skip:end], nil
 }
 
 func (m *memBookings) ListConfirmedPage(_ context.Context, skip, limit int) ([]booking.Booking, error) {

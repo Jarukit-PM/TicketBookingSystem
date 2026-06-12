@@ -4,8 +4,10 @@ import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
+import SeatLayoutEditor from '@/components/admin/SeatLayoutEditor.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { createEmptyGrid, gridToLayout } from '@/lib/seatLayoutEditor'
 import { Monitor } from 'lucide-vue-next'
 import type { Cinema, Screen, ScreenLayout } from '@/types/catalog'
 
@@ -18,18 +20,12 @@ const errorMessage = ref('')
 const editingId = ref<string | null>(null)
 const filterCinemaId = ref('')
 
-const defaultLayout: ScreenLayout = {
-  seats: [
-    { seatId: 'A-1', row: 1, col: 1, type: 'standard' },
-    { seatId: 'A-2', row: 1, col: 2, type: 'standard' },
-    { seatId: 'A-3', row: 1, col: 3, type: 'vip' },
-  ],
-}
+const defaultLayout: ScreenLayout = gridToLayout(createEmptyGrid(4, 8, 'standard'))
 
 const form = ref({
   cinemaId: '',
   name: '',
-  layoutJson: JSON.stringify(defaultLayout, null, 2),
+  layout: defaultLayout,
 })
 
 const filteredScreens = computed(() => {
@@ -46,16 +42,15 @@ function resetForm() {
   form.value = {
     cinemaId: filterCinemaId.value || cinemas.value[0]?.id || '',
     name: '',
-    layoutJson: JSON.stringify(defaultLayout, null, 2),
+    layout: { ...defaultLayout, seats: [...defaultLayout.seats] },
   }
 }
 
-function parseLayout(): ScreenLayout {
-  const parsed = JSON.parse(form.value.layoutJson) as ScreenLayout
-  if (!parsed?.seats?.length) {
+function validateLayout(layout: ScreenLayout): ScreenLayout {
+  if (!layout?.seats?.length) {
     throw new Error(t('admin.screens.layoutMustIncludeSeats'))
   }
-  return parsed
+  return layout
 }
 
 async function loadData() {
@@ -92,14 +87,16 @@ function startEdit(screen: Screen) {
   form.value = {
     cinemaId: screen.cinemaId,
     name: screen.name,
-    layoutJson: JSON.stringify(screen.layout, null, 2),
+    layout: {
+      seats: screen.layout.seats.map((seat) => ({ ...seat })),
+    },
   }
 }
 
 async function onSubmit() {
   errorMessage.value = ''
   try {
-    const layout = parseLayout()
+    const layout = validateLayout(form.value.layout)
     const payload = {
       cinemaId: form.value.cinemaId,
       name: form.value.name,
@@ -173,14 +170,8 @@ onMounted(async () => {
             <Input id="screenName" v-model="form.name" required />
           </div>
           <div class="space-y-2">
-            <label class="text-sm text-copy-secondary" for="layout">{{ t('admin.screens.layoutJson') }}</label>
-            <textarea
-              id="layout"
-              v-model="form.layoutJson"
-              rows="10"
-              class="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 font-mono text-xs text-copy-primary"
-              required
-            />
+            <label class="text-sm text-copy-secondary">{{ t('admin.screens.layoutEditor') }}</label>
+            <SeatLayoutEditor v-model="form.layout" />
           </div>
           <p v-if="!loading && cinemas.length === 0" class="text-sm text-copy-muted">
             {{ t('admin.screens.addCinemaFirst') }}

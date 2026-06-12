@@ -150,7 +150,7 @@ func GetBookingTicket(deps BookingsDeps) gin.HandlerFunc {
 
 func writeTicketError(c *gin.Context, err error) {
 	switch {
-	case errors.Is(err, booking.ErrBookingNotFound):
+	case errors.Is(err, booking.ErrBookingNotFound), errors.Is(err, booking.ErrInvalidTicket):
 		httputil.Error(c, http.StatusNotFound, "BOOKING_NOT_FOUND", "booking not found")
 	case errors.Is(err, booking.ErrForbidden):
 		httputil.Error(c, http.StatusForbidden, "FORBIDDEN", "not allowed to view this ticket")

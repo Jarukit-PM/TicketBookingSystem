@@ -34,7 +34,9 @@
     "previous": "Previous",
     "next": "Next",
     "dash": "—",
-    "closeDialog": "Close dialog"
+    "closeDialog": "Close dialog",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "nav": {
     "myBookings": "My Bookings",
@@ -113,6 +115,8 @@
       "selectedSeats": "Selected seats:",
       "noSeats": "No seats selected.",
       "backToSeatMap": "Back to seat map",
+      "emailLanguage": "Confirmation email language",
+      "emailLanguageHint": "Choose the language for your confirmation email. This is saved with your booking.",
       "confirm": "Confirm booking",
       "confirming": "Confirming…",
       "confirmError": "Failed to confirm booking"
@@ -145,7 +149,8 @@
       "seats": "Seats",
       "total": "Total",
       "reference": "Reference",
-      "locale": "Language",
+      "emailLocale": "Confirmation email language",
+      "emailLocaleHint": "Chosen at checkout using the language switcher.",
       "viewTicket": "View ticket"
     },
     "status": {
@@ -156,6 +161,7 @@
       "subtitle": "Present this QR code at the cinema entrance.",
       "loading": "Loading ticket…",
       "loadError": "Unable to load your ticket.",
+      "missingToken": "This ticket link is incomplete. Open it from your confirmation email or My Bookings.",
       "reference": "Booking reference",
       "qrAlt": "Ticket QR code",
       "movie": "Movie",
@@ -282,18 +288,36 @@
     },
     "screens": {
       "title": "Screens",
-      "subtitle": "Halls with seat layouts. Edit layout as JSON ({ seatId, row, col, type }).",
+      "subtitle": "Halls with seat layouts. Paint seats on the grid — no JSON required.",
       "addTitle": "Add screen",
       "editTitle": "Edit screen",
       "allTitle": "All screens",
-      "layoutJson": "Layout JSON",
+      "layoutEditor": "Seat layout",
       "addCinemaFirst": "Add a cinema first under Cinemas before creating a screen.",
       "empty": "No screens yet.",
-      "layoutMustIncludeSeats": "Layout must include a seats array",
+      "layoutMustIncludeSeats": "Layout must include at least one seat",
       "confirmDelete": "Delete this screen?",
       "loadFailed": "Failed to load screens",
       "saveFailed": "Save failed",
-      "deleteFailed": "Delete failed"
+      "deleteFailed": "Delete failed",
+      "editor": {
+        "rows": "Rows",
+        "cols": "Columns",
+        "brush": "Paint tool",
+        "fillStandard": "Fill all standard",
+        "seatCount": "{count} seat | {count} seats",
+        "screenLabel": "Screen",
+        "hint": "Click or drag across cells to paint. Use Aisle for gaps and walkways.",
+        "seatAria": "{seatId}, {type}",
+        "aisleAria": "Aisle at row {row}, column {col}",
+        "types": {
+          "standard": "Standard",
+          "vip": "VIP",
+          "wheelchair": "Wheelchair",
+          "blocked": "Blocked",
+          "aisle": "Aisle"
+        }
+      }
     },
     "showtimes": {
       "title": "Showtimes",
@@ -327,6 +351,12 @@
       "userId": "User ID",
       "objectIdPlaceholder": "MongoDB ObjectId",
       "showtimeId": "Showtime ID",
+      "movie": "Movie",
+      "movieAll": "All movies",
+      "locale": "Email language",
+      "localeAll": "All email languages",
+      "confirmedFrom": "Confirmed from",
+      "confirmedTo": "Confirmed to",
       "searchFailed": "Search failed",
       "noMatch": "No bookings match your search.",
       "empty": "No confirmed bookings yet.",
@@ -338,7 +368,7 @@
         "movie": "Movie",
         "seats": "Seats",
         "total": "Total",
-        "locale": "Locale",
+        "locale": "Email",
         "confirmed": "Confirmed",
         "loading": "Loading bookings…",
         "empty": "No confirmed bookings yet."

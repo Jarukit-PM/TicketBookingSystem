@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CheckCircle2, Home, Plus, QrCode } from 'lucide-vue-next'
+import AppHeader from '@/components/AppHeader.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -35,8 +36,10 @@ function bookMore(): void {
 </script>
 
 <template>
-  <div class="min-h-screen bg-base px-4 py-8 md:px-6">
-    <div class="mx-auto max-w-lg space-y-6">
+  <div class="min-h-screen bg-base">
+    <AppHeader />
+
+    <div class="mx-auto max-w-lg space-y-6 px-4 py-8 md:px-6">
       <Card v-if="booking">
         <CardHeader class="text-center">
           <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-state-success-dim">
@@ -70,16 +73,16 @@ function bookMore(): void {
             </div>
           </dl>
 
-          <div class="flex flex-wrap gap-3 pt-2">
-            <Button type="button" class="gap-1.5" @click="viewTicket">
+          <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
+            <Button type="button" class="w-full gap-1.5 sm:w-auto" @click="viewTicket">
               <QrCode class="h-4 w-4" aria-hidden="true" />
               {{ t('booking.confirmation.viewTicket') }}
             </Button>
-            <Button type="button" variant="ghost" class="gap-1.5" @click="goHome">
+            <Button type="button" variant="ghost" class="w-full gap-1.5 sm:w-auto" @click="goHome">
               <Home class="h-4 w-4" aria-hidden="true" />
               {{ t('nav.backToHome') }}
             </Button>
-            <Button type="button" variant="ghost" class="gap-1.5" @click="bookMore">
+            <Button type="button" variant="ghost" class="w-full gap-1.5 sm:w-auto" @click="bookMore">
               <Plus class="h-4 w-4" aria-hidden="true" />
               {{ t('booking.confirmation.bookMore') }}
             </Button>

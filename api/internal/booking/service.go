@@ -194,7 +194,6 @@ func (s *Service) insertBookingWithRetry(
 			return nil, err
 		}
 		bookingID := primitive.NewObjectID()
-		token := GenerateTicketToken(s.ticketSecret, ref, bookingID)
 
 		b := &Booking{
 			ID:          bookingID,
@@ -203,7 +202,6 @@ func (s *Service) insertBookingWithRetry(
 			Seats:       seatIDs,
 			Total:       total,
 			BookingRef:  ref,
-			TicketToken: token,
 			Status:      StatusConfirmed,
 			Locale:      locale,
 			ConfirmedAt: confirmedAt,
@@ -212,6 +210,10 @@ func (s *Service) insertBookingWithRetry(
 			if isDuplicateKey(err) {
 				continue
 			}
+			return nil, err
+		}
+		b.TicketToken = GenerateTicketToken(s.ticketSecret, ref, b.ID)
+		if err := s.bookings.UpdateTicketToken(ctx, b.ID, b.TicketToken); err != nil {
 			return nil, err
 		}
 		return b, nil

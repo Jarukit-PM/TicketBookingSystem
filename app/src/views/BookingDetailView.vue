@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, QrCode } from 'lucide-vue-next'
+import AppHeader from '@/components/AppHeader.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
@@ -29,8 +30,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-base px-4 py-8 md:px-6">
-    <div class="mx-auto max-w-lg space-y-6">
+  <div class="min-h-screen bg-base">
+    <AppHeader />
+
+    <div class="mx-auto max-w-lg space-y-6 px-4 py-8 md:px-6">
       <RouterLink
         to="/my-bookings"
         class="inline-flex items-center gap-1.5 text-sm text-copy-secondary transition-colors hover:text-copy-primary"
@@ -43,7 +46,7 @@ onMounted(async () => {
       <ErrorAlert v-else-if="error" :message="error" />
       <Card v-else-if="booking">
         <CardHeader class="flex flex-row items-start justify-between gap-3">
-          <CardTitle>{{ booking.movie.title }}</CardTitle>
+          <CardTitle class="min-w-0 flex-1 leading-snug">{{ booking.movie.title }}</CardTitle>
           <Badge variant="confirmed">{{ t('booking.status.confirmed') }}</Badge>
         </CardHeader>
         <CardContent class="space-y-4">
@@ -65,12 +68,15 @@ onMounted(async () => {
               <dt class="text-copy-secondary">{{ t('booking.detail.reference') }}</dt>
               <dd class="text-brand">{{ booking.bookingRef }}</dd>
             </div>
-            <div v-if="booking.locale" class="flex justify-between gap-4">
-              <dt class="text-copy-secondary">{{ t('booking.detail.locale') }}</dt>
-              <dd class="uppercase">{{ booking.locale }}</dd>
+            <div v-if="booking.locale" class="space-y-1">
+              <div class="flex justify-between gap-4">
+                <dt class="text-copy-secondary">{{ t('booking.detail.emailLocale') }}</dt>
+                <dd>{{ booking.locale === 'th' ? t('locale.th') : t('locale.en') }}</dd>
+              </div>
+              <p class="text-xs text-copy-muted">{{ t('booking.detail.emailLocaleHint') }}</p>
             </div>
           </dl>
-          <RouterLink :to="{ name: 'ticket', params: { bookingRef: booking.bookingRef } }">
+          <RouterLink :to="{ name: 'booking-ticket', params: { bookingId: booking.id } }">
             <Button variant="primary" class="w-full gap-1.5">
               <QrCode class="h-4 w-4" aria-hidden="true" />
               {{ t('booking.detail.viewTicket') }}

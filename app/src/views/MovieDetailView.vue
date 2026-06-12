@@ -125,7 +125,7 @@ watch(
 
       <div v-else-if="detail" class="grid gap-8 lg:grid-cols-[280px_1fr]">
         <div
-          class="aspect-[2/3] w-full max-w-xs rounded-xl bg-subtle bg-cover bg-center ring-1 ring-white/10"
+          class="mx-auto aspect-[2/3] w-full max-w-[220px] rounded-xl bg-subtle bg-cover bg-center ring-1 ring-white/10 sm:max-w-xs lg:mx-0"
           :style="posterStyle"
           role="img"
           :aria-label="posterAria"
@@ -166,14 +166,14 @@ watch(
                   :key="showtime.id"
                   class="overflow-hidden transition-shadow hover:shadow-glow-brand/10"
                 >
-                  <CardContent class="flex items-center justify-between gap-4 p-4">
-                    <div class="space-y-1">
+                  <CardContent class="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0 space-y-1">
                       <p class="flex items-center gap-2 font-medium text-copy-primary">
-                        <Clock class="h-4 w-4 text-brand" aria-hidden="true" />
+                        <Clock class="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
                         {{ formatTime(showtime.startsAt, cinemaTimezone) }}
                       </p>
                       <p class="flex items-center gap-2 text-sm text-copy-secondary">
-                        <Monitor class="h-3.5 w-3.5" aria-hidden="true" />
+                        <Monitor class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                         {{ showtime.screenName }}
                       </p>
                       <p class="mt-1 text-xs text-copy-muted">
@@ -181,7 +181,11 @@ watch(
                         {{ formatTHB(lowestTierPrice(showtime.priceTiers)) }}
                       </p>
                     </div>
-                    <Button variant="primary" class="gap-1.5" @click="bookShowtime(showtime.id)">
+                    <Button
+                      variant="primary"
+                      class="w-full shrink-0 gap-1.5 sm:w-auto"
+                      @click="bookShowtime(showtime.id)"
+                    >
                       <Ticket class="h-4 w-4" aria-hidden="true" />
                       {{ t('movie.book') }}
                     </Button>

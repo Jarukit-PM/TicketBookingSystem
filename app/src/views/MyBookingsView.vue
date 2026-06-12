@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeft, Calendar, History, Ticket } from 'lucide-vue-next'
+import { Calendar, History, Ticket } from 'lucide-vue-next'
+import AppHeader from '@/components/AppHeader.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -45,16 +46,10 @@ onMounted(() => void loadBookings())
 </script>
 
 <template>
-  <div class="min-h-screen bg-base px-4 py-8 md:px-6">
-    <div class="mx-auto max-w-3xl space-y-6">
-      <RouterLink
-        to="/"
-        class="inline-flex items-center gap-1.5 text-sm text-copy-secondary transition-colors hover:text-copy-primary"
-      >
-        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
-        {{ t('nav.backToHome') }}
-      </RouterLink>
+  <div class="min-h-screen bg-base">
+    <AppHeader />
 
+    <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 md:px-6">
       <div class="flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent-dim">
           <Ticket class="h-5 w-5 text-brand" aria-hidden="true" />

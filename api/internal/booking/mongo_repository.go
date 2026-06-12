@@ -153,6 +153,51 @@ func (r *MongoRepository) ListRecentConfirmed(ctx context.Context, limit int) ([
 	return out, nil
 }
 
+func (r *MongoRepository) CountConfirmedFiltered(ctx context.Context, filter ConfirmedFilter) (int64, error) {
+	count, err := r.coll.CountDocuments(ctx, confirmedFilterBSON(filter))
+	if err != nil {
+		return 0, fmt.Errorf("count filtered confirmed bookings: %w", err)
+	}
+	return count, nil
+}
+
+func (r *MongoRepository) ListConfirmedFiltered(
+	ctx context.Context,
+	filter ConfirmedFilter,
+	skip, limit int,
+) ([]Booking, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if skip < 0 {
+		skip = 0
+	}
+	opts := options.Find().
+		SetSort(bson.D{{Key: "confirmedAt", Value: -1}}).
+		SetSkip(int64(skip)).
+		SetLimit(int64(limit))
+
+	cur, err := r.coll.Find(ctx, confirmedFilterBSON(filter), opts)
+	if err != nil {
+		return nil, fmt.Errorf("list filtered confirmed bookings: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var out []Booking
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, fmt.Errorf("decode bookings: %w", err)
+	}
+	return out, nil
+}
+
+func (r *MongoRepository) UpdateTicketToken(ctx context.Context, id primitive.ObjectID, token string) error {
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{"$set": bson.M{"ticketToken": token}})
+	if err != nil {
+		return fmt.Errorf("update ticket token: %w", err)
+	}
+	return nil
+}
+
 func (r *MongoRepository) ListConfirmedByShowtime(ctx context.Context, showtimeID primitive.ObjectID) ([]Booking, error) {
 	filter := bson.M{
 		"showtimeId": showtimeID,

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ArrowLeft, CheckCircle2, CreditCard } from 'lucide-vue-next'
+import { CheckCircle2, CreditCard } from 'lucide-vue-next'
+import AppHeader from '@/components/AppHeader.vue'
+import BookingEmailLocaleField from '@/components/booking/BookingEmailLocaleField.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -106,8 +108,10 @@ watch(
 </script>
 
 <template>
-  <div class="min-h-screen bg-base px-4 py-8 md:px-6">
-    <div class="mx-auto max-w-lg space-y-6">
+  <div class="min-h-screen bg-base">
+    <AppHeader show-back :subtitle="t('booking.checkout.title')" @back="backToSeats" />
+
+    <div class="mx-auto max-w-lg space-y-6 px-4 py-8 md:px-6">
       <HoldCountdown :expires-at="session.expiresAt" />
 
       <Card>
@@ -134,16 +138,14 @@ watch(
               {{ formatTHB(totalPrice) }}
             </p>
 
+            <BookingEmailLocaleField />
+
             <ErrorAlert v-if="error" :message="error" />
 
-            <div class="flex flex-wrap gap-3">
-              <Button type="button" variant="ghost" class="gap-1.5" @click="backToSeats">
-                <ArrowLeft class="h-4 w-4" aria-hidden="true" />
-                {{ t('booking.checkout.backToSeatMap') }}
-              </Button>
+            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
                 type="button"
-                class="gap-1.5"
+                class="w-full gap-1.5 sm:w-auto"
                 :disabled="!session.holds.length || confirming"
                 @click="handleConfirm"
               >

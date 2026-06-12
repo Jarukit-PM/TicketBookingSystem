@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -20,11 +22,9 @@ type AdminBookingsDeps struct {
 // SearchAdminBookings handles GET /api/admin/bookings.
 func SearchAdminBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		q := admin.BookingSearchQuery{
-			Email:      c.Query("email"),
-			BookingRef: c.Query("bookingRef"),
-			UserID:     c.Query("userId"),
-			ShowtimeID: c.Query("showtimeId"),
+		q, ok := parseBookingSearchQuery(c)
+		if !ok {
+			return
 		}
 		page, limit := parseBookingPagination(c)
 		result, err := deps.Service.Search(c.Request.Context(), q, page, limit)
@@ -43,6 +43,56 @@ func SearchAdminBookings(deps AdminBookingsDeps) gin.HandlerFunc {
 			"limit":    result.Limit,
 		})
 	}
+}
+
+func parseBookingSearchQuery(c *gin.Context) (admin.BookingSearchQuery, bool) {
+	q := admin.BookingSearchQuery{
+		Email:      c.Query("email"),
+		BookingRef: c.Query("bookingRef"),
+		UserID:     c.Query("userId"),
+		ShowtimeID: c.Query("showtimeId"),
+		MovieID:    c.Query("movieId"),
+		Locale:     c.Query("locale"),
+	}
+	if from, ok := parseBookingDateQuery(c, "confirmedFrom"); !ok {
+		return q, false
+	} else if from != nil {
+		q.ConfirmedFrom = from
+	}
+	if to, ok := parseBookingDateEndQuery(c, "confirmedTo"); !ok {
+		return q, false
+	} else if to != nil {
+		q.ConfirmedTo = to
+	}
+	return q, true
+}
+
+func parseBookingDateQuery(c *gin.Context, key string) (*time.Time, bool) {
+	raw := strings.TrimSpace(c.Query(key))
+	if raw == "" {
+		return nil, true
+	}
+	t, err := time.Parse("2006-01-02", raw)
+	if err != nil {
+		httputil.Error(c, http.StatusBadRequest, "INVALID_QUERY", "invalid "+key)
+		return nil, false
+	}
+	utc := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+	return &utc, true
+}
+
+func parseBookingDateEndQuery(c *gin.Context, key string) (*time.Time, bool) {
+	raw := strings.TrimSpace(c.Query(key))
+	if raw == "" {
+		return nil, true
+	}
+	t, err := time.Parse("2006-01-02", raw)
+	if err != nil {
+		httputil.Error(c, http.StatusBadRequest, "INVALID_QUERY", "invalid "+key)
+		return nil, false
+	}
+	utc := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC).Add(24 * time.Hour)
+	return &utc, true
 }
 
 func parseBookingPagination(c *gin.Context) (page int, limit int) {

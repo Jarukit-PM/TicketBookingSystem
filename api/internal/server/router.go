@@ -127,6 +127,8 @@ func NewRouter(deps Deps) *gin.Engine {
 		Publisher: deps.Hub,
 		Audit:     auditLogger,
 	}
+	api.GET("/tickets/:ref", handler.GetPublicTicket(bookingsDeps))
+
 	bookingsRoutes := api.Group("/bookings")
 	bookingsRoutes.POST("/confirm", auth.RequireAuth(authMw), handler.ConfirmBooking(bookingsDeps))
 	bookingsRoutes.GET("/mine", auth.RequireAuth(authMw), handler.ListMyBookings(bookingsDeps))

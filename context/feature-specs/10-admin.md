@@ -23,7 +23,7 @@ Global admins operate all cinemas from one console. Scanning a ticket QR quickly
 | Method | Path | Notes |
 | ------ | ---- | ----- |
 | GET | `/api/admin/dashboard` | Counts: bookings today, upcoming showtimes, occupancy approx |
-| GET | `/api/admin/bookings` | Search: `email`, `bookingRef`, `userId`, `showtimeId` |
+| GET | `/api/admin/bookings` | Search (combinable): `email`, `bookingRef`, `userId`, `showtimeId`, `movieId`, `locale`, `confirmedFrom`, `confirmedTo` |
 | GET | `/api/admin/users/:userId/bookings` | Full history for support |
 | GET | `/api/admin/tickets/resolve` | From spec 09 — `ref` + `t` |
 | GET | `/api/admin/audit-logs` | Paginated, newest first |

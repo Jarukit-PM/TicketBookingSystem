@@ -32,8 +32,28 @@ func TestSignAndValidateTicketToken(t *testing.T) {
 	if booking.ValidateTicketToken("TBS-WRONG", token, b, secret) {
 		t.Fatal("expected wrong ref to be rejected")
 	}
-	if booking.ValidateTicketToken(ref, token, b, "wrong-secret") {
-		t.Fatal("expected wrong secret to be rejected")
+	if !booking.ValidateTicketToken(ref, token, b, "wrong-secret") {
+		t.Fatal("expected stored ticket token to validate even when HMAC secret differs")
+	}
+}
+
+func TestValidateTicketTokenAcceptsStoredTokenWhenHMACDiffers(t *testing.T) {
+	t.Parallel()
+
+	secret := "current-secret"
+	id := primitive.NewObjectID()
+	ref := "TBS-ABC123"
+	stored := "legacy-email-token"
+
+	b := &booking.Booking{
+		ID:          id,
+		BookingRef:  ref,
+		TicketToken: stored,
+		Status:      booking.StatusConfirmed,
+	}
+
+	if !booking.ValidateTicketToken(ref, stored, b, secret) {
+		t.Fatal("expected stored ticket token from email link to validate")
 	}
 }
 

@@ -146,8 +146,8 @@ watch(
           <dd>{{ formatTHB(display.total) }}</dd>
         </div>
         <div class="space-y-1">
-          <dt class="text-copy-secondary">{{ t('booking.detail.locale') }}</dt>
-          <dd class="uppercase">{{ display.locale || 'en' }}</dd>
+          <dt class="text-copy-secondary">{{ t('booking.detail.emailLocale') }}</dt>
+          <dd>{{ display.locale === 'th' ? t('locale.th') : t('locale.en') }}</dd>
         </div>
         <div class="space-y-1">
           <dt class="text-copy-secondary">{{ t('admin.bookings.table.confirmed') }}</dt>

@@ -49,9 +49,9 @@ const grid = computed(() => {
 </script>
 
 <template>
-  <div class="overflow-x-auto">
+  <div class="-mx-2 overflow-x-auto px-2 sm:mx-0 sm:px-0">
     <div
-      class="inline-grid gap-2 p-4"
+      class="inline-grid min-w-full gap-1.5 p-2 sm:gap-2 sm:p-4"
       :style="{ gridTemplateColumns: `repeat(${grid.cols}, minmax(2.5rem, 1fr))` }"
       role="grid"
       :aria-rowcount="grid.rows"

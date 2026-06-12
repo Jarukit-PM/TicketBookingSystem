@@ -39,7 +39,7 @@ function handleBack(): void {
       class="bg-gradient-brand-subtle h-px w-full"
       aria-hidden="true"
     />
-    <div class="flex h-16 items-center gap-3 px-4 md:px-6">
+    <div class="flex h-16 min-w-0 items-center gap-2 px-4 sm:gap-3 md:px-6">
       <button
         v-if="showBack"
         type="button"
@@ -52,11 +52,11 @@ function handleBack(): void {
 
       <RouterLink
         to="/"
-        class="inline-flex items-center gap-2 transition-opacity hover:opacity-90"
+        class="inline-flex min-w-0 shrink items-center gap-2 transition-opacity hover:opacity-90"
       >
-        <Film class="h-5 w-5 text-brand" aria-hidden="true" />
+        <Film class="h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
         <span
-          class="bg-gradient-brand bg-clip-text text-xl font-semibold tracking-tight text-transparent"
+          class="truncate bg-gradient-brand bg-clip-text text-lg font-semibold tracking-tight text-transparent sm:text-xl"
         >
           {{ t('common.appName') }}
         </span>
@@ -66,7 +66,7 @@ function handleBack(): void {
         {{ subtitle }}
       </p>
 
-      <nav class="ml-auto flex items-center gap-1 sm:gap-2">
+      <nav class="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
         <LocaleSwitcher />
 
         <template v-if="auth.isAuthenticated">

@@ -98,7 +98,13 @@ func (stubBookings) ListRecentConfirmed(context.Context, int) ([]booking.Booking
 	return nil, nil
 }
 func (stubBookings) CountConfirmed(context.Context) (int64, error) { return 0, nil }
+func (stubBookings) CountConfirmedFiltered(ctx context.Context, _ booking.ConfirmedFilter) (int64, error) {
+	return 0, nil
+}
 func (stubBookings) ListConfirmedPage(context.Context, int, int) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (stubBookings) ListConfirmedFiltered(ctx context.Context, _ booking.ConfirmedFilter, _, _ int) ([]booking.Booking, error) {
 	return nil, nil
 }
 func (s stubBookings) ListConfirmedByShowtime(_ context.Context, showtimeID primitive.ObjectID) ([]booking.Booking, error) {
@@ -110,6 +116,7 @@ func (s stubBookings) ListConfirmedByShowtime(_ context.Context, showtimeID prim
 	}
 	return out, nil
 }
+func (stubBookings) UpdateTicketToken(context.Context, primitive.ObjectID, string) error { return nil }
 
 type testEnv struct {
 	mr     *miniredis.Miniredis

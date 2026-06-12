@@ -53,8 +53,27 @@ func (r *adminBookingsRepo) ListRecentConfirmed(_ context.Context, _ int) ([]boo
 func (r *adminBookingsRepo) CountConfirmed(_ context.Context) (int64, error) {
 	return r.allTotal, nil
 }
+func (r *adminBookingsRepo) CountConfirmedFiltered(_ context.Context, filter booking.ConfirmedFilter) (int64, error) {
+	if filter.BookingRef != "" && r.byRef != nil && r.byRef.BookingRef == filter.BookingRef {
+		return 1, nil
+	}
+	return r.allTotal, nil
+}
 func (r *adminBookingsRepo) ListConfirmedPage(_ context.Context, _, _ int) ([]booking.Booking, error) {
 	return r.allPage, nil
+}
+func (r *adminBookingsRepo) ListConfirmedFiltered(
+	_ context.Context,
+	filter booking.ConfirmedFilter,
+	_, _ int,
+) ([]booking.Booking, error) {
+	if filter.BookingRef != "" && r.byRef != nil && r.byRef.BookingRef == filter.BookingRef {
+		return []booking.Booking{*r.byRef}, nil
+	}
+	return r.allPage, nil
+}
+func (r *adminBookingsRepo) UpdateTicketToken(context.Context, primitive.ObjectID, string) error {
+	return nil
 }
 
 type adminBookingsShowtimes struct{}

@@ -50,6 +50,7 @@ func main() {
 		auditRepos.EmailLogs,
 		email.NewBrevoClient(cfg.BrevoAPIKey, cfg.EmailFrom),
 		cfg.AppURL,
+		cfg.TicketHMACSecret(),
 	)
 
 	asynqRedisOpt, err := asynqRedisOptFromURL(cfg.RedisURL)

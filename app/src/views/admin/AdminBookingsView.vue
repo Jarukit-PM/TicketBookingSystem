@@ -8,6 +8,7 @@ import { ApiError, api } from '@/api/client'
 import BookingsTable from '@/components/admin/BookingsTable.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import type { BookingSummary } from '@/types/admin'
+import type { Movie } from '@/types/catalog'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -21,10 +22,18 @@ const focusBookingRef = computed(() => {
   return typeof raw === 'string' ? raw : undefined
 })
 
+const selectClass =
+  'w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-copy-primary focus:outline-none focus:ring-2 focus:ring-accent-glow focus:border-brand/50'
+
 const bookingRef = ref('')
 const email = ref('')
 const userId = ref('')
 const showtimeId = ref('')
+const movieId = ref('')
+const locale = ref('')
+const confirmedFrom = ref('')
+const confirmedTo = ref('')
+const movies = ref<Movie[]>([])
 const bookings = ref<BookingSummary[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
@@ -39,7 +48,11 @@ const hasFilters = computed(
       bookingRef.value.trim() ||
         email.value.trim() ||
         userId.value.trim() ||
-        showtimeId.value.trim(),
+        showtimeId.value.trim() ||
+        movieId.value.trim() ||
+        locale.value.trim() ||
+        confirmedFrom.value.trim() ||
+        confirmedTo.value.trim(),
     ),
 )
 
@@ -65,6 +78,10 @@ async function loadBookings() {
     if (email.value.trim()) params.set('email', email.value.trim())
     if (userId.value.trim()) params.set('userId', userId.value.trim())
     if (showtimeId.value.trim()) params.set('showtimeId', showtimeId.value.trim())
+    if (movieId.value.trim()) params.set('movieId', movieId.value.trim())
+    if (locale.value.trim()) params.set('locale', locale.value.trim())
+    if (confirmedFrom.value.trim()) params.set('confirmedFrom', confirmedFrom.value.trim())
+    if (confirmedTo.value.trim()) params.set('confirmedTo', confirmedTo.value.trim())
 
     const data = await api.get<{
       bookings: BookingSummary[]
@@ -97,8 +114,21 @@ function clearFilters() {
   email.value = ''
   userId.value = ''
   showtimeId.value = ''
+  movieId.value = ''
+  locale.value = ''
+  confirmedFrom.value = ''
+  confirmedTo.value = ''
   page.value = 1
   loadBookings()
+}
+
+async function loadMovies() {
+  try {
+    const data = await api.get<{ movies: Movie[] }>('/admin/movies')
+    movies.value = (data.movies ?? []).slice().sort((a, b) => a.title.localeCompare(b.title))
+  } catch {
+    movies.value = []
+  }
 }
 
 function goPrev() {
@@ -114,6 +144,7 @@ function goNext() {
 }
 
 onMounted(() => {
+  void loadMovies()
   if (focusBookingRef.value) {
     bookingRef.value = focusBookingRef.value
   }
@@ -149,6 +180,31 @@ onMounted(() => {
           <label class="block space-y-1.5">
             <span class="text-sm text-copy-secondary">{{ t('admin.bookings.showtimeId') }}</span>
             <Input v-model="showtimeId" :placeholder="t('admin.bookings.objectIdPlaceholder')" autocomplete="off" />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.bookings.movie') }}</span>
+            <select v-model="movieId" :class="selectClass">
+              <option value="">{{ t('admin.bookings.movieAll') }}</option>
+              <option v-for="movie in movies" :key="movie.id" :value="movie.id">
+                {{ movie.title }}
+              </option>
+            </select>
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.bookings.locale') }}</span>
+            <select v-model="locale" :class="selectClass">
+              <option value="">{{ t('admin.bookings.localeAll') }}</option>
+              <option value="en">{{ t('locale.en') }}</option>
+              <option value="th">{{ t('locale.th') }}</option>
+            </select>
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.bookings.confirmedFrom') }}</span>
+            <Input v-model="confirmedFrom" type="date" autocomplete="off" />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-sm text-copy-secondary">{{ t('admin.bookings.confirmedTo') }}</span>
+            <Input v-model="confirmedTo" type="date" autocomplete="off" />
           </label>
         </div>
         <div class="flex flex-wrap gap-3">

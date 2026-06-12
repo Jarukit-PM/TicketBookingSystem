@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { translateApiError } from '@/api/errors'
@@ -7,7 +7,7 @@ import { ApiError, api } from '@/api/client'
 import AuditLogDetailModal from '@/components/admin/AuditLogDetailModal.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
-import { FileText, Loader2 } from 'lucide-vue-next'
+import { CheckCircle2, Eye, FileText, Loader2, Mail } from 'lucide-vue-next'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry, EmailLogEntry } from '@/types/admin'
 
@@ -22,8 +22,22 @@ const auditLogs = ref<AuditLogEntry[]>([])
 const emailLogs = ref<EmailLogEntry[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
-const successMessage = ref('')
+const toastMessage = ref('')
 const resendingBookingId = ref('')
+
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function showToast(message: string): void {
+  toastMessage.value = message
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => {
+    toastMessage.value = ''
+  }, 4000)
+}
+
+onUnmounted(() => {
+  if (toastTimer) clearTimeout(toastTimer)
+})
 const page = ref(1)
 const limit = 50
 const auditDetailOpen = ref(false)
@@ -71,11 +85,10 @@ async function resendEmail(bookingId: string) {
   if (resendingBookingId.value) return
   resendingBookingId.value = bookingId
   errorMessage.value = ''
-  successMessage.value = ''
   try {
     await api.post(`/admin/bookings/${bookingId}/resend-email`, {})
-    successMessage.value = t('admin.logs.resendQueued')
     await loadLogs()
+    showToast(t('admin.logs.resendQueued'))
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError
@@ -89,7 +102,6 @@ async function resendEmail(bookingId: string) {
 async function loadLogs() {
   loading.value = true
   errorMessage.value = ''
-  successMessage.value = ''
   try {
     if (activeTab.value === 'audit') {
       const data = await api.get<{ logs: AuditLogEntry[] }>(
@@ -174,7 +186,27 @@ watch(activeTab, loadLogs, { immediate: true })
     </Card>
 
     <ErrorAlert v-if="errorMessage" :message="errorMessage" />
-    <p v-if="successMessage" class="text-sm text-state-success">{{ successMessage }}</p>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="translate-y-2 opacity-0"
+      >
+        <div
+          v-if="toastMessage"
+          class="pointer-events-none fixed right-4 top-4 z-50 flex max-w-sm items-center gap-2 rounded-lg border border-state-success/40 bg-state-success-dim px-4 py-3 text-sm text-state-success shadow-1"
+          role="status"
+          aria-live="polite"
+        >
+          <CheckCircle2 class="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{{ toastMessage }}</span>
+        </div>
+      </Transition>
+    </Teleport>
 
     <Card>
       <CardHeader class="flex flex-row flex-wrap items-center justify-between gap-3">
@@ -227,9 +259,15 @@ watch(activeTab, loadLogs, { immediate: true })
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.entity }}</td>
                   <td class="py-3 pr-4 font-mono text-xs text-copy-muted">{{ log.entityId }}</td>
                   <td class="py-3 pr-4 text-xs text-copy-secondary">{{ formatAuditDetails(log.meta) }}</td>
-                  <td class="py-3">
-                    <Button variant="secondary" @click="showAuditDetail(log)">
-                      {{ t('admin.logs.viewDetail') }}
+                  <td class="py-3 whitespace-nowrap">
+                    <Button
+                      variant="secondary"
+                      class="h-10 w-10 shrink-0 p-0 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-4 sm:py-2.5"
+                      :aria-label="t('admin.logs.viewDetail')"
+                      @click="showAuditDetail(log)"
+                    >
+                      <Eye class="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span class="hidden sm:inline">{{ t('admin.logs.viewDetail') }}</span>
                     </Button>
                   </td>
                 </tr>
@@ -247,12 +285,17 @@ watch(activeTab, loadLogs, { immediate: true })
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.type }}</td>
                   <td class="py-3 pr-4 text-copy-primary">{{ log.status }}</td>
                   <td class="py-3 pr-4 font-mono text-xs text-copy-muted">{{ log.bookingId }}</td>
-                  <td class="py-3">
+                  <td class="py-3 whitespace-nowrap">
                     <Button
                       variant="secondary"
-                      class="gap-1.5"
+                      class="h-10 w-10 shrink-0 p-0 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-4 sm:py-2.5"
                       :disabled="!!resendingBookingId"
                       :aria-busy="resendingBookingId === log.bookingId"
+                      :aria-label="
+                        resendingBookingId === log.bookingId
+                          ? t('admin.logs.resending')
+                          : t('admin.logs.resend')
+                      "
                       @click="resendEmail(log.bookingId)"
                     >
                       <Loader2
@@ -260,11 +303,14 @@ watch(activeTab, loadLogs, { immediate: true })
                         class="h-4 w-4 shrink-0 animate-spin"
                         aria-hidden="true"
                       />
-                      {{
-                        resendingBookingId === log.bookingId
-                          ? t('admin.logs.resending')
-                          : t('admin.logs.resend')
-                      }}
+                      <Mail v-else class="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span class="hidden whitespace-nowrap sm:inline">
+                        {{
+                          resendingBookingId === log.bookingId
+                            ? t('admin.logs.resending')
+                            : t('admin.logs.resend')
+                        }}
+                      </span>
                     </Button>
                   </td>
                 </tr>

@@ -50,8 +50,17 @@ func (r *adminTicketsRepo) ListRecentConfirmed(_ context.Context, _ int) ([]book
 	return nil, nil
 }
 func (r *adminTicketsRepo) CountConfirmed(_ context.Context) (int64, error) { return 0, nil }
+func (r *adminTicketsRepo) CountConfirmedFiltered(_ context.Context, _ booking.ConfirmedFilter) (int64, error) {
+	return 0, nil
+}
 func (r *adminTicketsRepo) ListConfirmedPage(_ context.Context, _, _ int) ([]booking.Booking, error) {
 	return nil, nil
+}
+func (r *adminTicketsRepo) ListConfirmedFiltered(_ context.Context, _ booking.ConfirmedFilter, _, _ int) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (r *adminTicketsRepo) UpdateTicketToken(context.Context, primitive.ObjectID, string) error {
+	return nil
 }
 
 func setupAdminTicketsRouter(t *testing.T, role string, repo *adminTicketsRepo) *gin.Engine {

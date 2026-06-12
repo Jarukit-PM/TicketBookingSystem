@@ -22,7 +22,7 @@ const variantClasses: Record<BadgeVariant, string> = {
 
 const classes = computed(() =>
   cn(
-    'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium',
+    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium leading-none',
     variantClasses[props.variant],
     props.class,
   ),

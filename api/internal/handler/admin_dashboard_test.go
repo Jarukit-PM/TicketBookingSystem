@@ -43,8 +43,17 @@ func (r *memBookingRepo) ListRecentConfirmed(_ context.Context, _ int) ([]bookin
 	return []booking.Booking{}, nil
 }
 func (r *memBookingRepo) CountConfirmed(_ context.Context) (int64, error) { return 0, nil }
+func (r *memBookingRepo) CountConfirmedFiltered(_ context.Context, _ booking.ConfirmedFilter) (int64, error) {
+	return 0, nil
+}
 func (r *memBookingRepo) ListConfirmedPage(_ context.Context, _, _ int) ([]booking.Booking, error) {
 	return nil, nil
+}
+func (r *memBookingRepo) ListConfirmedFiltered(_ context.Context, _ booking.ConfirmedFilter, _, _ int) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (r *memBookingRepo) UpdateTicketToken(context.Context, primitive.ObjectID, string) error {
+	return nil
 }
 
 type memShowtimeRepo struct{}

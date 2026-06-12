@@ -44,6 +44,7 @@ func TestHandleEmailSend(t *testing.T) {
 		logs,
 		sender,
 		"http://localhost",
+		"test-ticket-secret",
 	)
 	payload, _ := json.Marshal(tasks.EmailSendPayload{BookingID: bid.Hex()})
 	if err := svc.HandleEmailSend(context.Background(), asynq.NewTask(tasks.TypeEmailSend, payload)); err != nil {
@@ -79,11 +80,23 @@ func (fakeBookings) ListRecentConfirmed(context.Context, int) ([]booking.Booking
 	return nil, nil
 }
 func (fakeBookings) CountConfirmed(context.Context) (int64, error) { return 0, nil }
+func (fakeBookings) CountConfirmedFiltered(ctx context.Context, _ booking.ConfirmedFilter) (int64, error) {
+	return 0, nil
+}
 func (fakeBookings) ListConfirmedPage(context.Context, int, int) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (fakeBookings) ListConfirmedFiltered(ctx context.Context, _ booking.ConfirmedFilter, _, _ int) ([]booking.Booking, error) {
 	return nil, nil
 }
 func (f fakeBookings) ListConfirmedByShowtime(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
+}
+func (f fakeBookings) UpdateTicketToken(_ context.Context, id primitive.ObjectID, token string) error {
+	if f.b.ID == id {
+		f.b.TicketToken = token
+	}
+	return nil
 }
 
 type fakeUsers struct{ u *user.User }

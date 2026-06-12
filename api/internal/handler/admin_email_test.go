@@ -43,11 +43,20 @@ func (r *resendBookingsRepo) ListRecentConfirmed(context.Context, int) ([]bookin
 	return nil, nil
 }
 func (r *resendBookingsRepo) CountConfirmed(context.Context) (int64, error) { return 0, nil }
+func (r *resendBookingsRepo) CountConfirmedFiltered(ctx context.Context, _ booking.ConfirmedFilter) (int64, error) {
+	return 0, nil
+}
 func (r *resendBookingsRepo) ListConfirmedPage(context.Context, int, int) ([]booking.Booking, error) {
+	return nil, nil
+}
+func (r *resendBookingsRepo) ListConfirmedFiltered(ctx context.Context, _ booking.ConfirmedFilter, _, _ int) ([]booking.Booking, error) {
 	return nil, nil
 }
 func (r *resendBookingsRepo) ListConfirmedByShowtime(context.Context, primitive.ObjectID) ([]booking.Booking, error) {
 	return nil, nil
+}
+func (r *resendBookingsRepo) UpdateTicketToken(context.Context, primitive.ObjectID, string) error {
+	return nil
 }
 
 type fakeEnqueuer struct {

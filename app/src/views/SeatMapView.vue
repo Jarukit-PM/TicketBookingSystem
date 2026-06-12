@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeft, ShoppingCart } from 'lucide-vue-next'
+import { ShoppingCart } from 'lucide-vue-next'
+import AppHeader from '@/components/AppHeader.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -149,17 +150,9 @@ watch(
 
 <template>
   <div class="min-h-screen bg-base">
-    <header
-      class="sticky top-0 z-10 flex h-16 items-center border-b border-surface-border bg-base/80 px-4 backdrop-blur-md md:px-6"
-    >
-      <Button variant="ghost" type="button" class="gap-1.5" @click="goBack">
-        <ArrowLeft class="h-4 w-4" aria-hidden="true" />
-        {{ t('common.back') }}
-      </Button>
-      <span class="ml-4 text-sm text-copy-secondary">{{ t('seatMap.selectSeats') }}</span>
-    </header>
+    <AppHeader show-back :subtitle="t('seatMap.selectSeats')" @back="goBack" />
 
-    <main class="mx-auto max-w-4xl px-4 py-8 md:px-6">
+    <main class="mx-auto max-w-4xl px-4 py-6 pb-28 sm:py-8 md:px-6">
       <SeatMapSkeleton v-if="loading && !snapshot" />
       <ErrorAlert v-else-if="error" :message="error" />
 
@@ -196,9 +189,10 @@ watch(
 
         <div
           v-if="selectedCount > 0"
-          class="sticky bottom-4 mt-6 rounded-xl border border-surface-border bg-elevated p-4 shadow-elevation-2"
+          class="fixed inset-x-0 bottom-0 z-20 border-t border-surface-border bg-elevated/95 p-4 shadow-elevation-2 backdrop-blur-md sm:sticky sm:inset-x-auto sm:bottom-4 sm:mt-6 sm:rounded-xl sm:border"
+          style="padding-bottom: max(1rem, env(safe-area-inset-bottom))"
         >
-          <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div>
               <p class="text-sm text-copy-secondary">
                 {{ t('seatMap.seatsSelected', selectedCount) }}
@@ -207,7 +201,7 @@ watch(
                 {{ formatTHB(totalPrice) }}
               </p>
             </div>
-            <Button type="button" class="gap-1.5" @click="goCheckout">
+            <Button type="button" class="w-full gap-1.5 sm:w-auto" @click="goCheckout">
               <ShoppingCart class="h-4 w-4" aria-hidden="true" />
               {{ t('seatMap.continueCheckout') }}
             </Button>

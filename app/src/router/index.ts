@@ -66,8 +66,7 @@ const router = createRouter({
     {
       path: '/ticket/:bookingRef',
       name: 'ticket',
-      component: () => import('../views/TicketPlaceholderView.vue'),
-      meta: { requiresAuth: true },
+      component: () => import('../views/PublicTicketView.vue'),
     },
     {
       path: '/admin',

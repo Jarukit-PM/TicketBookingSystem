@@ -32,12 +32,13 @@ type CatalogReader struct {
 
 // Service sends booking confirmation emails from asynq tasks.
 type Service struct {
-	bookings booking.Repository
-	users    user.Repository
-	catalog  CatalogReader
-	logs     audit.EmailLogRepository
-	sender   Sender
-	appURL   string
+	bookings     booking.Repository
+	users        user.Repository
+	catalog      CatalogReader
+	logs         audit.EmailLogRepository
+	sender       Sender
+	appURL       string
+	ticketSecret string
 }
 
 // NewService wires the email worker service.
@@ -47,15 +48,16 @@ func NewService(
 	catalog CatalogReader,
 	logs audit.EmailLogRepository,
 	sender Sender,
-	appURL string,
+	appURL, ticketSecret string,
 ) *Service {
 	return &Service{
-		bookings: bookings,
-		users:    users,
-		catalog:  catalog,
-		logs:     logs,
-		sender:   sender,
-		appURL:   appURL,
+		bookings:     bookings,
+		users:        users,
+		catalog:      catalog,
+		logs:         logs,
+		sender:       sender,
+		appURL:       appURL,
+		ticketSecret: ticketSecret,
 	}
 }
 
@@ -92,6 +94,14 @@ func (s *Service) HandleEmailSend(ctx context.Context, t *asynq.Task) error {
 	cn, err := s.catalog.Cinemas.FindCinemaByID(ctx, sc.CinemaID)
 	if err != nil || cn == nil {
 		return fmt.Errorf("cinema not found")
+	}
+
+	if b.TicketToken == "" && s.ticketSecret != "" {
+		token := booking.GenerateTicketToken(s.ticketSecret, b.BookingRef, b.ID)
+		if err := s.bookings.UpdateTicketToken(ctx, b.ID, token); err != nil {
+			return err
+		}
+		b.TicketToken = token
 	}
 
 	ticketURL := booking.TicketURL(s.appURL, b.BookingRef, b.TicketToken)

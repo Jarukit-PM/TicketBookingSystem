@@ -11,4 +11,5 @@ var (
 	ErrSeatLimitExceeded   = errors.New("seat limit exceeded")
 	ErrBookingNotFound     = errors.New("booking not found")
 	ErrForbidden           = errors.New("forbidden")
+	ErrInvalidTicket       = errors.New("invalid ticket")
 )

@@ -17,10 +17,7 @@ import (
 // ErrInvalidQuery is returned when a search filter value is malformed.
 var ErrInvalidQuery = errors.New("invalid search query")
 
-const (
-	adminBookingSearchLimit  = 100
-	defaultBookingPageLimit  = 20
-)
+const defaultBookingPageLimit = 20
 
 // BookingSearchResult is a paginated admin booking search response.
 type BookingSearchResult struct {
@@ -31,12 +28,16 @@ type BookingSearchResult struct {
 }
 
 // BookingSearchQuery holds optional admin booking search filters.
-// Priority when multiple are set: bookingRef > userId > email > showtimeId.
+// Multiple filters are combined (AND). Email resolves to a user ID.
 type BookingSearchQuery struct {
-	Email      string
-	BookingRef string
-	UserID     string
-	ShowtimeID string
+	Email         string
+	BookingRef    string
+	UserID        string
+	ShowtimeID    string
+	MovieID       string
+	Locale        string
+	ConfirmedFrom *time.Time
+	ConfirmedTo   *time.Time // exclusive upper bound
 }
 
 // BookingSummary is a confirmed booking row for admin lookup.
@@ -75,7 +76,7 @@ type BookingsService struct {
 	Users     user.Repository
 }
 
-// Search returns confirmed bookings matching the first non-empty filter, or all
+// Search returns confirmed bookings matching the combined filters, or all
 // confirmed bookings when no filter is set. Results are paginated newest first.
 func (s *BookingsService) Search(ctx context.Context, q BookingSearchQuery, page, limit int) (*BookingSearchResult, error) {
 	limit = clampBookingLimit(limit)
@@ -177,82 +178,92 @@ func (s *BookingsService) resolveSearch(
 	q BookingSearchQuery,
 	page, limit int,
 ) ([]booking.Booking, int64, error) {
-	ref := strings.TrimSpace(q.BookingRef)
+	filter, empty, err := s.buildConfirmedFilter(ctx, q)
+	if err != nil {
+		return nil, 0, err
+	}
+	if empty {
+		return []booking.Booking{}, 0, nil
+	}
+
+	total, err := s.Bookings.CountConfirmedFiltered(ctx, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count filtered bookings: %w", err)
+	}
+	bookings, err := s.Bookings.ListConfirmedFiltered(ctx, filter, SkipFor(page, limit), limit)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list filtered bookings: %w", err)
+	}
+	return bookings, total, nil
+}
+
+func (s *BookingsService) buildConfirmedFilter(
+	ctx context.Context,
+	q BookingSearchQuery,
+) (booking.ConfirmedFilter, bool, error) {
+	filter := booking.ConfirmedFilter{
+		BookingRef:    strings.TrimSpace(q.BookingRef),
+		ConfirmedFrom: q.ConfirmedFrom,
+		ConfirmedTo:   q.ConfirmedTo,
+	}
+
 	userID := strings.TrimSpace(q.UserID)
 	email := strings.TrimSpace(strings.ToLower(q.Email))
-	showtimeID := strings.TrimSpace(q.ShowtimeID)
-
 	switch {
-	case ref != "":
-		b, err := s.Bookings.FindByBookingRef(ctx, ref)
-		if err != nil {
-			return nil, 0, fmt.Errorf("find booking by ref: %w", err)
-		}
-		if b == nil || b.Status != booking.StatusConfirmed {
-			return []booking.Booking{}, 0, nil
-		}
-		return []booking.Booking{*b}, 1, nil
 	case userID != "":
 		oid, err := primitive.ObjectIDFromHex(userID)
 		if err != nil {
-			return nil, 0, ErrInvalidQuery
+			return filter, false, ErrInvalidQuery
 		}
-		bookings, err := s.Bookings.ListByUser(ctx, oid)
-		if err != nil {
-			return nil, 0, fmt.Errorf("list bookings by user: %w", err)
-		}
-		return paginateBookings(bookings, page, limit)
+		filter.UserID = oid
 	case email != "":
 		u, err := s.Users.FindByEmail(ctx, email)
 		if err != nil {
-			return nil, 0, fmt.Errorf("find user by email: %w", err)
+			return filter, false, fmt.Errorf("find user by email: %w", err)
 		}
 		if u == nil {
-			return []booking.Booking{}, 0, nil
+			return filter, true, nil
 		}
-		bookings, err := s.Bookings.ListByUser(ctx, u.ID)
-		if err != nil {
-			return nil, 0, fmt.Errorf("list bookings by email: %w", err)
-		}
-		return paginateBookings(bookings, page, limit)
-	case showtimeID != "":
+		filter.UserID = u.ID
+	}
+
+	showtimeID := strings.TrimSpace(q.ShowtimeID)
+	movieID := strings.TrimSpace(q.MovieID)
+	if showtimeID != "" {
 		oid, err := primitive.ObjectIDFromHex(showtimeID)
 		if err != nil {
-			return nil, 0, ErrInvalidQuery
+			return filter, false, ErrInvalidQuery
 		}
-		bookings, err := s.Bookings.ListConfirmedByShowtime(ctx, oid)
+		filter.ShowtimeID = oid
+	} else if movieID != "" {
+		oid, err := primitive.ObjectIDFromHex(movieID)
 		if err != nil {
-			return nil, 0, fmt.Errorf("list bookings by showtime: %w", err)
+			return filter, false, ErrInvalidQuery
 		}
-		return paginateBookings(bookings, page, limit)
-	default:
-		total, err := s.Bookings.CountConfirmed(ctx)
+		showtimes, err := s.Showtimes.ListShowtimesByMovie(ctx, oid)
 		if err != nil {
-			return nil, 0, fmt.Errorf("count confirmed bookings: %w", err)
+			return filter, false, fmt.Errorf("list showtimes by movie: %w", err)
 		}
-		bookings, err := s.Bookings.ListConfirmedPage(ctx, SkipFor(page, limit), limit)
-		if err != nil {
-			return nil, 0, fmt.Errorf("list confirmed bookings: %w", err)
+		if len(showtimes) == 0 {
+			return filter, true, nil
 		}
-		return bookings, total, nil
+		filter.ShowtimeIDs = make([]primitive.ObjectID, 0, len(showtimes))
+		for _, st := range showtimes {
+			filter.ShowtimeIDs = append(filter.ShowtimeIDs, st.ID)
+		}
 	}
-}
 
-func paginateBookings(bookings []booking.Booking, page, limit int) ([]booking.Booking, int64, error) {
-	total := int64(len(bookings))
-	if total > adminBookingSearchLimit {
-		bookings = bookings[:adminBookingSearchLimit]
-		total = adminBookingSearchLimit
+	locale := strings.TrimSpace(strings.ToLower(q.Locale))
+	if locale != "" {
+		switch locale {
+		case "en", "th":
+			filter.Locale = locale
+		default:
+			return filter, false, ErrInvalidQuery
+		}
 	}
-	start := SkipFor(page, limit)
-	if start >= len(bookings) {
-		return []booking.Booking{}, total, nil
-	}
-	end := start + limit
-	if end > len(bookings) {
-		end = len(bookings)
-	}
-	return bookings[start:end], total, nil
+
+	return filter, false, nil
 }
 
 func clampBookingLimit(limit int) int {

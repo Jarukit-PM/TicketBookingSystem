@@ -10,6 +10,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - **MVP on `main`** (merged at `e0c2d67` via PR #39) — remaining **HITL** before production: manual Google OAuth sign-in test, Brevo env (`BREVO_API_KEY` / `EMAIL_FROM`), two-browser WebSocket seat-map smoke test.
 
+## Recent
+
+- **Responsive mobile UI (2026-06-12):** Admin slide-over nav + mobile header; seat-map fixed checkout bar with safe-area; full-width CTAs on checkout/confirmation; movie showtime cards stack on small screens; admin bookings card list on mobile; viewport-fit + `100dvh` base styles.
+
 ## Completed
 
 - **Admin resend email (2026-06-12):** `POST /api/admin/bookings/:id/resend-email` re-queues confirmation email; Resend button on admin email log tab.
@@ -41,6 +45,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - **UI polish — icons + skeleton loading (2026-06-12):** Lucide icons across customer + admin pages; reusable `Skeleton`, `EmptyState`, `ErrorAlert`; feature skeletons (movie grid/detail, bookings, seat map, checkout, ticket, stats, table); shared `AppHeader`; shimmer animation with `prefers-reduced-motion`; `vue-tsc` + production build pass.
 - **THB currency display (2026-06-12):** Admin showtime pricing inputs/labels use baht (THB); API still stores satang; `formatTHB` and confirmation emails convert minor units to THB for display.
 - **Admin detail modals (2026-06-12):** Reusable `Modal` primitive; booking ref opens `AdminBookingDetailModal` from list data (enriches via `GET /api/admin/bookings/:id` when available); audit **View details** → **View customer booking history** navigates to `/admin/users/:userId/bookings` and auto-opens the booking detail modal.
+- **Admin bookings filters (2026-06-12):** `GET /api/admin/bookings` supports combined filters (`movieId`, `locale`, `confirmedFrom`, `confirmedTo` plus existing ref/email/user/showtime); Admin Bookings search panel adds movie, language, and confirmed-date range controls.
+- **Booking email locale UX (2026-06-12):** `AppHeader` + language switcher on seat map, checkout, and My Bookings; checkout shows explicit confirmation-email language picker (`BookingEmailLocaleField`); admin/customer labels clarify stored locale is email language at confirm time.
+- **Ticket QR routing fix (2026-06-12):** My Bookings detail links to authenticated `TicketView`; public `/ticket/:bookingRef?t=` loads QR via `GET /api/tickets/:ref` (token-validated); removed placeholder view.
+- **Email ticket link fix (2026-06-12):** Ticket token signed after Mongo insert (persisted ID); validation accepts stored `ticketToken` from email; worker backfills missing tokens before send; `PublicTicketView` falls back to owner session when link token fails.
+- **Admin seat layout editor (2026-06-12):** `SeatLayoutEditor` visual grid replaces JSON textarea on Admin Screens; paint brush for standard/VIP/wheelchair/blocked/aisle; row/col sizing + drag-to-paint; `seatLayoutEditor` lib with Vitest round-trip tests; EN/TH i18n.
 
 ## In Progress
 
