@@ -6,6 +6,7 @@ A full-stack cinema ticket booking platform with real-time seat maps, Redis-back
 
 **Related docs**
 
+- Demo video: [YouTube](https://youtu.be/bVDQ12Q24JM)
 - Architecture diagram: [`docs/System_architecture.png`](docs/System_architecture.png)
 - Thai version: [`docs/th/system-overview.md`](docs/th/system-overview.md)
 

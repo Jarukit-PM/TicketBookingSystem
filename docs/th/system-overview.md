@@ -6,6 +6,7 @@
 
 **ไฟล์ที่เกี่ยวข้อง**
 
+- วิดีโอสาธิต: [YouTube](https://youtu.be/bVDQ12Q24JM)
 - แผนภาพสถาปัตยกรรม: [`../System_architecture.png`](../System_architecture.png)
 - ฉบับภาษาอังกฤษ: [`../../README.md`](../../README.md)
 
