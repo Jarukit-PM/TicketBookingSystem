@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
@@ -9,6 +10,16 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/compo
 import type { BookingSummary } from '@/types/admin'
 
 const { t } = useI18n()
+const route = useRoute()
+
+const focusBookingId = computed(() => {
+  const raw = route.query.bookingId
+  return typeof raw === 'string' ? raw : undefined
+})
+const focusBookingRef = computed(() => {
+  const raw = route.query.bookingRef
+  return typeof raw === 'string' ? raw : undefined
+})
 
 const bookingRef = ref('')
 const email = ref('')
@@ -102,7 +113,12 @@ function goNext() {
   loadBookings()
 }
 
-onMounted(loadBookings)
+onMounted(() => {
+  if (focusBookingRef.value) {
+    bookingRef.value = focusBookingRef.value
+  }
+  void loadBookings()
+})
 </script>
 
 <template>
@@ -156,6 +172,8 @@ onMounted(loadBookings)
           :loading="loading"
           show-customer
           :empty-message="emptyMessage"
+          :focus-booking-id="focusBookingId"
+          :focus-booking-ref="focusBookingRef"
         />
         <div v-if="total > limit" class="flex flex-wrap items-center justify-end gap-3">
           <Button variant="secondary" :disabled="loading || !canGoPrev" @click="goPrev">

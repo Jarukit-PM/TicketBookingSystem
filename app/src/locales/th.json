@@ -242,6 +242,7 @@
       "avgOccupancy": "อัตราครองที่นั่งเฉลี่ย",
       "occupancyHint": "ที่นั่งขายแล้ว / ความจุที่ขายได้",
       "recentBookings": "การจองล่าสุด",
+      "viewAllBookings": "ดูการจองทั้งหมด",
       "loadFailed": "โหลดแดชบอร์ดไม่สำเร็จ"
     },
     "movies": {
@@ -409,6 +410,7 @@
       "resendFailed": "คิวอีเมลยืนยันไม่สำเร็จ",
       "emptyAudit": "ยังไม่มีรายการบันทึกการตรวจสอบ",
       "emptyEmail": "ไม่มีรายการบันทึกอีเมลที่ตรงกับตัวกรอง",
+      "pageInfo": "หน้า {page}",
       "loadFailed": "โหลดบันทึกไม่สำเร็จ",
       "auditDetails": {
         "ref": "ref {value}",

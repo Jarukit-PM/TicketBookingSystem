@@ -18,6 +18,7 @@ const props = withDefaults(
     emptyMessage?: string
     focusBookingId?: string
     focusBookingRef?: string
+    linkToBookings?: boolean
   }>(),
   {
     loading: false,
@@ -25,8 +26,16 @@ const props = withDefaults(
     emptyMessage: undefined,
     focusBookingId: undefined,
     focusBookingRef: undefined,
+    linkToBookings: false,
   },
 )
+
+function bookingPageTo(booking: BookingSummary) {
+  return {
+    name: 'admin-bookings',
+    query: { bookingRef: booking.bookingRef },
+  }
+}
 
 const { t } = useI18n()
 const { formatDateTime, formatTHB } = useLocaleFormat()
@@ -66,7 +75,46 @@ watch(
     class="py-10"
   />
 
-  <div v-else class="overflow-x-auto">
+  <template v-else>
+    <div class="space-y-3 md:hidden">
+      <template v-for="booking in bookings" :key="booking.id">
+        <RouterLink
+          v-if="linkToBookings"
+          :to="bookingPageTo(booking)"
+          class="block w-full rounded-xl border border-surface-border bg-surface p-4 text-left transition-colors hover:bg-subtle"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <p class="font-medium text-brand">{{ booking.bookingRef }}</p>
+            <span class="text-sm font-medium text-copy-primary">{{ formatTHB(booking.total) }}</span>
+          </div>
+          <p class="mt-2 text-sm text-copy-primary">{{ booking.movieTitle }}</p>
+          <p class="mt-1 text-sm text-copy-secondary">{{ booking.seats.join(', ') }}</p>
+          <p v-if="showCustomer" class="mt-1 truncate text-xs text-copy-muted">
+            {{ booking.userEmail || booking.userId || t('common.dash') }}
+          </p>
+          <p class="mt-2 text-xs text-copy-muted">{{ formatDateTime(booking.confirmedAt) }}</p>
+        </RouterLink>
+        <button
+          v-else
+          type="button"
+          class="w-full rounded-xl border border-surface-border bg-surface p-4 text-left transition-colors hover:bg-subtle"
+          @click="openBookingDetail(booking)"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <p class="font-medium text-brand">{{ booking.bookingRef }}</p>
+            <span class="text-sm font-medium text-copy-primary">{{ formatTHB(booking.total) }}</span>
+          </div>
+          <p class="mt-2 text-sm text-copy-primary">{{ booking.movieTitle }}</p>
+          <p class="mt-1 text-sm text-copy-secondary">{{ booking.seats.join(', ') }}</p>
+          <p v-if="showCustomer" class="mt-1 truncate text-xs text-copy-muted">
+            {{ booking.userEmail || booking.userId || t('common.dash') }}
+          </p>
+          <p class="mt-2 text-xs text-copy-muted">{{ formatDateTime(booking.confirmedAt) }}</p>
+        </button>
+      </template>
+    </div>
+
+    <div class="hidden overflow-x-auto md:block">
     <table class="w-full text-left text-sm">
       <thead class="sticky top-0 bg-surface text-copy-muted">
         <tr>
@@ -88,7 +136,15 @@ watch(
           class="border-t border-surface-border"
         >
           <td class="py-3 pr-4 font-medium">
+            <RouterLink
+              v-if="linkToBookings"
+              :to="bookingPageTo(booking)"
+              class="rounded-sm text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-glow"
+            >
+              {{ booking.bookingRef }}
+            </RouterLink>
             <button
+              v-else
               type="button"
               class="rounded-sm text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-glow"
               @click="openBookingDetail(booking)"
@@ -109,14 +165,18 @@ watch(
           <td class="py-3 pr-4 text-copy-primary">{{ booking.movieTitle }}</td>
           <td class="py-3 pr-4 text-copy-secondary">{{ booking.seats.join(', ') }}</td>
           <td class="py-3 pr-4 text-copy-primary">{{ formatTHB(booking.total) }}</td>
-          <td class="py-3 pr-4 text-copy-secondary uppercase">{{ booking.locale || 'en' }}</td>
+          <td class="py-3 pr-4 text-copy-secondary">
+            {{ booking.locale === 'th' ? t('locale.th') : t('locale.en') }}
+          </td>
           <td class="py-3 text-copy-secondary">{{ formatDateTime(booking.confirmedAt) }}</td>
         </tr>
       </tbody>
     </table>
-  </div>
+    </div>
+  </template>
 
   <AdminBookingDetailModal
+    v-if="!linkToBookings"
     v-model:open="detailOpen"
     :booking-id="selectedBooking?.id ?? null"
     :summary="selectedBooking"

@@ -29,6 +29,15 @@ const limit = 50
 const auditDetailOpen = ref(false)
 const selectedAuditLog = ref<AuditLogEntry | null>(null)
 
+const currentLogs = computed(() =>
+  activeTab.value === 'audit' ? auditLogs.value : emailLogs.value,
+)
+const canGoPrev = computed(() => page.value > 1)
+const canGoNext = computed(() => currentLogs.value.length === limit)
+const showPagination = computed(
+  () => !loading.value && currentLogs.value.length > 0 && (canGoPrev.value || canGoNext.value),
+)
+
 const emptyMessage = computed(() =>
   activeTab.value === 'audit' ? t('admin.logs.emptyAudit') : t('admin.logs.emptyEmail'),
 )
@@ -115,6 +124,23 @@ function setTab(tab: LogTab) {
   selectedAuditLog.value = null
 }
 
+function applyEmailFilter() {
+  page.value = 1
+  void loadLogs()
+}
+
+function goPrev() {
+  if (!canGoPrev.value) return
+  page.value -= 1
+  void loadLogs()
+}
+
+function goNext() {
+  if (!canGoNext.value) return
+  page.value += 1
+  void loadLogs()
+}
+
 watch(activeTab, loadLogs, { immediate: true })
 </script>
 
@@ -143,7 +169,7 @@ watch(activeTab, loadLogs, { immediate: true })
           <span class="text-sm text-copy-secondary">{{ t('admin.logs.bookingId') }}</span>
           <Input v-model="bookingId" :placeholder="t('admin.logs.bookingIdPlaceholder')" autocomplete="off" />
         </label>
-        <Button :disabled="loading" @click="loadLogs">{{ t('common.apply') }}</Button>
+        <Button :disabled="loading" @click="applyEmailFilter">{{ t('common.apply') }}</Button>
       </CardContent>
     </Card>
 
@@ -151,10 +177,13 @@ watch(activeTab, loadLogs, { immediate: true })
     <p v-if="successMessage" class="text-sm text-state-success">{{ successMessage }}</p>
 
     <Card>
-      <CardHeader>
+      <CardHeader class="flex flex-row flex-wrap items-center justify-between gap-3">
         <CardTitle>{{ activeTab === 'audit' ? t('admin.logs.auditEntries') : t('admin.logs.emailDeliveries') }}</CardTitle>
+        <p v-if="showPagination" class="text-sm text-copy-muted">
+          {{ t('admin.logs.pageInfo', { page }) }}
+        </p>
       </CardHeader>
-      <CardContent>
+      <CardContent class="space-y-4">
         <TableSkeleton v-if="loading" :columns="activeTab === 'email' ? 6 : 6" :rows="6" />
         <EmptyState
           v-else-if="(activeTab === 'audit' && !auditLogs.length) || (activeTab === 'email' && !emailLogs.length)"
@@ -242,6 +271,14 @@ watch(activeTab, loadLogs, { immediate: true })
               </template>
             </tbody>
           </table>
+        </div>
+        <div v-if="showPagination" class="flex flex-wrap items-center justify-end gap-3">
+          <Button variant="secondary" :disabled="loading || !canGoPrev" @click="goPrev">
+            {{ t('common.previous') }}
+          </Button>
+          <Button variant="secondary" :disabled="loading || !canGoNext" @click="goNext">
+            {{ t('common.next') }}
+          </Button>
         </div>
       </CardContent>
     </Card>

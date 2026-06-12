@@ -2,6 +2,7 @@
 import { BarChart3, Calendar, Ticket } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
@@ -65,11 +66,21 @@ onMounted(loadDashboard)
     </div>
 
     <Card>
-      <CardHeader>
+      <CardHeader class="flex flex-row flex-wrap items-center justify-between gap-3">
         <CardTitle>{{ t('admin.dashboard.recentBookings') }}</CardTitle>
+        <RouterLink
+          :to="{ name: 'admin-bookings' }"
+          class="text-sm font-medium text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-glow"
+        >
+          {{ t('admin.dashboard.viewAllBookings') }}
+        </RouterLink>
       </CardHeader>
       <CardContent>
-        <BookingsTable :bookings="dashboard?.recentBookings ?? []" :loading="loading" />
+        <BookingsTable
+          :bookings="dashboard?.recentBookings ?? []"
+          :loading="loading"
+          link-to-bookings
+        />
       </CardContent>
     </Card>
   </div>

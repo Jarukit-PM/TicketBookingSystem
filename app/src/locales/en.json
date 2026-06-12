@@ -242,6 +242,7 @@
       "avgOccupancy": "Avg occupancy",
       "occupancyHint": "Sold seats / sellable capacity",
       "recentBookings": "Recent bookings",
+      "viewAllBookings": "View all bookings",
       "loadFailed": "Failed to load dashboard"
     },
     "movies": {
@@ -409,6 +410,7 @@
       "resendFailed": "Failed to queue confirmation email.",
       "emptyAudit": "No audit log entries yet.",
       "emptyEmail": "No email log entries match your filter.",
+      "pageInfo": "Page {page}",
       "loadFailed": "Failed to load logs",
       "auditDetails": {
         "ref": "ref {value}",
