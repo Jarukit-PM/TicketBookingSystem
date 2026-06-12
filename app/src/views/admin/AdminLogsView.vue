@@ -8,6 +8,7 @@ import AuditLogDetailModal from '@/components/admin/AuditLogDetailModal.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
 import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
 import { CheckCircle2, Eye, FileText, Loader2, Mail } from 'lucide-vue-next'
+import { useAuditMeta } from '@/composables/useAuditMeta'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry, EmailLogEntry } from '@/types/admin'
 
@@ -15,6 +16,7 @@ type LogTab = 'audit' | 'email'
 
 const { t, te } = useI18n()
 const { formatDateTime } = useLocaleFormat()
+const { formatAuditSummary } = useAuditMeta()
 
 const activeTab = ref<LogTab>('audit')
 const bookingId = ref('')
@@ -59,21 +61,6 @@ const emptyMessage = computed(() =>
 function formatAuditAction(action: string) {
   const key = `admin.logs.auditActions.${action}`
   return te(key) ? t(key) : action
-}
-
-function formatAuditDetails(meta?: Record<string, unknown>) {
-  if (!meta || !Object.keys(meta).length) return t('common.dash')
-  const parts: string[] = []
-  if (typeof meta.bookingRef === 'string') {
-    parts.push(t('admin.logs.auditDetails.ref', { value: meta.bookingRef }))
-  }
-  if (Array.isArray(meta.seats)) parts.push(t('admin.logs.auditDetails.seats', { value: meta.seats.join(', ') }))
-  if (Array.isArray(meta.seatIds)) parts.push(t('admin.logs.auditDetails.seats', { value: meta.seatIds.join(', ') }))
-  if (typeof meta.seatId === 'string') parts.push(t('admin.logs.auditDetails.seat', { value: meta.seatId }))
-  if (typeof meta.code === 'string') parts.push(meta.code)
-  if (typeof meta.reason === 'string') parts.push(meta.reason)
-  if (typeof meta.message === 'string') parts.push(meta.message)
-  return parts.length ? parts.join(' · ') : JSON.stringify(meta)
 }
 
 function showAuditDetail(log: AuditLogEntry) {
@@ -258,7 +245,7 @@ watch(activeTab, loadLogs, { immediate: true })
                   </td>
                   <td class="py-3 pr-4 text-copy-secondary">{{ log.entity }}</td>
                   <td class="py-3 pr-4 font-mono text-xs text-copy-muted">{{ log.entityId }}</td>
-                  <td class="py-3 pr-4 text-xs text-copy-secondary">{{ formatAuditDetails(log.meta) }}</td>
+                  <td class="py-3 pr-4 text-xs text-copy-secondary">{{ formatAuditSummary(log.meta) }}</td>
                   <td class="py-3 whitespace-nowrap">
                     <Button
                       variant="secondary"

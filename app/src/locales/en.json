@@ -453,6 +453,21 @@
         "seats": "seats {value}",
         "seat": "seat {value}"
       },
+      "metaFields": {
+        "bookingRef": "Booking reference",
+        "seats": "Seats",
+        "seatIds": "Seats",
+        "seatId": "Seat",
+        "showtimeId": "Showtime ID",
+        "total": "Total",
+        "reason": "Reason",
+        "code": "Code",
+        "message": "Message"
+      },
+      "metaReasons": {
+        "hold_ttl_expired": "Hold expired",
+        "user_released": "Released by user"
+      },
       "auditActions": {
         "booking_success": "Booking Success",
         "booking_timeout": "Booking Timeout",

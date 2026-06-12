@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { Button, Modal } from '@/components/ui'
+import { useAuditMeta } from '@/composables/useAuditMeta'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
 import type { AuditLogEntry } from '@/types/admin'
 
@@ -18,7 +19,10 @@ const emit = defineEmits<{
 
 const { t, te } = useI18n()
 const { formatDateTime } = useLocaleFormat()
+const { auditMetaRows, rowLabel } = useAuditMeta()
 const router = useRouter()
+
+const metaRows = computed(() => auditMetaRows(props.log?.meta))
 
 const bookingId = computed(() => {
   if (props.log?.entity === 'booking') return props.log.entityId
@@ -35,11 +39,6 @@ const canViewCustomerHistory = computed(() => Boolean(props.log?.actorId && (boo
 function formatAuditAction(action: string) {
   const key = `admin.logs.auditActions.${action}`
   return te(key) ? t(key) : action
-}
-
-function formatMeta(meta?: Record<string, unknown>) {
-  if (!meta || !Object.keys(meta).length) return t('common.dash')
-  return JSON.stringify(meta, null, 2)
 }
 
 function viewCustomerHistory() {
@@ -85,11 +84,24 @@ function viewCustomerHistory() {
         </div>
       </dl>
 
-      <div class="space-y-1">
-        <p class="text-copy-secondary">{{ t('admin.logs.meta') }}</p>
-        <pre class="overflow-x-auto rounded-lg bg-subtle p-3 text-xs text-copy-primary">{{
-          formatMeta(log.meta)
-        }}</pre>
+      <div v-if="metaRows.length" class="space-y-2">
+        <p class="text-copy-secondary">{{ t('admin.logs.details') }}</p>
+        <dl class="grid gap-3 rounded-lg bg-subtle p-3 sm:grid-cols-2">
+          <div
+            v-for="row in metaRows"
+            :key="row.key"
+            class="space-y-1"
+            :class="row.mono ? 'sm:col-span-2' : undefined"
+          >
+            <dt class="text-xs text-copy-secondary">{{ rowLabel(row) }}</dt>
+            <dd
+              class="text-sm text-copy-primary"
+              :class="row.mono ? 'break-all font-mono text-xs text-copy-muted' : undefined"
+            >
+              {{ row.value }}
+            </dd>
+          </div>
+        </dl>
       </div>
 
       <Button v-if="canViewCustomerHistory" variant="secondary" @click="viewCustomerHistory">

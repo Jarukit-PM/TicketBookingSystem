@@ -453,6 +453,21 @@
         "seats": "ที่นั่ง {value}",
         "seat": "ที่นั่ง {value}"
       },
+      "metaFields": {
+        "bookingRef": "เลขที่การจอง",
+        "seats": "ที่นั่ง",
+        "seatIds": "ที่นั่ง",
+        "seatId": "ที่นั่ง",
+        "showtimeId": "รหัสรอบฉาย",
+        "total": "ยอดรวม",
+        "reason": "เหตุผล",
+        "code": "รหัส",
+        "message": "ข้อความ"
+      },
+      "metaReasons": {
+        "hold_ttl_expired": "หมดเวลาถือที่นั่ง",
+        "user_released": "ผู้ใช้ปล่อยที่นั่ง"
+      },
       "auditActions": {
         "booking_success": "จองสำเร็จ",
         "booking_timeout": "หมดเวลาจอง",
