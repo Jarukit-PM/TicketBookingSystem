@@ -1,6 +1,8 @@
 # Cinema Ticket Booking System
 
-![Cover](docs/Cover.png)
+[![Cover](docs/Cover.png)](https://youtu.be/bVDQ12Q24JM)
+
+[![Watch demo](https://img.shields.io/badge/YouTube-Watch%20demo-FF0000?logo=youtube&logoColor=white)](https://youtu.be/bVDQ12Q24JM)
 
 A full-stack cinema ticket booking platform with real-time seat maps, Redis-backed holds, and digital tickets. Customer SPA in Vue 3; API in Go (Gin); MongoDB for durable data; Redis for holds, locks, and background jobs.
 

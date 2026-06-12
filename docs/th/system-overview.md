@@ -1,6 +1,8 @@
 # ระบบจองตั๋วภาพยนตร์ — ภาพรวมทางเทคนิค (ภาษาไทย)
 
-![ปกเอกสาร](../Cover.png)
+[![ปกเอกสาร](../Cover.png)](https://youtu.be/bVDQ12Q24JM)
+
+[![ชมวิดีโอสาธิต](https://img.shields.io/badge/YouTube-ชมวิดีโอสาธิต-FF0000?logo=youtube&logoColor=white)](https://youtu.be/bVDQ12Q24JM)
 
 เอกสารนี้อธิบายสถาปัตยกรรม กระบวนการจอง และวิธีรันระบบในเครื่อง
 
