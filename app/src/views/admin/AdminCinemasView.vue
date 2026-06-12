@@ -5,11 +5,13 @@ import { useI18n } from 'vue-i18n'
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
-import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input, SuccessToast } from '@/components/ui'
 import { Building2 } from 'lucide-vue-next'
+import { useToast } from '@/composables/useToast'
 import type { Cinema } from '@/types/catalog'
 
 const { t } = useI18n()
+const { message: toastMessage, show: showToast } = useToast()
 
 const cinemas = ref<Cinema[]>([])
 const loading = ref(true)
@@ -57,8 +59,10 @@ async function onSubmit() {
   try {
     if (editingId.value) {
       await api.put(`/admin/cinemas/${editingId.value}`, form.value)
+      showToast(t('admin.cinemas.updated'))
     } else {
       await api.post('/admin/cinemas', form.value)
+      showToast(t('admin.cinemas.created'))
     }
     resetForm()
     await loadCinemas()
@@ -76,6 +80,7 @@ async function onDelete(id: string) {
     await api.delete(`/admin/cinemas/${id}`)
     if (editingId.value === id) resetForm()
     await loadCinemas()
+    showToast(t('admin.cinemas.deleted'))
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError
@@ -123,6 +128,7 @@ onMounted(loadCinemas)
     </Card>
 
     <ErrorAlert v-if="errorMessage" :message="errorMessage" />
+    <SuccessToast :message="toastMessage" />
 
     <Card>
       <CardHeader>

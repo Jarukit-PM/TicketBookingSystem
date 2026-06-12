@@ -271,6 +271,9 @@
       "confirmDelete": "Delete this movie?",
       "loadFailed": "Failed to load movies",
       "saveFailed": "Save failed",
+      "created": "Movie created.",
+      "updated": "Movie updated.",
+      "deleted": "Movie deleted.",
       "deleteFailed": "Delete failed",
       "status": {
         "NOW_SHOWING": "Now showing",
@@ -290,6 +293,9 @@
       "confirmDelete": "Delete this cinema?",
       "loadFailed": "Failed to load cinemas",
       "saveFailed": "Save failed",
+      "created": "Cinema created.",
+      "updated": "Cinema updated.",
+      "deleted": "Cinema deleted.",
       "deleteFailed": "Delete failed"
     },
     "screens": {
@@ -305,6 +311,9 @@
       "confirmDelete": "Delete this screen?",
       "loadFailed": "Failed to load screens",
       "saveFailed": "Save failed",
+      "created": "Screen created.",
+      "updated": "Screen updated.",
+      "deleted": "Screen deleted.",
       "deleteFailed": "Delete failed",
       "editor": {
         "rows": "Rows",
@@ -340,6 +349,9 @@
       "loadFailed": "Failed to load showtimes",
       "loadDataFailed": "Failed to load data",
       "saveFailed": "Save failed",
+      "created": "Showtime created.",
+      "updated": "Showtime updated.",
+      "deleted": "Showtime deleted.",
       "deleteFailed": "Delete failed",
       "status": {
         "OPEN": "Open",

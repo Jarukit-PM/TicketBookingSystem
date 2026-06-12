@@ -6,12 +6,14 @@ import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import SeatLayoutEditor from '@/components/admin/SeatLayoutEditor.vue'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
-import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input, SuccessToast } from '@/components/ui'
 import { createEmptyGrid, gridToLayout } from '@/lib/seatLayoutEditor'
 import { Monitor } from 'lucide-vue-next'
+import { useToast } from '@/composables/useToast'
 import type { Cinema, Screen, ScreenLayout } from '@/types/catalog'
 
 const { t } = useI18n()
+const { message: toastMessage, show: showToast } = useToast()
 
 const cinemas = ref<Cinema[]>([])
 const screens = ref<Screen[]>([])
@@ -104,8 +106,10 @@ async function onSubmit() {
     }
     if (editingId.value) {
       await api.put(`/admin/screens/${editingId.value}`, payload)
+      showToast(t('admin.screens.updated'))
     } else {
       await api.post('/admin/screens', payload)
+      showToast(t('admin.screens.created'))
     }
     resetForm()
     await loadScreens()
@@ -126,6 +130,7 @@ async function onDelete(id: string) {
     await api.delete(`/admin/screens/${id}`)
     if (editingId.value === id) resetForm()
     await loadScreens()
+    showToast(t('admin.screens.deleted'))
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError
@@ -189,6 +194,7 @@ onMounted(async () => {
     </Card>
 
     <ErrorAlert v-if="errorMessage" :message="errorMessage" />
+    <SuccessToast :message="toastMessage" />
 
     <Card>
       <CardHeader>

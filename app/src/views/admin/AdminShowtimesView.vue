@@ -5,13 +5,15 @@ import { useI18n } from 'vue-i18n'
 import { translateApiError } from '@/api/errors'
 import { ApiError, api } from '@/api/client'
 import TableSkeleton from '@/components/skeletons/TableSkeleton.vue'
-import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorAlert, Input, SuccessToast } from '@/components/ui'
 import { Calendar } from 'lucide-vue-next'
 import { useLocaleFormat } from '@/composables/useLocaleFormat'
+import { useToast } from '@/composables/useToast'
 import type { Cinema, Movie, Screen, Showtime, ShowtimeStatus } from '@/types/catalog'
 
 const { t } = useI18n()
 const { formatDateTime } = useLocaleFormat()
+const { message: toastMessage, show: showToast } = useToast()
 
 const movies = ref<Movie[]>([])
 const screens = ref<Screen[]>([])
@@ -163,8 +165,10 @@ async function onSubmit() {
     }
     if (editingId.value) {
       await api.put(`/admin/showtimes/${editingId.value}`, payload)
+      showToast(t('admin.showtimes.updated'))
     } else {
       await api.post('/admin/showtimes', payload)
+      showToast(t('admin.showtimes.created'))
     }
     resetForm()
     await loadShowtimes()
@@ -182,6 +186,7 @@ async function onDelete(id: string) {
     await api.delete(`/admin/showtimes/${id}`)
     if (editingId.value === id) resetForm()
     await loadShowtimes()
+    showToast(t('admin.showtimes.deleted'))
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError
@@ -272,6 +277,7 @@ onMounted(loadAll)
     </Card>
 
     <ErrorAlert v-if="errorMessage" :message="errorMessage" />
+    <SuccessToast :message="toastMessage" />
 
     <Card>
       <CardHeader>
