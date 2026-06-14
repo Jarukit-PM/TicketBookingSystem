@@ -12,6 +12,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Recent
 
+- **Nginx upstream DNS (2026-06-14):** `nginx/nginx.conf` uses Docker embedded DNS (`127.0.0.11`) + `$api_upstream` variable so `/api` and `/ws` proxy survive api container restarts (fixes 502 / “โหลดโรงภาพยนตร์ไม่สำเร็จ” after `docker compose up`).
 - **Docker build — low-RAM EC2 (2026-06-12):** Single `ticketbookingsystem-backend` image for api+worker (one build, sequential compiles); `GOMAXPROCS=1` / `-p 1` / `GOMEMLIMIT` in `api/Dockerfile`; `api/.dockerignore` excludes tests.
 - **Seat map type indicators (2026-06-12):** Customer seat map shows VIP (crown + orange tint) and wheelchair (accessibility icon + green tint) on cells; legend split into status + seat types with THB prices.
 - **Feature 12 — public ticket access (2026-06-12):** `GET /api/tickets/:ref?t=` (no auth); token persisted after confirm + worker backfill; `ValidateTicketToken` accepts stored email token; `PublicTicketView` with owner fallback; handler/email/filter tests; spec 12 complete (HITL: incognito email-link smoke).
